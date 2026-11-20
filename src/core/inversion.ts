@@ -1,90 +1,40 @@
-import type { HourlyReading } from '../shared/schemas.js';
+import type { HourlyReading } from '../shared/air.js';
+import type { Inversion } from '../shared/plan.js';
 import {
-  INVERSION_BLH_CLEARS_THRESHOLD_M,
-  INVERSION_BLH_TRAPPED_THRESHOLD_M,
-  INVERSION_WIND_TRAPPED_THRESHOLD_KMH,
+  INVERSION_CLEARED_BLH_M,
+  INVERSION_STAGNANT_WIND_KMH,
+  INVERSION_TRAPPED_BLH_M,
+  PLAN_HORIZON_HOURS,
 } from './constants.js';
 
-export interface InversionResult {
-  readonly trappedNow: boolean;
-  readonly clearsAtHour: number | null;
-  readonly minBlhM: number | null;
-  readonly maxBlhM: number | null;
-  readonly basis: 'boundary_layer' | 'wind_only';
-}
-
-function findClearsAtHour(hourly: readonly HourlyReading[], nowIndex: number): number | null {
-  const maxLookahead = Math.min(hourly.length, nowIndex + 24);
-  for (let i = nowIndex + 1; i < maxLookahead; i++) {
-    const reading = hourly[i];
-    if (reading && reading.blhM !== null && reading.blhM >= INVERSION_BLH_CLEARS_THRESHOLD_M) {
-      return reading.hour;
-    }
-  }
-  return null;
-}
-
-function computeBlhExtremes(
-  hourly: readonly HourlyReading[],
-  nowIndex: number,
-): { minBlhM: number | null; maxBlhM: number | null } {
-  const maxLookahead = Math.min(hourly.length, nowIndex + 24);
-  const blhValues = hourly
-    .slice(nowIndex, maxLookahead)
-    .map((h) => h.blhM)
-    .filter((v): v is number => v !== null);
-
-  const minBlhM = Math.min(...blhValues);
-  const maxBlhM = Math.max(...blhValues);
-  return { minBlhM, maxBlhM };
+function isStagnant(reading: HourlyReading): boolean {
+  return reading.windKmh !== null && reading.windKmh < INVERSION_STAGNANT_WIND_KMH;
 }
 
 /**
- * Analyze surface temperature inversion trapping and boundary layer ventilation.
- * Evaluates conditions at nowIndex and the upcoming 24-hour diurnal cycle.
- * Falls back to wind speed alone when boundary layer height data is missing.
+ * Whether winter-inversion conditions trap pollution near the ground now, and the hour in the
+ * next 24 when daytime mixing (boundary layer ≥ 500 m) should clear it. Without boundary-layer
+ * data it falls back to wind speed alone and says so in `basis`.
  */
-export function analyzeInversion(
-  hourly: readonly HourlyReading[],
-  nowIndex: number,
-): InversionResult {
-  const current = hourly[nowIndex];
-  if (!current) {
+export function analyzeInversion(hourly: readonly HourlyReading[], nowIndex: number): Inversion {
+  const horizon = hourly.slice(nowIndex, nowIndex + PLAN_HORIZON_HOURS);
+  const current = horizon[0];
+  if (current === undefined || current.blhM === null) {
     return {
-      trappedNow: false,
+      trappedNow: current !== undefined && isStagnant(current),
       clearsAtHour: null,
       minBlhM: null,
       maxBlhM: null,
       basis: 'wind_only',
     };
   }
-
-  // When boundary-layer data is missing, fall back to wind only
-  if (current.blhM === null) {
-    const trappedNow =
-      current.windKmh !== null && current.windKmh < INVERSION_WIND_TRAPPED_THRESHOLD_KMH;
-    return {
-      trappedNow,
-      clearsAtHour: null,
-      minBlhM: null,
-      maxBlhM: null,
-      basis: 'wind_only',
-    };
-  }
-
-  const trappedNow =
-    current.blhM < INVERSION_BLH_TRAPPED_THRESHOLD_M &&
-    current.windKmh !== null &&
-    current.windKmh < INVERSION_WIND_TRAPPED_THRESHOLD_KMH;
-
-  const clearsAtHour = findClearsAtHour(hourly, nowIndex);
-  const { minBlhM, maxBlhM } = computeBlhExtremes(hourly, nowIndex);
-
+  const heights = horizon.map((h) => h.blhM).filter((v): v is number => v !== null);
+  const clears = horizon.slice(1).find((h) => h.blhM !== null && h.blhM >= INVERSION_CLEARED_BLH_M);
   return {
-    trappedNow,
-    clearsAtHour,
-    minBlhM,
-    maxBlhM,
+    trappedNow: current.blhM < INVERSION_TRAPPED_BLH_M && isStagnant(current),
+    clearsAtHour: clears?.hour ?? null,
+    minBlhM: Math.min(...heights),
+    maxBlhM: Math.max(...heights),
     basis: 'boundary_layer',
   };
 }

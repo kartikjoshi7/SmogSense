@@ -1,15 +1,11 @@
-import type { Member } from '../shared/schemas.js';
-
-export type SensitivityLevel = 'normal' | 'elevated' | 'high';
-export type OutdoorAdvice = 'ok' | 'reduce' | 'avoid' | 'stay_indoors';
+import type { OutdoorAdvice, Sensitivity } from '../shared/plan.js';
+import type { Member } from '../shared/profile.js';
 
 /**
- * Determine vulnerability sensitivity of an individual household member:
- * - "high" if the member has any health condition, or is an infant or senior.
- * - "elevated" if child age group.
- * - "normal" otherwise.
+ * How sensitive one member is to particulate pollution: "high" with any health condition or
+ * as an infant or senior, "elevated" for children, otherwise "normal".
  */
-export function memberSensitivity(member: Member): SensitivityLevel {
+export function memberSensitivity(member: Member): Sensitivity {
   if (
     member.conditions.length > 0 ||
     member.ageGroup === 'infant' ||
@@ -17,49 +13,39 @@ export function memberSensitivity(member: Member): SensitivityLevel {
   ) {
     return 'high';
   }
-  if (member.ageGroup === 'child') {
-    return 'elevated';
-  }
-  return 'normal';
+  return member.ageGroup === 'child' ? 'elevated' : 'normal';
+}
+
+const SENSITIVITY_ORDER: readonly Sensitivity[] = ['normal', 'elevated', 'high'];
+
+/** A household is as sensitive as its most sensitive member. */
+export function householdSensitivity(members: readonly Member[]): Sensitivity {
+  const highest = Math.max(...members.map((m) => SENSITIVITY_ORDER.indexOf(memberSensitivity(m))));
+  return SENSITIVITY_ORDER[highest] ?? 'normal';
+}
+
+/** Ids of members with high sensitivity, who get personal alerts. */
+export function highRiskMemberIds(members: readonly Member[]): string[] {
+  return members.filter((m) => memberSensitivity(m) === 'high').map((m) => m.id);
 }
 
 /**
- * Household sensitivity is the highest sensitivity across all members.
+ * Outdoor-activity advice for an AQI band (0–5) and sensitivity. Sensitive people move one
+ * step sooner; at band 5 everyone stays indoors.
  */
-export function householdSensitivity(members: readonly Member[]): SensitivityLevel {
-  let hasElevated = false;
-  for (const m of members) {
-    const s = memberSensitivity(m);
-    if (s === 'high') {
-      return 'high';
-    }
-    if (s === 'elevated') {
-      hasElevated = true;
-    }
-  }
-  return hasElevated ? 'elevated' : 'normal';
-}
-
-/**
- * Outdoor activity advice based on AQI band (0–5) and member/household sensitivity:
- * - band 0–1: ok.
- * - band 2: reduce for high, ok otherwise.
- * - band 3: avoid for high, reduce otherwise.
- * - band 4: stay_indoors for high, avoid otherwise.
- * - band 5: stay_indoors for everyone.
- */
-export function outdoorAdvice(band: number, sensitivity: SensitivityLevel): OutdoorAdvice {
+export function outdoorAdvice(band: number, sensitivity: Sensitivity): OutdoorAdvice {
+  const isHigh = sensitivity === 'high';
   if (band <= 1) {
     return 'ok';
   }
   if (band === 2) {
-    return sensitivity === 'high' ? 'reduce' : 'ok';
+    return isHigh ? 'reduce' : 'ok';
   }
   if (band === 3) {
-    return sensitivity === 'high' ? 'avoid' : 'reduce';
+    return isHigh ? 'avoid' : 'reduce';
   }
   if (band === 4) {
-    return sensitivity === 'high' ? 'stay_indoors' : 'avoid';
+    return isHigh ? 'stay_indoors' : 'avoid';
   }
   return 'stay_indoors';
 }

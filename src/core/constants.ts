@@ -1,212 +1,328 @@
 /**
- * Breakpoint interval for AQI linear interpolation.
+ * Domain coefficients for the SmogSense engine — the only place numbers live.
+ * Values marked "estimate" are rounded simplifications for planning guidance, not
+ * measurements; README › Assumptions lists each one with its source.
  */
-export interface AqiBreakpoint {
-  readonly bpLo: number;
-  readonly bpHi: number;
-  readonly iLo: number;
-  readonly iHi: number;
+import type { AqiCategory, AqiScale, Level, Sensitivity } from '../shared/plan.js';
+import type {
+  AgeGroup,
+  Airtightness,
+  CommuteMode,
+  ExerciseActivity,
+  MaskType,
+} from '../shared/profile.js';
+
+// ---------------------------------------------------------------- Air-quality indexes
+
+/** A concentration range in µg/m³; values in (cLo, cHi] belong to the band. */
+interface ConcentrationRange {
+  readonly cLo: number;
+  readonly cHi: number;
 }
 
-// --- India NAQI (CPCB 2014) ---
-// Source: Central Pollution Control Board (CPCB), National Air Quality Index (NAQI) Technical Report, 2014.
-// Documented assumption: only the PM pollutants (PM2.5, PM10) are used for headline calculation.
+/** One row of an official AQI table: a category, its index range and the PM ranges behind it. */
+export interface AqiBand {
+  readonly category: AqiCategory;
+  readonly iLo: number;
+  readonly iHi: number;
+  readonly pm25: ConcentrationRange;
+  readonly pm10: ConcentrationRange;
+}
+
+export interface AqiScaleDefinition {
+  /** Bands from best to worst; the band's position is its 0–5 band number. */
+  readonly bands: readonly [AqiBand, ...AqiBand[]];
+  /** Decimal places a concentration is truncated to before lookup; null = no truncation. */
+  readonly pm25Decimals: number | null;
+  readonly pm10Decimals: number | null;
+}
+
+function band(
+  category: AqiCategory,
+  [iLo, iHi]: readonly [number, number],
+  [pm25Lo, pm25Hi]: readonly [number, number],
+  [pm10Lo, pm10Hi]: readonly [number, number],
+): AqiBand {
+  return {
+    category,
+    iLo,
+    iHi,
+    pm25: { cLo: pm25Lo, cHi: pm25Hi },
+    pm10: { cLo: pm10Lo, cHi: pm10Hi },
+  };
+}
 
 /**
- * India NAQI 24-hour breakpoints for PM2.5 in µg/m³.
- * Note: The open-ended Severe band's upper reference of 380 µg/m³ is a documented assumption (estimate).
+ * India: CPCB National Air Quality Index (2014), 24-hour PM breakpoints.
+ * US: EPA AQI Technical Assistance Document, PM2.5 rows from the February 2024 update.
+ * CPCB's Severe band is open-ended; its upper references (380 PM2.5, 510 PM10) are an
+ * assumption so the index can rise to 500.
  */
-export const NAQI_PM25_BREAKPOINTS: readonly AqiBreakpoint[] = [
-  { bpLo: 0, bpHi: 30, iLo: 0, iHi: 50 },
-  { bpLo: 30, bpHi: 60, iLo: 51, iHi: 100 },
-  { bpLo: 60, bpHi: 90, iLo: 101, iHi: 200 },
-  { bpLo: 90, bpHi: 120, iLo: 201, iHi: 300 },
-  { bpLo: 120, bpHi: 250, iLo: 301, iHi: 400 },
-  { bpLo: 250, bpHi: 380, iLo: 401, iHi: 500 }, // 380 is a documented assumption (estimate)
-];
+export const AQI_SCALES: Readonly<Record<AqiScale, AqiScaleDefinition>> = {
+  naqi: {
+    bands: [
+      band('good', [0, 50], [0, 30], [0, 50]),
+      band('satisfactory', [51, 100], [30, 60], [50, 100]),
+      band('moderate', [101, 200], [60, 90], [100, 250]),
+      band('poor', [201, 300], [90, 120], [250, 350]),
+      band('very_poor', [301, 400], [120, 250], [350, 430]),
+      band('severe', [401, 500], [250, 380], [430, 510]),
+    ],
+    pm25Decimals: null,
+    pm10Decimals: null,
+  },
+  us_aqi: {
+    bands: [
+      band('good', [0, 50], [0, 9.0], [0, 54]),
+      band('moderate', [51, 100], [9.1, 35.4], [55, 154]),
+      band('unhealthy_sensitive', [101, 150], [35.5, 55.4], [155, 254]),
+      band('unhealthy', [151, 200], [55.5, 125.4], [255, 354]),
+      band('very_unhealthy', [201, 300], [125.5, 225.4], [355, 424]),
+      band('hazardous', [301, 500], [225.5, 325.4], [425, 604]),
+    ],
+    pm25Decimals: 1,
+    pm10Decimals: 0,
+  },
+};
 
-/**
- * India NAQI 24-hour breakpoints for PM10 in µg/m³.
- * Source: CPCB NAQI Technical Report, 2014.
- */
-export const NAQI_PM10_BREAKPOINTS: readonly AqiBreakpoint[] = [
-  { bpLo: 0, bpHi: 50, iLo: 0, iHi: 50 },
-  { bpLo: 50, bpHi: 100, iLo: 51, iHi: 100 },
-  { bpLo: 100, bpHi: 250, iLo: 101, iHi: 200 },
-  { bpLo: 250, bpHi: 350, iLo: 201, iHi: 300 },
-  { bpLo: 350, bpHi: 430, iLo: 301, iHi: 400 },
-  { bpLo: 430, bpHi: 510, iLo: 401, iHi: 500 },
-];
-
-/** India NAQI category descriptors corresponding to bands 0 through 5. */
-export const NAQI_CATEGORIES = [
-  'Good',
-  'Satisfactory',
-  'Moderate',
-  'Poor',
-  'Very Poor',
-  'Severe',
-] as const;
-
-// --- US AQI (EPA 2024) ---
-// Source: US Environmental Protection Agency (EPA), Air Quality Index (AQI) Reporting, Feb 2024 update.
-
-/**
- * US AQI breakpoints for PM2.5 in µg/m³ (truncated to 0.1 µg/m³ per EPA standard).
- * Source: EPA PM2.5 AQI breakpoints update (Feb 2024).
- */
-export const US_AQI_PM25_BREAKPOINTS: readonly AqiBreakpoint[] = [
-  { bpLo: 0.0, bpHi: 9.0, iLo: 0, iHi: 50 },
-  { bpLo: 9.1, bpHi: 35.4, iLo: 51, iHi: 100 },
-  { bpLo: 35.5, bpHi: 55.4, iLo: 101, iHi: 150 },
-  { bpLo: 55.5, bpHi: 125.4, iLo: 151, iHi: 200 },
-  { bpLo: 125.5, bpHi: 225.4, iLo: 201, iHi: 300 },
-  { bpLo: 225.5, bpHi: 325.4, iLo: 301, iHi: 500 },
-];
-
-/**
- * US AQI breakpoints for PM10 in µg/m³ (truncated to integer per EPA standard).
- * Source: US EPA AQI breakpoints for PM10.
- */
-export const US_AQI_PM10_BREAKPOINTS: readonly AqiBreakpoint[] = [
-  { bpLo: 0, bpHi: 54, iLo: 0, iHi: 50 },
-  { bpLo: 55, bpHi: 154, iLo: 51, iHi: 100 },
-  { bpLo: 155, bpHi: 254, iLo: 101, iHi: 150 },
-  { bpLo: 255, bpHi: 354, iLo: 151, iHi: 200 },
-  { bpLo: 355, bpHi: 424, iLo: 201, iHi: 300 },
-  { bpLo: 425, bpHi: 604, iLo: 301, iHi: 500 },
-];
-
-/** US AQI category descriptors corresponding to bands 0 through 5. */
-export const US_AQI_CATEGORIES = [
-  'Good',
-  'Moderate',
-  'Unhealthy for Sensitive Groups',
-  'Unhealthy',
-  'Very Unhealthy',
-  'Hazardous',
-] as const;
-
-/** Maximum index cap for both NAQI and US AQI scales. */
+/** Highest value on both index scales. */
 export const AQI_MAX = 500;
 
-/** Minimum valid hourly observations required out of 24 hours (75% data completeness rule). */
-export const AQI_MIN_HOURLY_READINGS_24H = 16;
+/** Hours in the averaging window for the headline index (CPCB and EPA use 24-hour PM means). */
+export const INDEX_WINDOW_HOURS = 24;
 
-/** Number of hours in a full trailing daily window. */
-export const AQI_TRAILING_HOURS = 24;
+/** Minimum valid hours for a 24-hour mean (CPCB's 16-of-24-hours completeness rule). */
+export const INDEX_MIN_VALID_HOURS = 16;
 
-// --- Inversion thresholds ---
-// Source: Atmospheric boundary layer meteorology for urban winter inversion trapping.
+/** Time zones that identify an Indian location when no country code is known. */
+export const INDIA_TIMEZONES: readonly string[] = ['Asia/Kolkata', 'Asia/Calcutta'];
 
-/** Boundary layer height threshold (m) below which air pollutants are trapped in a surface layer. */
-export const INVERSION_BLH_TRAPPED_THRESHOLD_M = 200;
+// ---------------------------------------------------------------- Forecast horizon
 
-/** Surface wind speed threshold (km/h) below which dispersion is stagnant. */
-export const INVERSION_WIND_TRAPPED_THRESHOLD_KMH = 5;
+/** How far ahead the plan looks, in hours. */
+export const PLAN_HORIZON_HOURS = 24;
 
-/** Convective boundary layer height threshold (m) where daytime thermal mixing clears the inversion. */
-export const INVERSION_BLH_CLEARS_THRESHOLD_M = 500;
+// ---------------------------------------------------------------- Winter inversion
 
-// --- Inhaled dose and exposure coefficients ---
-// Source: US EPA Exposure Factors Handbook (2011 Edition, Chapter 6: Inhalation Rates).
-// Adult short-term mean breathing rates (m³/h).
+/** Boundary-layer height (m) below which pollution is treated as trapped near the ground (estimate). */
+export const INVERSION_TRAPPED_BLH_M = 200;
 
-/** Sedentary breathing rate in m³/h (EPA 2011 Table 6-1, resting adult). */
-export const BREATHING_RATE_SEDENTARY = 0.3;
+/** Wind speed (km/h) below which air is treated as stagnant (estimate). */
+export const INVERSION_STAGNANT_WIND_KMH = 5;
 
-/** Light activity breathing rate in m³/h (EPA 2011 Table 6-1, e.g. gentle yoga or passenger). */
-export const BREATHING_RATE_LIGHT = 0.7;
+/** Boundary-layer height (m) at which daytime mixing is treated as having cleared the inversion (estimate). */
+export const INVERSION_CLEARED_BLH_M = 500;
 
-/** Moderate activity breathing rate in m³/h (EPA 2011 Table 6-1, brisk walk). */
-export const BREATHING_RATE_MODERATE = 1.6;
+// ---------------------------------------------------------------- Breathing and exposure
 
-/** Vigorous activity breathing rate in m³/h (EPA 2011 Table 6-1, running or sports). */
-export const BREATHING_RATE_VIGOROUS = 3.0;
+/**
+ * Adult inhalation rates in m³/h, rounded from the US EPA Exposure Factors Handbook (2011),
+ * chapter 6, short-term rates by activity level. "cycling" sits between moderate and high.
+ */
+const BREATHING_RATE_M3H = {
+  sedentary: 0.3,
+  light: 0.7,
+  moderate: 1.6,
+  cycling: 2.5,
+  vigorous: 3.0,
+} as const;
 
-/** Cycling breathing rate in m³/h (moderate-vigorous commuter/leisure cycling). */
-export const BREATHING_RATE_CYCLE = 2.5;
+/** Breathing rate for each exercise type. */
+export const EXERCISE_BREATHING_M3H: Readonly<Record<ExerciseActivity, number>> = {
+  walk: BREATHING_RATE_M3H.moderate,
+  run: BREATHING_RATE_M3H.vigorous,
+  cycle: BREATHING_RATE_M3H.cycling,
+  yoga: BREATHING_RATE_M3H.light,
+  sports: BREATHING_RATE_M3H.vigorous,
+  none: BREATHING_RATE_M3H.sedentary,
+};
 
-// --- Age adjustment factors ---
-// Source: Simplified physiological ventilation volume ratio relative to adult baseline (estimate).
+/** Breathing volume relative to an adult doing the same activity (estimate, simplified). */
+export const AGE_FACTOR: Readonly<Record<AgeGroup, number>> = {
+  infant: 0.4,
+  child: 0.7,
+  teen: 0.9,
+  adult: 1.0,
+  senior: 0.9,
+};
 
-/** Relative inhalation volume ratio for infants (estimate). */
-export const AGE_FACTOR_INFANT = 0.4;
+/** Share of PM2.5 a mask removes in real use: filtration × typical fit (conservative estimate). */
+export const MASK_REDUCTION: Readonly<Record<MaskType, number>> = {
+  none: 0,
+  cloth: 0.2,
+  surgical: 0.4,
+  n95: 0.8,
+};
 
-/** Relative inhalation volume ratio for children (estimate). */
-export const AGE_FACTOR_CHILD = 0.7;
+export interface CommuteModeFactors {
+  /** In-transit PM2.5 relative to ambient air (estimate, informed by Delhi on-road studies such as Goel et al. 2015, Atmospheric Environment). */
+  readonly exposureMultiplier: number;
+  /** Typical urban door-to-door speed in km/h (estimate). */
+  readonly speedKmh: number;
+  /** Tailpipe/grid CO₂ in kg per km — per vehicle for private modes, per passenger for bus and metro (estimate, India GHG Program road-transport factors). */
+  readonly co2KgPerKm: number;
+  /** Breathing rate while travelling, m³/h. */
+  readonly breathingM3h: number;
+  /** True for modes the traveller drives (engine-off and carpool advice apply). */
+  readonly isPrivateMotor: boolean;
+}
 
-/** Relative inhalation volume ratio for teenagers (estimate). */
-export const AGE_FACTOR_TEEN = 0.9;
+const CAR = { exposureMultiplier: 0.6, speedKmh: 22, isPrivateMotor: true } as const;
+const PASSENGER_BREATHING = BREATHING_RATE_M3H.light;
 
-/** Baseline adult inhalation factor (reference 1.0). */
-export const AGE_FACTOR_ADULT = 1.0;
+/** Every commute mode's exposure, speed and emission factors in one table. */
+export const COMMUTE_MODES: Readonly<Record<CommuteMode, CommuteModeFactors>> = {
+  walk: {
+    exposureMultiplier: 1.2,
+    speedKmh: 5,
+    co2KgPerKm: 0,
+    breathingM3h: BREATHING_RATE_M3H.moderate,
+    isPrivateMotor: false,
+  },
+  cycle: {
+    exposureMultiplier: 1.2,
+    speedKmh: 12,
+    co2KgPerKm: 0,
+    breathingM3h: BREATHING_RATE_M3H.cycling,
+    isPrivateMotor: false,
+  },
+  two_wheeler: {
+    exposureMultiplier: 1.4,
+    speedKmh: 25,
+    co2KgPerKm: 0.05,
+    breathingM3h: PASSENGER_BREATHING,
+    isPrivateMotor: true,
+  },
+  auto: {
+    exposureMultiplier: 1.5,
+    speedKmh: 20,
+    co2KgPerKm: 0.08,
+    breathingM3h: PASSENGER_BREATHING,
+    isPrivateMotor: false,
+  },
+  bus: {
+    exposureMultiplier: 1.2,
+    speedKmh: 15,
+    co2KgPerKm: 0.03,
+    breathingM3h: PASSENGER_BREATHING,
+    isPrivateMotor: false,
+  },
+  metro: {
+    exposureMultiplier: 0.7,
+    speedKmh: 30,
+    co2KgPerKm: 0.02,
+    breathingM3h: PASSENGER_BREATHING,
+    isPrivateMotor: false,
+  },
+  car_petrol: { ...CAR, co2KgPerKm: 0.17, breathingM3h: PASSENGER_BREATHING },
+  car_diesel: { ...CAR, co2KgPerKm: 0.16, breathingM3h: PASSENGER_BREATHING },
+  car_cng: { ...CAR, co2KgPerKm: 0.13, breathingM3h: PASSENGER_BREATHING },
+  car_ev: { ...CAR, co2KgPerKm: 0.08, breathingM3h: PASSENGER_BREATHING },
+  none: {
+    exposureMultiplier: 1.0,
+    speedKmh: 5,
+    co2KgPerKm: 0,
+    breathingM3h: BREATHING_RATE_M3H.sedentary,
+    isPrivateMotor: false,
+  },
+};
 
-/** Relative inhalation volume ratio for seniors (estimate). */
-export const AGE_FACTOR_SENIOR = 0.9;
+/** Modes that are cars, where carpooling applies. */
+export const CAR_MODES: readonly CommuteMode[] = ['car_petrol', 'car_diesel', 'car_cng', 'car_ev'];
 
-// --- Mask reduction factors ---
-// Source: Particle filtration efficiency combined with typical real-world inward leakage (conservative estimate).
+/** People sharing a car when carpooling (estimate). */
+export const CARPOOL_OCCUPANTS = 3;
 
-/** Mask reduction factor for no mask (estimate: 0% reduction). */
-export const MASK_REDUCTION_NONE = 0.0;
+/** Longest one-way distance (km) suggested for cycling and walking commutes (estimate). */
+export const MAX_CYCLE_KM = 8;
+export const MAX_WALK_KM = 2;
 
-/** Mask reduction factor for cloth masks (conservative estimate: 20% reduction). */
-export const MASK_REDUCTION_CLOTH = 0.2;
+// ---------------------------------------------------------------- Indoor air (mass-balance model)
 
-/** Mask reduction factor for disposable surgical masks (conservative estimate: 40% reduction). */
-export const MASK_REDUCTION_SURGICAL = 0.4;
+/** Share of outdoor PM2.5 that penetrates the building envelope (estimate; typical 0.6–1.0). */
+export const INDOOR_PENETRATION = 0.8;
 
-/** Mask reduction factor for fitted N95 respirators (conservative estimate: 80% reduction). */
-export const MASK_REDUCTION_N95 = 0.8;
+/** PM2.5 loss to indoor surfaces, per hour (estimate; typical 0.1–0.4). */
+export const INDOOR_DEPOSITION_PER_H = 0.2;
 
-// --- Commute microenvironment exposure multipliers ---
-// Source: Delhi on-road exposure and commuter microenvironment studies (e.g. Goel et al. 2015, Atmospheric Environment) (estimate).
+/** Air changes per hour for each envelope, plus windows open (estimates). */
+export const AIR_CHANGES_PER_H: Readonly<Record<Airtightness | 'windows_open', number>> = {
+  leaky: 1.5,
+  average: 1.0,
+  sealed: 0.5,
+  windows_open: 5.0,
+};
 
-/** In-transit PM2.5 ratio relative to ambient for walking along roadways (estimate). */
-export const COMMUTE_MULTIPLIER_WALK = 1.2;
+/** One step tighter for the "seal gaps" advice. */
+export const TIGHTER_ENVELOPE: Readonly<Record<Airtightness, Airtightness>> = {
+  leaky: 'average',
+  average: 'sealed',
+  sealed: 'sealed',
+};
 
-/** In-transit PM2.5 ratio relative to ambient for cycling along roadways (estimate). */
-export const COMMUTE_MULTIPLIER_CYCLE = 1.2;
+/** Ceiling height used to turn floor area into room volume, in metres (estimate). */
+export const CEILING_HEIGHT_M = 2.8;
 
-/** In-transit PM2.5 ratio relative to ambient on motorized two-wheelers in traffic (estimate). */
-export const COMMUTE_MULTIPLIER_TWO_WHEELER = 1.4;
+/** Clean-air delivery rate assumed for a typical home purifier, m³/h (estimate). */
+export const DEFAULT_PURIFIER_CADR_M3H = 250;
 
-/** In-transit PM2.5 ratio relative to ambient inside open auto-rickshaws (estimate). */
-export const COMMUTE_MULTIPLIER_AUTO = 1.5;
+/** PM2.5 emitted while burning, µg/h (order-of-magnitude estimates). */
+export const INDOOR_SOURCE_UG_PER_H = {
+  incense: 20_000,
+  smoking: 25_000,
+} as const;
 
-/** In-transit PM2.5 ratio relative to ambient inside non-AC / standard buses (estimate). */
-export const COMMUTE_MULTIPLIER_BUS = 1.2;
+// ---------------------------------------------------------------- When actions apply
 
-/** In-transit PM2.5 ratio relative to ambient inside underground/elevated metro train cars (estimate). */
-export const COMMUTE_MULTIPLIER_METRO = 0.7;
+/**
+ * The AQI band (0–5) at which each action starts to apply. Band 2 is Moderate (India) or
+ * Unhealthy for Sensitive Groups (US); 3 is Poor / Unhealthy; 4 is Very Poor / Very Unhealthy.
+ */
+export const ACTION_BAND = {
+  commuteMask: 2,
+  alertSensitive: 2,
+  maskEveryone: 3,
+  reportOpenBurning: 3,
+  checkOnNeighbours: 4,
+  grapCheck: 4,
+} as const;
 
-/** In-transit PM2.5 ratio relative to ambient in cars with closed windows and cabin filter recirculation (estimate). */
-export const COMMUTE_MULTIPLIER_CAR = 0.6;
+// ---------------------------------------------------------------- Ranking
 
-/** Default ambient microenvironment multiplier (baseline 1.0). */
-export const COMMUTE_MULTIPLIER_DEFAULT = 1.0;
+/** How much each household sensitivity amplifies health benefits when ranking. */
+export const SENSITIVITY_WEIGHT: Readonly<Record<Sensitivity, number>> = {
+  normal: 1,
+  elevated: 1.5,
+  high: 2,
+};
 
-// --- Average urban commute travel speeds ---
-// Source: Typical Indian metropolitan commuting speed estimates in traffic congestion (estimate).
+/** Ranking points per kg of CO₂ avoided each week. */
+export const CO2_RANK_WEIGHT = 2;
 
-/** Average walking speed in km/h (estimate). */
-export const URBAN_SPEED_WALK_KMH = 5;
+/** Ranking points deducted for the effort an action takes. */
+export const EFFORT_PENALTY: Readonly<Record<Level, number>> = {
+  low: 0,
+  medium: 5,
+  high: 15,
+};
 
-/** Average urban cycling speed in km/h (estimate). */
-export const URBAN_SPEED_CYCLE_KMH = 12;
+/** Exposure-equivalent points for benefits that are described, not measured. */
+export const QUALITATIVE_BENEFIT_PCT: Readonly<Record<Level, number>> = {
+  low: 5,
+  medium: 15,
+  high: 30,
+};
 
-/** Average urban motorized two-wheeler speed in km/h (estimate). */
-export const URBAN_SPEED_TWO_WHEELER_KMH = 25;
+/** Added to protective actions in smog-emergency mode so they always rank first. */
+export const EMERGENCY_BOOST = 1000;
 
-/** Average urban auto-rickshaw speed in km/h (estimate). */
-export const URBAN_SPEED_AUTO_KMH = 20;
+/** Clean windows that cut exposure by less than this (%) are not worth moving a routine for. */
+export const MIN_WORTHWHILE_REDUCTION_PCT = 10;
 
-/** Average urban city bus speed in km/h (estimate). */
-export const URBAN_SPEED_BUS_KMH = 15;
+/** Hour the purifier timeline entry is shown at (bedtime). */
+export const PURIFIER_NIGHT_HOUR = 21;
 
-/** Average urban metro rail speed including walking access and dwell times in km/h (estimate). */
-export const URBAN_SPEED_METRO_KMH = 30;
+// ---------------------------------------------------------------- Delhi NCR
 
-/** Average urban private/cab car speed in city traffic in km/h (estimate). */
-export const URBAN_SPEED_CAR_KMH = 22;
+/** Approximate bounding box of the National Capital Region (CAQM's jurisdiction). */
+export const NCR_BOUNDS = { latMin: 27.9, latMax: 29.2, lonMin: 76.8, lonMax: 77.9 } as const;

@@ -121,9 +121,11 @@ export default tseslint.config(
   },
 
   {
-    files: ['src/core/**/*.test.ts'],
+    // Tests may import shared schemas to check engine output against the API contract.
+    files: ['src/core/**/*.test.ts', 'src/core/fixtures/**/*.ts'],
     rules: {
       'no-restricted-imports': 'off',
+      '@typescript-eslint/no-restricted-imports': 'off',
     },
   },
 
