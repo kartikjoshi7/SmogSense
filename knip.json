@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/knip@5/overview/configuration-schema.json",
+  "entry": [
+    "api/index.ts",
+    "src/ui/main.tsx",
+    "index.html",
+    "*.config.{js,ts,mjs}",
+    "scripts/**/*.{js,mjs}"
+  ]
+}

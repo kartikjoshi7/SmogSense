@@ -1,0 +1,71 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens — light and dark themes via CSS custom properties.
+ * AQI category colours each have a companion text colour meeting WCAG AA.
+ */
+
+:root {
+  /* Light theme */
+  --color-bg: #ffffff;
+  --color-fg: #1a1a2e;
+  --color-surface: #f8f9fa;
+  --color-border: #dee2e6;
+  --color-primary: #0f766e;
+  --color-primary-fg: #ffffff;
+
+  /* AQI category colours (background + AA-contrast text) */
+  --aqi-good: #22c55e;
+  --aqi-good-text: #052e16;
+  --aqi-moderate: #eab308;
+  --aqi-moderate-text: #422006;
+  --aqi-unhealthy-sensitive: #f97316;
+  --aqi-unhealthy-sensitive-text: #431407;
+  --aqi-unhealthy: #ef4444;
+  --aqi-unhealthy-text: #450a0a;
+  --aqi-very-unhealthy: #a855f7;
+  --aqi-very-unhealthy-text: #3b0764;
+  --aqi-hazardous: #881337;
+  --aqi-hazardous-text: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1a1a2e;
+    --color-fg: #e2e8f0;
+    --color-surface: #16213e;
+    --color-border: #334155;
+    --color-primary: #2dd4bf;
+    --color-primary-fg: #042f2e;
+
+    /* AQI colours stay the same; text colours already meet AA on these backgrounds */
+  }
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  background: var(--color-primary);
+  color: var(--color-primary-fg);
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

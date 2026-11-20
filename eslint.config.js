@@ -1,0 +1,164 @@
+import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import reactPlugin from 'eslint-plugin-react';
+import reactHooksPlugin from 'eslint-plugin-react-hooks';
+import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
+import importXPlugin from 'eslint-plugin-import-x';
+import globals from 'globals';
+
+export default tseslint.config(
+  { ignores: ['dist/**', 'coverage/**', 'node_modules/**'] },
+
+  eslint.configs.recommended,
+
+  ...tseslint.configs.strictTypeChecked,
+  ...tseslint.configs.stylisticTypeChecked,
+  {
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.app.json', './tsconfig.server.json'],
+        projectService: false,
+        warnOnUnsupportedTypeScriptVersion: false,
+      },
+    },
+    linterOptions: {
+      reportUnusedDisableDirectives: 'error',
+    },
+  },
+
+  reactPlugin.configs.flat['jsx-runtime'],
+  {
+    rules: {
+      'react/jsx-key': 'error',
+      'react/no-array-index-key': 'error',
+    },
+  },
+
+  reactHooksPlugin.configs.flat['recommended-latest'],
+
+  jsxA11yPlugin.flatConfigs.strict,
+
+  {
+    plugins: { 'import-x': importXPlugin },
+    settings: {
+      'import-x/resolver-next': [
+        importXPlugin.createNodeResolver({
+          extensions: ['.ts', '.tsx', '.js', '.mjs'],
+        }),
+      ],
+    },
+    rules: {
+      'import-x/no-cycle': 'error',
+      'import-x/no-duplicates': 'error',
+      'import-x/no-self-import': 'error',
+    },
+  },
+
+  {
+    rules: {
+      complexity: ['error', 10],
+      'max-lines-per-function': ['error', { max: 60, skipBlankLines: true, skipComments: true }],
+      'max-depth': ['error', 3],
+      'max-params': ['error', 4],
+      'no-nested-ternary': 'error',
+      'no-console': 'error',
+      eqeqeq: 'error',
+      curly: 'error',
+      'no-empty': 'error',
+      'prefer-const': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+    },
+  },
+
+  {
+    files: ['src/core/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['!./**', '!../**', '!src/shared/**', '!src/shared'],
+              message: 'core may not import from any npm package',
+            },
+            {
+              group: ['src/ui', 'src/ui/**', '../ui/**', '../../ui/**'],
+              message: 'core must not import from ui',
+            },
+            {
+              group: ['src/server', 'src/server/**', '../server/**', '../../server/**'],
+              message: 'core must not import from server',
+            },
+          ],
+        },
+      ],
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['src/ui', 'src/ui/**', '../ui/**', '../../ui/**'],
+              message: 'core must not import from ui',
+              allowTypeImports: false,
+            },
+            {
+              group: ['src/server', 'src/server/**', '../server/**', '../../server/**'],
+              message: 'core must not import from server',
+              allowTypeImports: false,
+            },
+            {
+              group: ['src/shared', 'src/shared/**', '../shared/**', '../../shared/**'],
+              message: 'core may only use type-only imports from shared',
+              allowTypeImports: true,
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    files: ['src/core/**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
+
+  {
+    files: ['src/server/logger.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+
+  {
+    files: ['api/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-deprecated': 'off',
+    },
+  },
+
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx'],
+    rules: {
+      'max-lines-per-function': 'off',
+    },
+  },
+
+  {
+    files: ['**/*.js', '**/*.mjs'],
+    languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      ...tseslint.configs.disableTypeChecked.rules,
+      'no-console': 'off',
+    },
+  },
+);
