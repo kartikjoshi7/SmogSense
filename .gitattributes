@@ -1,0 +1,2 @@
+# Normalise line endings so Windows and Linux (CI) format files identically.
+* text=auto eol=lf
