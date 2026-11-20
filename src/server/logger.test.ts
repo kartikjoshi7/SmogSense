@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import * as logger from './logger.ts';
+import * as logger from './logger.js';
 
 describe('Logger', () => {
   it('info writes structured JSON to stdout', () => {

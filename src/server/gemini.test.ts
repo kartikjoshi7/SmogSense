@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGeminiClient } from './gemini.ts';
+import { createGeminiClient } from './gemini.js';
 
 describe('createGeminiClient', () => {
   it('returns undefined when no API key is provided', () => {

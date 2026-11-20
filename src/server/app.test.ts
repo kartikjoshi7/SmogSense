@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createApp } from './app.ts';
+import { createApp } from './app.js';
 
 describe('Health route', () => {
   it('GET /api/health returns ok', async () => {

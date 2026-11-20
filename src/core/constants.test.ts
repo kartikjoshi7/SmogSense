@@ -5,7 +5,7 @@ import {
   AQI_USG_MAX,
   AQI_UNHEALTHY_MAX,
   AQI_VERY_UNHEALTHY_MAX,
-} from './constants.ts';
+} from './constants.js';
 
 describe('AQI constants', () => {
   it('defines ascending breakpoint thresholds', () => {

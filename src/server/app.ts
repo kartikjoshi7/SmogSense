@@ -2,8 +2,8 @@ import type { GoogleGenAI } from '@google/genai';
 import { Hono } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
 import { bodyLimit } from 'hono/body-limit';
-import * as logger from './logger.ts';
-import { BODY_LIMIT_BYTES } from './config.ts';
+import * as logger from './logger.js';
+import { BODY_LIMIT_BYTES } from './config.js';
 
 const APP_VERSION = '0.1.0';
 

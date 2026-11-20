@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { App } from './app.tsx';
-import { checkA11y } from './test/axe.ts';
+import { App } from './app.js';
+import { checkA11y } from './test/axe.js';
 
 describe('App shell', () => {
   it('renders the skip link and allows keyboard focus', async () => {

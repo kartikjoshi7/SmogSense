@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { aqiCategorySchema, type AqiCategory } from './schemas.ts';
+import { aqiCategorySchema, type AqiCategory } from './schemas.js';
 
 describe('aqiCategorySchema', () => {
   it('accepts valid AQI categories', () => {

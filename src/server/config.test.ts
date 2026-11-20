@@ -6,7 +6,7 @@ import {
   OUTBOUND_TIMEOUT_MS,
   CACHE_TTL_MS,
   RATE_LIMIT_DAILY,
-} from './config.ts';
+} from './config.js';
 
 describe('Server config', () => {
   it('parses defaults when no env vars are set', () => {

@@ -34,7 +34,8 @@ Dependencies point one way: `ui → shared, core` · `server → shared, core` �
 7. **No dead code:** no unused exports, files or dependencies (knip enforces this), no commented-out code, no TODOs in committed code.
 8. **No test-only branches in production code.** Inject dependencies (fetch, clock, AI client) instead.
 9. Named exports only (default exports only where a framework requires them). Function components. `kebab-case` file names. A JSDoc comment on every exported function in `core/` and `server/`.
-10. **State lives in one place:** one React context + reducer for profile and plan, persisted through a single storage module.
+10. **Relative imports end in `.js`** (`import { x } from './x.js'`, even when the file is `x.ts`/`x.tsx`). Vercel compiles each `.ts` file to `.js` without rewriting import paths, so `.ts` or missing extensions crash the API at runtime. The server type-check (`NodeNext`) enforces this.
+11. **State lives in one place:** one React context + reducer for profile and plan, persisted through a single storage module.
 
 ## Security rules
 
