@@ -64,6 +64,7 @@ Dependencies point one way: `ui → shared, core` · `server → shared, core` �
 
 ## Workflow
 
-- Work on `main` only. Never create branches.
+- Work on `main` only. Never create branches, and don't add bots that open branches or PRs (no Dependabot).
+- npm hygiene: never use `--legacy-peer-deps` or `--force`, never add an `.npmrc` that changes resolution, and never hand-edit `package-lock.json`. If `npm ci` fails, delete `node_modules` and `package-lock.json`, run `npm install`, and confirm a clean `npm ci` passes. Peer dependencies you import directly (e.g. `@testing-library/dom`) are listed in `devDependencies`.
 - Before finishing any task, run `npm run check` (typecheck, lint, format check, knip, tests with coverage, build) and `npm run check:repo`. Both must pass with zero warnings.
 - Commit each finished task with a conventional commit message (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `refactor:`).
