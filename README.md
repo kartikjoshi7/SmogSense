@@ -1,6 +1,9 @@
 # SmogSense
 
 [![CI](https://github.com/kartikjoshi7/SmogSense/actions/workflows/ci.yml/badge.svg)](https://github.com/kartikjoshi7/SmogSense/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/kartikjoshi7/SmogSense/actions/workflows/codeql.yml/badge.svg)](https://github.com/kartikjoshi7/SmogSense/actions/workflows/codeql.yml)
+
+**Your family's plan for smog season.**
 
 A GenAI assistant that helps families and communities get through winter smog. It reads the
 live air-quality forecast for where you live, builds a plan for your household's day (low-emission
@@ -8,9 +11,25 @@ routines, indoor air hacks, sustainable alternatives) and shows the impact of ev
 numbers. Gemini explains the plan in English or Hindi, answers questions and writes community
 notices in ten languages, and it may only use the numbers the engine computed.
 
-**Live:** https://smog-sense-sigma.vercel.app · [Architecture](docs/ARCHITECTURE.md)
+**Live app:** https://smog-sense-sigma.vercel.app (no sign-up; "Try an example family in Delhi"
+fills the form in one click).
 
-**Evidence for each judging area**
+![The plan for a family in New Delhi on a very poor day: India AQI 314 with a smog-emergency headline written by the AI, this hour's six pollutant readings, the inversion card, the day's timeline and a bar chart of PM2.5 over the next 24 hours with the cleanest hour highlighted](docs/images/plan.png)
+
+## Contents
+
+- [Evidence for each judging area](#evidence-for-each-judging-area)
+- [Chosen vertical](#chosen-vertical)
+- [Approach and logic](#approach-and-logic)
+- [How the solution works](#how-the-solution-works)
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Project structure](#project-structure)
+- [Run it locally](#run-it-locally)
+- [Deploy your own](#deploy-your-own)
+- [Assumptions](#assumptions)
+
+## Evidence for each judging area
 
 | Area                         | In short                                                                                                                | Details                                |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
@@ -22,6 +41,9 @@ notices in ten languages, and it may only use the numbers the engine computed.
 | Problem statement alignment  | Each requirement of the brief traced to code and tests; real Open-Meteo data; works without the AI                      | [Alignment](docs/ALIGNMENT.md)         |
 | Design decisions (all areas) | Ten records: why each choice was made, what was turned down, what it costs, and the tests that hold it                  | [Decisions](docs/DECISIONS.md)         |
 
+How the parts fit together, request by request, is in [Architecture](docs/ARCHITECTURE.md), and
+the rules every change follows are in [AGENTS.md](AGENTS.md).
+
 ## Chosen vertical
 
 **Urban Air Quality Assistant.** The brief: _"Create a GenAI-powered assistant that helps families
@@ -32,6 +54,15 @@ choices."_
 
 SmogSense is built for households in North Indian cities, where winter inversions trap smoke for
 weeks, and it works anywhere Open-Meteo has a forecast (US AQI outside India).
+
+### Who it is for
+
+- **Families in North Indian cities** during winter smog, especially those with children, older
+  relatives, a pregnancy or heart and lung conditions: the plan follows the most sensitive member
+  and names who each action is for.
+- **Communities**: housing societies, schools and workplaces, through shareable notices and
+  community actions such as checking on neighbours and reporting open burning.
+- **Anyone with an Open-Meteo forecast**: outside India the plan uses the US AQI.
 
 ## Approach and logic
 
@@ -75,19 +106,24 @@ flowchart LR
 ```
 
 1. **Set up (no sign-up).** Choose a place by GPS or city search, add family members (their names
-   stay on the device) and describe the commute, exercise and home. The Delhi example family fills
-   the form in one click.
+   stay on the device) and describe the commute, exercise, home and winter heating. The Delhi
+   example family fills the form in one click.
 2. **Today.** `POST /api/plan` gets the place's air-quality and weather forecast from Open-Meteo
    and runs the engine; no AI is involved, so the plan appears at once with standard guidance.
    `POST /api/explain` then swaps in Gemini's wording item by item. The request flow, caches and
    error handling are in [Architecture](docs/ARCHITECTURE.md).
-3. **The plan.** An AQI card (number, category in words, icon and colour, and every pollutant
-   measured this hour), the hourly PM2.5 chart
-   with a table view, the inversion card, the day's timeline, five tabs named after the brief and a
-   "what if" slider that recomputes exercise exposure in the browser with the same engine.
+3. **The plan.** An AQI card (number with its scale, category in words, icon and colour, and every
+   pollutant measured this hour), the hourly PM2.5 chart with a table view, the inversion card, the
+   day's timeline, five tabs named after the brief and a "what if" slider that recomputes exercise
+   exposure in the browser with the same engine.
 4. **Ask and share.** A chat dialog for questions such as "Can the children play outside at 4 pm?"
    and a community notice that can be copied or shared, each in any of ten languages. Both are
    loaded only when opened.
+
+<p>
+  <img src="docs/images/setup.png" width="560" alt="The setup screen: a hero with the example-family button, then numbered cards for where you live, who lives with you (each member grouped under their name) and the daily commute with the options you could use">
+  <img src="docs/images/plan-phone-dark.png" width="200" alt="The same plan on a 390-pixel phone in dark mode: the AQI card stacks above this hour's pollutant readings">
+</p>
 
 **GenAI usage.** Gemini (through `@google/genai`) is used in three places, all in
 `src/server/ai/`:
@@ -106,7 +142,71 @@ an `ai` or `fallback` label that the UI shows next to it.
 **Free-tier strategy.** The app runs on a free AI Studio key: small prompts, capped tokens,
 caching, a cool-down after a 429 and a daily budget ([Efficiency](docs/EFFICIENCY.md#gemini-on-the-free-tier)).
 
-**Run it locally** (Node 22+):
+**The API.** One Hono app answers every route; each body and query is a Zod schema in
+`src/shared/api.ts`, and the limits on each group of routes are in
+[Security](docs/SECURITY.md#rate-limits-caches-and-budgets).
+
+| Route                 | What it does                                               | Uses AI |
+| --------------------- | ---------------------------------------------------------- | ------- |
+| `GET /api/health`     | Says the API is up                                         | No      |
+| `GET /api/geocode`    | Finds places by name, with names in the interface language | No      |
+| `POST /api/plan`      | Builds the household's plan for a place from live data     | No      |
+| `POST /api/explain`   | Words the plan's headline, summary and top items           | Yes     |
+| `POST /api/chat`      | Answers a question about today's plan                      | Yes     |
+| `POST /api/community` | Writes a notice for a housing society, school or workplace | Yes     |
+
+## Features
+
+![The plan's five tabs (low-emission routines, indoor air hacks, sustainable alternatives, protection and community) above three recommendation cards, each with its measured benefit, its effort, who it is for, why and how, and a label saying whether the AI or standard guidance wrote it](docs/images/recommendations.png)
+
+- **Low-emission routines:** the cleanest hour to exercise or air the home, moving exercise
+  indoors on bad days, an N95 for the commute, and a timeline for the day.
+- **Indoor air hacks:** a purifier, sealing gaps, shut windows, cooking ventilation, no incense or
+  smoking indoors, and heating without smoke, each with the room's PM2.5 before and after.
+- **Sustainable alternatives:** metro, bus, carpool, cycling, walking, working from home and
+  cleaner cooking fuel, each with the CO₂ it saves a week.
+- **Protection and community:** fitted masks, extra care for sensitive members, the GRAP check in
+  Delhi NCR, checking on neighbours, reporting open burning and a shareable notice.
+- **What if:** drag the exercise time and see the dose change, computed in the browser.
+- **Honest AI:** every card says whether the AI or standard guidance wrote it, and the AI may
+  quote only the plan's own numbers.
+- **For every household:** English and Hindi, read-aloud, light and dark themes, phones and
+  keyboards, no account; family names never leave the device.
+
+## Tech stack
+
+| Part       | Technology                                                              | Why                                                                         |
+| ---------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Language   | TypeScript (strict) for the browser, the API and the tests              | One set of types from the form to the engine                                |
+| Interface  | React 19, Vite 8, Tailwind CSS 4, a hand-written SVG chart              | [Decision 10](docs/DECISIONS.md#10-no-chart-ui-kit-or-state-library)        |
+| API        | Hono 4 in one Vercel function (Node 22)                                 | [Decision 3](docs/DECISIONS.md#3-one-hono-app-in-one-vercel-function)       |
+| Validation | Zod 4, the same schemas on the server and in the browser                | [Decision 4](docs/DECISIONS.md#4-one-set-of-zod-schemas-on-both-sides)      |
+| AI         | Google Gemini through `@google/genai`                                   | [Decisions 1 and 2](docs/DECISIONS.md#1-the-engine-decides-the-ai-explains) |
+| Data       | Open-Meteo air quality, weather and geocoding (no key)                  | [Decision 9](docs/DECISIONS.md#9-open-meteo-as-the-only-data-source)        |
+| Tests      | Vitest, Testing Library, jsdom, axe-core, Playwright                    | [Testing](docs/TESTING.md)                                                  |
+| Quality    | ESLint 9 with typescript-eslint, Prettier, knip, GitHub Actions, CodeQL | [Code quality](docs/CODE_QUALITY.md)                                        |
+
+## Project structure
+
+```
+api/                 the Vercel function that hands /api/* to the Hono app
+src/                 the app in four layers: core, shared, server and ui
+e2e/                 Playwright tests against the production build
+docs/                one doc per judging area, the architecture, the decisions and screenshots
+scripts/             check-repo.mjs: one branch, small files, no .env files
+.github/workflows/   CI (check and e2e jobs) and CodeQL
+AGENTS.md            the engineering rules every change follows
+vercel.json          build, routing and security headers for Vercel
+vite.config.ts       the build, the dev server's API and the preview headers
+```
+
+What each layer holds and which way imports may point is in
+[Architecture › Layers](docs/ARCHITECTURE.md#layers).
+
+## Run it locally
+
+You need Node 22 or later. A free Gemini key from Google AI Studio is optional: without one, every
+AI route answers with standard guidance.
 
 ```bash
 npm ci
@@ -114,8 +214,26 @@ cp .env.example .env.local   # add GEMINI_API_KEY; without it the app uses stand
 npm run dev                  # UI and API on http://localhost:5173
 ```
 
-The quality gates are listed in [Code quality](docs/CODE_QUALITY.md#gates-that-fail-the-build)
-and the test suites in [Testing](docs/TESTING.md).
+| Variable                | What it sets (defaults live in `src/server/config.ts`)                  |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `GEMINI_API_KEY`        | The Gemini key, read on the server only                                 |
+| `GEMINI_MODELS`         | Model ids to try, in order, separated by commas                         |
+| `GEMINI_DAILY_BUDGET`   | Gemini calls allowed per day on each server instance                    |
+| `GEMINI_THINKING_LEVEL` | How much the model thinks before answering: `OFF`, `MINIMAL` or `LOW`   |
+| `ALLOWED_ORIGIN`        | A full URL allowed to call the API from another site; unset allows none |
+
+To check a change the way CI does, run `npm run check`, `npm run check:repo` and
+`npm run test:e2e`. What each one enforces is in
+[Code quality](docs/CODE_QUALITY.md#gates-that-fail-the-build) and [Testing](docs/TESTING.md).
+
+## Deploy your own
+
+1. Fork the repository and import it as a new Vercel project. `vercel.json` already holds the
+   build, the routing and the headers ([Architecture › Build and
+   deploy](docs/ARCHITECTURE.md#build-and-deploy)).
+2. Add `GEMINI_API_KEY` to the project's environment variables (optional), and `ALLOWED_ORIGIN`
+   only if another site must call the API.
+3. Deploy, then open `/api/health` on your new address: it answers `{"status":"ok"}`.
 
 ## Assumptions
 
@@ -140,4 +258,5 @@ and the test suites in [Testing](docs/TESTING.md).
   `src/core/constants.ts`, with its source; [Architecture › Assumptions behind the
   numbers](docs/ARCHITECTURE.md#assumptions-behind-the-numbers) lists each one.
 
-Air-quality and weather data: [Open-Meteo.com](https://open-meteo.com) (CC BY 4.0). Licence: MIT.
+Air-quality and weather data: [Open-Meteo.com](https://open-meteo.com) (CC BY 4.0). AI:
+Google Gemini. Licence: [MIT](LICENSE).

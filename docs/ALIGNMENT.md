@@ -1,15 +1,8 @@
 # Problem statement alignment
 
-The brief is quoted in the README's [chosen vertical](../README.md#chosen-vertical); this page
-shows who SmogSense serves and where each part of the brief is met.
-
-## Who it is for
-
-- **Families in North Indian cities** during winter smog, especially those with children, older
-  relatives, pregnancy or heart and lung conditions: the plan follows the most sensitive member.
-- **Communities**: housing societies, schools and workplaces, through shareable notices and
-  community actions such as checking on neighbours and reporting open burning.
-- **Anyone with an Open-Meteo forecast**: outside India the plan uses the US AQI.
+The brief and the people SmogSense is built for are in the README's
+[chosen vertical](../README.md#chosen-vertical); this page shows where each part of the brief is
+met, in the code and in the tests.
 
 ## Requirement traceability
 

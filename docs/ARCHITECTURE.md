@@ -12,7 +12,6 @@ src/core/         the decision engine: pure functions, no I/O, no clock (time is
 src/shared/       Zod schemas and the types inferred from them (profile, air data, plan, API)
 src/server/       Hono app, middleware, routes, Open-Meteo and Gemini services, config, logger
 src/ui/           React: components render, hooks orchestrate, api/client.ts does fetch
-e2e/              Playwright tests against the production build
 ```
 
 Dependencies point one way: `ui → shared, core`, `server → shared, core`, `core → shared`
