@@ -56,6 +56,8 @@ const recommendationCategorySchema = z.enum([
   'community',
 ]);
 
+export type RecommendationCategory = z.infer<typeof recommendationCategorySchema>;
+
 /** Every recommendation the engine can produce. Each id has fixed fallback text on the server. */
 const recommendationIdSchema = z.enum([
   'exercise_window',
@@ -101,6 +103,8 @@ const impactSchema = z.object({
   /** Qualitative size of the benefit when it cannot be quantified. */
   level: levelSchema.optional(),
 });
+
+export type Impact = z.infer<typeof impactSchema>;
 
 /** Named values behind a recommendation; the only numbers any explanation may use. */
 const factsSchema = z.record(z.string(), z.union([z.number(), z.string()]));

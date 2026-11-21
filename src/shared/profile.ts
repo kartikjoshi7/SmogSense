@@ -59,6 +59,7 @@ const exerciseSchema = z.object({
   durationMin: z.number().int().min(10).max(180),
   canMoveIndoors: z.boolean(),
 });
+export type Exercise = z.infer<typeof exerciseSchema>;
 
 const airtightnessSchema = z.enum(['leaky', 'average', 'sealed']);
 export type Airtightness = z.infer<typeof airtightnessSchema>;

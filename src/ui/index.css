@@ -1,64 +1,174 @@
 @import 'tailwindcss';
 
 /*
- * Design tokens — light and dark themes via CSS custom properties.
- * AQI category colours each have a companion text colour meeting WCAG AA.
+ * Design tokens for light and dark themes. Every AQI band pairs a background tint with a
+ * text colour that meets WCAG AA on it; the band is also always named in text.
  */
-
 :root {
-  /* Light theme */
-  --color-bg: #ffffff;
-  --color-fg: #1a1a2e;
-  --color-surface: #f8f9fa;
-  --color-border: #dee2e6;
-  --color-primary: #0f766e;
-  --color-primary-fg: #ffffff;
-
-  /* AQI category colours (background + AA-contrast text) */
-  --aqi-good: #22c55e;
-  --aqi-good-text: #052e16;
-  --aqi-moderate: #eab308;
-  --aqi-moderate-text: #422006;
-  --aqi-unhealthy-sensitive: #f97316;
-  --aqi-unhealthy-sensitive-text: #431407;
-  --aqi-unhealthy: #ef4444;
-  --aqi-unhealthy-text: #450a0a;
-  --aqi-very-unhealthy: #a855f7;
-  --aqi-very-unhealthy-text: #3b0764;
-  --aqi-hazardous: #881337;
-  --aqi-hazardous-text: #ffffff;
+  color-scheme: light dark;
+  --bg: #f6f7f4;
+  --fg: #16201c;
+  --muted: #4a5853;
+  --surface: #ffffff;
+  --border: #c9d2cd;
+  --primary: #0f6b5c;
+  --primary-fg: #ffffff;
+  --focus: #b4530a;
+  --error: #a3221c;
+  --band-0: #d8f3dc;
+  --band-1: #fdf0b8;
+  --band-2: #fddcb5;
+  --band-3: #f9c4c0;
+  --band-4: #e3cff5;
+  --band-5: #f2c1d1;
+  --band-fg: #1b1b1b;
+  --bar: #6b7d77;
+  --bar-clean: #0f6b5c;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #1a1a2e;
-    --color-fg: #e2e8f0;
-    --color-surface: #16213e;
-    --color-border: #334155;
-    --color-primary: #2dd4bf;
-    --color-primary-fg: #042f2e;
-
-    /* AQI colours stay the same; text colours already meet AA on these backgrounds */
+    --bg: #101614;
+    --fg: #e6ece9;
+    --muted: #a9b8b2;
+    --surface: #1a2320;
+    --border: #3a4a44;
+    --primary: #5fd0b8;
+    --primary-fg: #06231d;
+    --focus: #ffb26b;
+    --error: #ff9a91;
+    --bar: #8fa39c;
+    --bar-clean: #5fd0b8;
   }
 }
 
 body {
-  background-color: var(--color-bg);
-  color: var(--color-fg);
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, 'Segoe UI', Roboto, 'Noto Sans', 'Noto Sans Devanagari', sans-serif;
+  line-height: 1.5;
 }
 
-.skip-link {
-  position: absolute;
-  left: -9999px;
-  top: 0;
-  z-index: 100;
-  padding: 0.5rem 1rem;
-  background: var(--color-primary);
-  color: var(--color-primary-fg);
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
 }
 
-.skip-link:focus {
-  left: 0;
+@layer components {
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0.5rem;
+    z-index: 100;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    background: var(--primary);
+    color: var(--primary-fg);
+  }
+  .skip-link:focus {
+    left: 0.5rem;
+  }
+  .surface {
+    background: var(--surface);
+    color: var(--fg);
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.25rem;
+  }
+  .muted {
+    color: var(--muted);
+  }
+  .btn-primary,
+  .btn-secondary {
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: var(--primary-fg);
+  }
+  .btn-secondary {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--fg);
+  }
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .field label,
+  .field legend {
+    font-weight: 600;
+  }
+  .field input:not([type='checkbox']),
+  .field select,
+  .field textarea {
+    min-height: 44px;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--surface);
+    color: var(--fg);
+  }
+  .field-error {
+    color: var(--error);
+    font-size: 0.9rem;
+  }
+  .check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+  }
+  .check input {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  .tag {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.8rem;
+  }
+  .tag-ai {
+    border-color: var(--primary);
+  }
+  .band-0 {
+    background: var(--band-0);
+    color: var(--band-fg);
+  }
+  .band-1 {
+    background: var(--band-1);
+    color: var(--band-fg);
+  }
+  .band-2 {
+    background: var(--band-2);
+    color: var(--band-fg);
+  }
+  .band-3 {
+    background: var(--band-3);
+    color: var(--band-fg);
+  }
+  .band-4 {
+    background: var(--band-4);
+    color: var(--band-fg);
+  }
+  .band-5 {
+    background: var(--band-5);
+    color: var(--band-fg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -67,5 +177,6 @@ body {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

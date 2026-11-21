@@ -34,6 +34,7 @@ export const planRequestSchema = z.object({
   profile: profileSchema,
   location: locationSchema,
 });
+export type PlanRequest = z.infer<typeof planRequestSchema>;
 
 export const planResponseSchema = z.object({ plan: planSchema });
 
@@ -49,6 +50,7 @@ export type Audience = z.infer<typeof audienceSchema>;
 const textSourceSchema = z.enum(['ai', 'fallback']);
 
 export const explainRequestSchema = planRequestSchema.extend({ lang: languageSchema });
+export type ExplainRequest = z.infer<typeof explainRequestSchema>;
 
 const explainedItemSchema = z.object({
   id: planSchema.shape.recommendations.element.shape.id,
@@ -79,6 +81,8 @@ export const chatRequestSchema = planRequestSchema.extend({
   history: z.array(chatTurnSchema).max(6),
 });
 
+export type ChatRequest = z.infer<typeof chatRequestSchema>;
+
 export const chatResponseSchema = z.object({ answer: z.string(), source: textSourceSchema });
 export type ChatResponse = z.infer<typeof chatResponseSchema>;
 
@@ -86,6 +90,8 @@ export const communityRequestSchema = planRequestSchema.extend({
   lang: languageSchema,
   audience: audienceSchema,
 });
+
+export type CommunityRequest = z.infer<typeof communityRequestSchema>;
 
 export const communityResponseSchema = z.object({ notice: z.string(), source: textSourceSchema });
 export type CommunityResponse = z.infer<typeof communityResponseSchema>;

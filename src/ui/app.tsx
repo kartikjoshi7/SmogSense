@@ -1,24 +1,92 @@
-export function App(): React.JSX.Element {
+import { Dashboard } from './components/dashboard/dashboard.js';
+import { SelectField } from './components/common/fields.js';
+import { SetupForm } from './components/setup/setup-form.js';
+import { activeSetup } from './state/app-state.js';
+import { AppProvider, useAppDispatch, useAppState, useMessages } from './state/app-context.js';
+import type { KeyValueStore } from './state/storage.js';
+
+const UI_LANGUAGES = { en: 'English', hi: 'हिन्दी' } as const;
+
+function Header() {
+  const t = useMessages();
+  const state = useAppState();
+  const dispatch = useAppDispatch();
   return (
-    <>
-      <a href="#main" className="skip-link">
-        Skip to main content
-      </a>
-      <header>
-        <span className="app-title">SmogSense</span>
-      </header>
-      <main id="main">
-        <h1>SmogSense</h1>
+    <header className="mx-auto flex max-w-3xl flex-wrap items-end justify-between gap-3 p-4">
+      <div>
+        <p className="text-xl font-bold">{t.app.name}</p>
+        <p className="muted text-sm">{t.app.tagline}</p>
+      </div>
+      <div className="flex flex-wrap items-end gap-3">
+        <SelectField
+          label={t.app.language}
+          value={state.lang}
+          options={UI_LANGUAGES}
+          onChange={(lang) => {
+            dispatch({ type: 'set_language', lang });
+          }}
+        />
+        {activeSetup(state) === null ? null : (
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              dispatch({ type: 'edit_setup' });
+            }}
+          >
+            {t.app.editHousehold}
+          </button>
+        )}
+      </div>
+    </header>
+  );
+}
+
+function Footer() {
+  const t = useMessages().app;
+  return (
+    <footer className="muted mx-auto max-w-3xl p-4 text-sm">
+      <p>
+        {t.dataCredit}{' '}
+        <a
+          className="underline"
+          href="https://open-meteo.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open-Meteo.com
+        </a>{' '}
+        (CC BY 4.0)
+      </p>
+      <p className="mt-1">{t.disclaimer}</p>
+    </footer>
+  );
+}
+
+function Screen() {
+  const setup = activeSetup(useAppState());
+  return setup === null ? <SetupForm /> : <Dashboard {...setup} />;
+}
+
+/** The SmogSense app: skip link, header, the setup or plan screen, and footer. */
+export function App({ store }: { readonly store: KeyValueStore | null }) {
+  return (
+    <AppProvider store={store}>
+      <SkipLink />
+      <Header />
+      <main id="main" className="mx-auto max-w-3xl p-4">
+        <Screen />
       </main>
-      <footer>
-        <p>
-          Air quality and weather data:{' '}
-          <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer">
-            Open-Meteo.com
-          </a>{' '}
-          (CC BY 4.0)
-        </p>
-      </footer>
-    </>
+      <Footer />
+    </AppProvider>
+  );
+}
+
+function SkipLink() {
+  const t = useMessages().app;
+  return (
+    <a href="#main" className="skip-link">
+      {t.skip}
+    </a>
   );
 }
