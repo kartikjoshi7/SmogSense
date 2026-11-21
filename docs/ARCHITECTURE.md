@@ -104,14 +104,15 @@ status, in the interface language.
 ## Build and deploy
 
 - `vite build` produces static files in `dist/`. Gzip sizes from the last build: main bundle
-  120.3 kB, CSS 4.0 kB, and lazy chunks of 1.2 kB (chat), 1.0 kB (community) and 0.8 kB (dialog).
-- What the main bundle holds, measured once by splitting a build by origin (gzip): React and
-  React DOM 67.5 kB, Zod with the shared schemas 27.5 kB, the engine 9.6 kB, Hindi text 4.2 kB,
-  English text 3.2 kB and the rest of the UI 10.3 kB. Zod stays in the browser because every
-  response and the saved household are validated there, with the same schemas the server uses.
-  `zod/mini` would be smaller, but every shared schema would have to be rewritten in its
-  functional style; one schema style for server and browser was the better trade. Hindi stays in the main bundle: loading
-  it separately would save about 4 kB but make the first switch to Hindi wait on the network.
+  122.0 kB, CSS 4.1 kB, and lazy chunks of 1.3 kB (chat), 1.0 kB (community) and 0.8 kB (dialog).
+- What the main bundle holds, measured by splitting a build by origin (gzip): React and React DOM
+  67.5 kB, Zod with the shared schemas 28.5 kB, the engine with its English and Hindi text
+  17.8 kB (the Hindi text alone 4.4 kB) and the rest of the UI 10.4 kB. Zod stays in the browser
+  because every response and the saved household are validated there, with the same schemas the
+  server uses; `zod/mini` would be smaller, but every shared schema would have to be rewritten in
+  its functional style, and one schema style for server and browser was the better trade. Hindi
+  stays in the main bundle: loading it separately would save about 4 kB but make the first switch
+  to Hindi wait on the network.
 - Vercel serves `dist/` and runs `api/index.ts` in the Mumbai region (`bom1`). `vercel.json`
   rewrites `/api/*` to the function and sets the security headers for every page.
 - `npm run dev` serves the UI and the same Hono app on one port through a small Vite plugin
