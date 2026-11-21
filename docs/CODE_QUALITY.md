@@ -77,3 +77,8 @@ npm run check:repo
 ```
 
 The test suites, including the end-to-end run, are in [Testing](TESTING.md#how-to-run).
+
+**Before each commit (optional).** With [pre-commit](https://pre-commit.com) installed,
+`pre-commit install` runs the format, lint, type, unused-code and repository checks, plus the
+Vitest tests the staged files affect (`vitest related`), before every commit. Each hook in
+`.pre-commit-config.yaml` calls one of the npm scripts above, so the rules stay in one place.

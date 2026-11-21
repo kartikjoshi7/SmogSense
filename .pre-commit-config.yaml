@@ -1,0 +1,42 @@
+# Optional checks before each commit, for anyone who uses https://pre-commit.com:
+#   pipx install pre-commit   (or: pip install pre-commit)
+#   pre-commit install
+# Each hook runs one of the project's own npm scripts, so the rules live in package.json and the
+# tool configs, not here. CI still runs the full `npm run check`, `check:repo` and the e2e tests.
+repos:
+  - repo: local
+    hooks:
+      - id: format
+        name: Prettier (check only)
+        entry: npm run format:check
+        language: system
+        pass_filenames: false
+      - id: lint
+        name: ESLint, zero warnings
+        entry: npm run lint
+        language: system
+        files: \.(ts|tsx|js|mjs)$
+        pass_filenames: false
+      - id: typecheck
+        name: TypeScript (browser, server and e2e projects)
+        entry: npm run typecheck
+        language: system
+        files: \.(ts|tsx)$
+        pass_filenames: false
+      - id: unused-code
+        name: knip (unused files, exports and dependencies)
+        entry: npm run knip
+        language: system
+        files: \.(ts|tsx|js|mjs|json)$
+        pass_filenames: false
+      - id: related-tests
+        name: Vitest, only the tests the staged files affect
+        entry: npx vitest related --run --passWithNoTests
+        language: system
+        files: \.(ts|tsx)$
+      - id: repo-rules
+        name: Repository rules (one branch, small files, no .env)
+        entry: npm run check:repo
+        language: system
+        always_run: true
+        pass_filenames: false

@@ -189,15 +189,16 @@ caching, a cool-down after a 429 and a daily budget ([Efficiency](docs/EFFICIENC
 ## Project structure
 
 ```
-api/                 the Vercel function that hands /api/* to the Hono app
-src/                 the app in four layers: core, shared, server and ui
-e2e/                 Playwright tests against the production build
-docs/                one doc per judging area, the architecture, the decisions and screenshots
-scripts/             check-repo.mjs: one branch, small files, no .env files
-.github/workflows/   CI (check and e2e jobs) and CodeQL
-AGENTS.md            the engineering rules every change follows
-vercel.json          build, routing and security headers for Vercel
-vite.config.ts       the build, the dev server's API and the preview headers
+api/                     the Vercel function that hands /api/* to the Hono app
+src/                     the app in four layers: core, shared, server and ui
+e2e/                     Playwright tests against the production build
+docs/                    one doc per judging area, the architecture, the decisions and screenshots
+scripts/                 check-repo.mjs: one branch, small files, no .env files
+.github/workflows/       CI (check and e2e jobs) and CodeQL
+AGENTS.md                the engineering rules every change follows
+.pre-commit-config.yaml  optional checks before each commit, using the npm scripts
+vercel.json              build, routing and security headers for Vercel
+vite.config.ts           the build, the dev server's API and the preview headers
 ```
 
 What each layer holds and which way imports may point is in
