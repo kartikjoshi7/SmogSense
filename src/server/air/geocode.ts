@@ -1,0 +1,48 @@
+import { z } from 'zod';
+import type { Place } from '../../shared/api.js';
+import { fetchJson, type FetchFailure, type HttpDeps } from '../http/fetch-json.js';
+import { ok, type Result } from '../result.js';
+
+const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
+const MAX_RESULTS = 5;
+
+const geocodingResponseSchema = z.object({
+  /** Absent when nothing matches. */
+  results: z
+    .array(
+      z.object({
+        name: z.string(),
+        latitude: z.number(),
+        longitude: z.number(),
+        admin1: z.string().optional(),
+        country: z.string().optional(),
+      }),
+    )
+    .optional(),
+});
+
+/** Search Open-Meteo's place names (English labels) for a city or town. */
+export async function searchPlaces(
+  query: string,
+  deps: HttpDeps,
+): Promise<Result<Place[], FetchFailure>> {
+  const url = new URL(GEOCODING_URL);
+  url.search = new URLSearchParams({
+    name: query,
+    count: String(MAX_RESULTS),
+    language: 'en',
+    format: 'json',
+  }).toString();
+  const response = await fetchJson(url, geocodingResponseSchema, deps);
+  if (!response.ok) {
+    return response;
+  }
+  const places = (response.value.results ?? []).map((r) => ({
+    name: r.name,
+    region: r.admin1 ?? null,
+    country: r.country ?? null,
+    lat: r.latitude,
+    lon: r.longitude,
+  }));
+  return ok(places);
+}

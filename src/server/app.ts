@@ -1,43 +1,83 @@
-import type { GoogleGenAI } from '@google/genai';
 import { Hono } from 'hono';
-import { secureHeaders } from 'hono/secure-headers';
 import { bodyLimit } from 'hono/body-limit';
+import { cors } from 'hono/cors';
+import { HTTPException } from 'hono/http-exception';
+import { secureHeaders } from 'hono/secure-headers';
+import type { AirService } from './air/air-service.js';
+import type { AiService } from './ai/ai-service.js';
+import { SETTINGS, type EnvConfig } from './config.js';
 import * as logger from './logger.js';
-import { BODY_LIMIT_BYTES } from './config.js';
+import { rateLimit } from './middleware/rate-limit.js';
+import { aiRoutes } from './routes/ai.js';
+import { dataRoutes } from './routes/data.js';
 
-const APP_VERSION = '0.1.0';
-
-/** Dependencies injected into the app for testability. */
+/** Everything the app needs from the outside world, injected so tests can replace it. */
 export interface AppDeps {
-  gemini?: GoogleGenAI | undefined;
+  readonly config: EnvConfig;
+  readonly air: AirService;
+  readonly ai: AiService;
+  /** Current time in milliseconds (for rate limiting). */
+  readonly now: () => number;
 }
 
-/**
- * Create the Hono application with all middleware and routes.
- * Dependencies are injected for testability.
- */
-export function createApp(_deps: AppDeps) {
+/** Origins allowed to call the API from a browser on another origin. */
+function allowedOrigins(config: EnvConfig): string[] {
+  const origins = config.ALLOWED_ORIGIN === undefined ? [] : [config.ALLOWED_ORIGIN];
+  return config.NODE_ENV === 'development' ? [...origins, SETTINGS.devOrigin] : origins;
+}
+
+function limiter(limit: number, now: () => number) {
+  return rateLimit({
+    limit,
+    now,
+    windowMs: SETTINGS.rateLimitWindowMs,
+    maxClients: SETTINGS.rateLimitMaxClients,
+  });
+}
+
+/** The API: security middleware, rate limits, routes and safe error handling. */
+export function createApp(deps: AppDeps) {
+  const origins = allowedOrigins(deps.config);
+  const dataLimit = limiter(SETTINGS.dataRequestsPerWindow, deps.now);
+  const aiLimit = limiter(SETTINGS.aiRequestsPerWindow, deps.now);
   const app = new Hono().basePath('/api');
 
-  app.use('*', secureHeaders());
-  app.use('*', bodyLimit({ maxSize: BODY_LIMIT_BYTES }));
+  app.use(secureHeaders());
+  app.use(
+    cors({
+      origin: (origin) => (origins.includes(origin) ? origin : null),
+      allowMethods: ['GET', 'POST'],
+      allowHeaders: ['Content-Type'],
+      maxAge: 600,
+    }),
+  );
+  app.use(
+    bodyLimit({
+      maxSize: SETTINGS.bodyLimitBytes,
+      onError: (c) => c.json({ error: 'Request is too large.' }, 413),
+    }),
+  );
+  app.use('/geocode', dataLimit);
+  app.use('/plan', dataLimit);
+  for (const path of ['/explain', '/chat', '/community']) {
+    app.use(path, aiLimit);
+  }
 
-  app.get('/health', (c) => {
-    return c.json({ status: 'ok', version: APP_VERSION });
-  });
+  app.get('/health', (c) => c.json({ status: 'ok' }));
+  app.route('/', dataRoutes(deps.air));
+  app.route('/', aiRoutes(deps.air, deps.ai));
 
-  app.notFound((c) => {
-    return c.json({ error: 'Not found' }, 404);
-  });
-
-  app.onError((err, c) => {
+  app.notFound((c) => c.json({ error: 'Not found' }, 404));
+  app.onError((error, c) => {
+    if (error instanceof HTTPException) {
+      return c.json({ error: 'Invalid request' }, error.status);
+    }
     logger.error('Unhandled error', {
-      path: c.req.path,
       method: c.req.method,
-      error: err.message,
+      path: c.req.path,
+      error: error.message,
     });
     return c.json({ error: 'Internal error' }, 500);
   });
-
   return app;
 }

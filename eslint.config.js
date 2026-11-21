@@ -66,6 +66,7 @@ export default tseslint.config(
       curly: 'error',
       'no-empty': 'error',
       'prefer-const': 'error',
+      '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },

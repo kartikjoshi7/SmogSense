@@ -1,0 +1,257 @@
+import type { Audience } from '../../shared/api.js';
+import type { OutdoorAdvice, Plan, Recommendation } from '../../shared/plan.js';
+import {
+  clock,
+  impact,
+  kg,
+  lookup,
+  num,
+  pct,
+  text,
+  type LanguagePack,
+  type Template,
+} from './format.js';
+
+const MASK: Readonly<Record<string, string>> = {
+  none: 'बिना मास्क',
+  cloth: 'कपड़े के मास्क',
+  surgical: 'सर्जिकल मास्क',
+};
+
+const FUEL: Readonly<Record<string, string>> = { biomass: 'लकड़ी या उपले', kerosene: 'केरोसिन' };
+
+const SENSITIVE_ADVICE: Readonly<Record<OutdoorAdvice, string>> = {
+  ok: 'बाहर उन पर नज़र रखें',
+  reduce: 'बाहर कम और हल्का समय बिताएँ',
+  avoid: 'बाहर मेहनत वाले काम से बचें',
+  stay_indoors: 'उन्हें घर के अंदर रखें',
+};
+
+const AUDIENCE: Readonly<Record<Audience, string>> = {
+  housing_society: 'प्रिय निवासियों',
+  school: 'प्रिय अभिभावकों और स्टाफ़',
+  workplace: 'प्रिय सहकर्मियों',
+};
+
+function indoor(title: string, lead: string, steps: readonly string[]): Template {
+  return (rec) => ({
+    title,
+    why: `${lead} घर के अंदर PM2.5 लगभग ${impact(rec, 'indoorBeforeUgM3')} से घटकर ${impact(rec, 'indoorAfterUgM3')} µg/m³ हो जाता है (${pct(rec)}% कम)।`,
+    steps,
+  });
+}
+
+function exposureClause(rec: Recommendation): string {
+  const change = pct(rec);
+  if (change > 0) {
+    return ` और रास्ते में साँस से जाने वाला PM2.5 ${change}% घटता है`;
+  }
+  return change < 0 ? `; रास्ते में प्रदूषण ${-change}% बढ़ता है, इसलिए N95 पहनें` : '';
+}
+
+function swap(title: string, steps: readonly string[]): Template {
+  return (rec) => ({
+    title,
+    why: `इससे हर हफ़्ते ${kg(rec)} kg CO₂ बचता है${exposureClause(rec)}।`,
+    steps,
+  });
+}
+
+function qualitative(title: string, why: string, steps: readonly string[]): Template {
+  return () => ({ title, why, steps });
+}
+
+const recommendations: LanguagePack['recommendations'] = {
+  exercise_window: (rec) => ({
+    title: `${clock(num(rec, 'usualHour'))} की जगह ${clock(num(rec, 'bestHour'))} पर व्यायाम करें`,
+    why: `${clock(num(rec, 'bestHour'))} पर PM2.5 लगभग ${num(rec, 'bestPm25')} µg/m³ रहने का अनुमान है, जबकि ${clock(num(rec, 'usualHour'))} पर ${num(rec, 'usualPm25')}; इससे आप ${pct(rec)}% कम प्रदूषण साँस में लेते हैं (${impact(rec, 'doseBeforeUg')} → ${impact(rec, 'doseAfterUg')} µg)।`,
+    steps: [
+      'साफ़ समय पर शुरू करें और उसी समय में पूरा करें।',
+      'रफ़्तार हल्की रखें; खाँसी या साँस फूले तो रुक जाएँ।',
+      'कल फिर देखें: साफ़ समय मौसम के साथ बदलता है।',
+    ],
+  }),
+  exercise_indoors: (rec) => ({
+    title: 'आज घर के अंदर व्यायाम करें',
+    why: `${clock(num(rec, 'usualHour'))} पर बाहर की हवा लगभग ${num(rec, 'outdoorPm25')} µg/m³ है और आपके कमरे में लगभग ${num(rec, 'indoorPm25')}। अंदर व्यायाम करने से साँस में जाने वाला PM2.5 ${pct(rec)}% घटता है।`,
+    steps: [
+      'बाहर की जगह घर पर योग, स्ट्रेचिंग या सीढ़ियाँ चढ़ें।',
+      'व्यायाम के समय खिड़कियाँ बंद रखें और प्यूरीफ़ायर चालू रखें।',
+      'किसी को साँस फूले तो ज़ोरदार व्यायाम न करें।',
+    ],
+  }),
+  commute_protection: (rec) => ({
+    title: 'आने-जाने में N95 पहनें',
+    why: `${lookup(MASK, text(rec, 'currentMask'), 'आपके मास्क')} की जगह ठीक से फ़िट N95 पहनने से रोज़ का PM2.5 ${impact(rec, 'doseBeforeUg')} से ${impact(rec, 'doseAfterUg')} µg रह जाता है (${pct(rec)}% कम)।`,
+    steps: [
+      `दोनों सफ़र में पहनें, ${clock(num(rec, 'departHour'))} और ${clock(num(rec, 'returnHour'))} पर।`,
+      'निकलने से पहले नाक की क्लिप दबाएँ और फ़िटिंग जाँचें।',
+      'कार में शीशे बंद रखें और एयर रीसर्कुलेशन चालू रखें।',
+    ],
+  }),
+  ventilate_briefly: (rec) => ({
+    title: `${clock(num(rec, 'hour'))} पर घर में हवा आने दें`,
+    why: `${clock(num(rec, 'hour'))} दिन का सबसे साफ़ समय है (लगभग ${num(rec, 'pm25')} µg/m³)। तब थोड़ी देर हवा आने देने से धुआँ और बासी हवा निकल जाती है।`,
+    steps: ['खिड़कियाँ सिर्फ़ 10 से 15 मिनट खोलें।', 'शाम का धुंध बढ़ने से पहले बंद कर दें।'],
+  }),
+  engine_off_at_signals: qualitative(
+    'लाल बत्ती पर इंजन बंद करें',
+    'खड़े-खड़े इंजन चलाने से ईंधन जलता है और धुआँ वहीं फैलता है जहाँ लोग साँस लेते हैं।',
+    ['लंबे सिग्नल और जाम में इंजन बंद करें।', 'बेवजह रेस न दें।'],
+  ),
+  combine_errands: qualitative(
+    'काम एक ही चक्कर में निपटाएँ',
+    'कम छोटे सफ़र का मतलब कम ईंधन और आसपास कम धुआँ।',
+    ['हफ़्ते के काम एक ही रास्ते पर रखें।', 'हवा ठीक हो तो छोटे कामों के लिए पैदल जाएँ।'],
+  ),
+  run_purifier: (rec) => ({
+    title: num(rec, 'purifiersOwned') > 0 ? 'प्यूरीफ़ायर तेज़ चलाएँ' : 'एयर प्यूरीफ़ायर लगाएँ',
+    why: `आपके ${num(rec, 'roomAreaM2')} m² के कमरे में प्यूरीफ़ायर से PM2.5 लगभग ${impact(rec, 'indoorBeforeUgM3')} से ${impact(rec, 'indoorAfterUgM3')} µg/m³ हो जाता है (${pct(rec)}% कम)।`,
+    steps: [
+      'इसे उस कमरे में रखें जहाँ परिवार सोता है, दरवाज़ा बंद रखें।',
+      'रात भर और सबसे ज़्यादा धुंध के समय तेज़ चलाएँ।',
+      'फ़िल्टर समय पर बदलें।',
+    ],
+  }),
+  seal_gaps: indoor('दरवाज़ों-खिड़कियों की दरारें बंद करें', 'कम रिसाव से धुंध बाहर रहती है।', [
+    'दरवाज़े की दरार पर वेदर-स्ट्रिप या लपेटा तौलिया लगाएँ।',
+    'बेकार वेंट और खुले हिस्से बंद करें।',
+  ]),
+  keep_windows_shut: indoor('धुंध के समय खिड़कियाँ बंद रखें', 'खुली खिड़कियों से बाहर की धुंध सीधे अंदर आती है।', [
+    'सुबह और शाम के सबसे खराब समय में बंद रखें।',
+    'सिर्फ़ सबसे साफ़ समय पर थोड़ी देर हवा आने दें।',
+  ]),
+  stop_incense: indoor('अगरबत्ती, धूप और मच्छर कॉइल कुछ दिन बंद करें', 'जलते समय ये बहुत बारीक धुआँ छोड़ते हैं।', [
+    'कॉइल की जगह इलेक्ट्रिक रिपेलेंट या मच्छरदानी लगाएँ।',
+    'अगरबत्ती जलाएँ तो थोड़ी देर ही।',
+  ]),
+  no_indoor_smoking: indoor('धूम्रपान घर से बाहर करें', 'तंबाकू का धुआँ घर में PM2.5 का बड़ा स्रोत है।', [
+    'दरवाज़े-खिड़कियों से दूर, बाहर धूम्रपान करें।',
+    'मेहमानों से भी यही कहें।',
+    'छोड़ने में मदद के लिए डॉक्टर से बात करें।',
+  ]),
+  cooking_ventilation: (rec) => ({
+    title: 'खाना बनाते समय धुआँ बाहर निकालें',
+    why:
+      text(rec, 'hasExhaust') === 'yes'
+        ? `${lookup(FUEL, text(rec, 'cookingFuel'), 'इस ईंधन')} पर खाना बनाने से घर में बारीक धुआँ भर जाता है।`
+        : 'एग्ज़ॉस्ट फ़ैन या चिमनी के बिना तड़के और तलने का धुआँ घर में ही रहता है।',
+    steps: [
+      'खाना बनाते समय और बाद में कुछ देर एग्ज़ॉस्ट या चिमनी चलाएँ।',
+      'ढक्कन लगाएँ और आँच धीमी रखें।',
+      'तलते समय बच्चों और बुज़ुर्गों को रसोई से दूर रखें।',
+    ],
+  }),
+  wet_mopping: qualitative(
+    'झाड़ू की जगह गीला पोछा लगाएँ',
+    'सूखी झाड़ू से जमी धूल और कालिख फिर हवा में उड़ती है।',
+    ['फ़र्श पर पोछा और सतहों पर गीला कपड़ा लगाएँ।', 'धुंध के मौसम में रोज़ करें।'],
+  ),
+  switch_to_metro: swap('काम पर मेट्रो से जाएँ', [
+    'स्टेशन तक आने-जाने का रास्ता देख लें।',
+    'हफ़्ते में दो दिन से शुरुआत करें।',
+  ]),
+  switch_to_bus: swap('काम पर बस से जाएँ', [
+    'सीधा रूट चुनें ताकि सफ़र छोटा रहे।',
+    'धुंध वाले दिन बस स्टॉप पर N95 पहनें।',
+  ]),
+  switch_to_cycle: swap('काम पर साइकिल से जाएँ', [
+    'भारी ट्रैफ़िक से दूर शांत रास्ते चुनें।',
+    'हो सके तो साफ़ समय पर चलाएँ।',
+  ]),
+  switch_to_walk: swap('काम पर पैदल जाएँ', ['मुख्य सड़क की जगह गलियों से जाएँ।', 'धुंध वाले दिन N95 पहनें।']),
+  carpool: swap('पड़ोसियों या सहकर्मियों के साथ कारपूल करें', [
+    'सोसाइटी या ऑफ़िस ग्रुप में पूछें कि कौन आपके रास्ते जाता है।',
+    'पिकअप का एक तय समय रखें।',
+  ]),
+  work_from_home: swap('हफ़्ते में एक दिन घर से काम करें', [
+    'सबसे खराब पूर्वानुमान वाला दिन चुनें।',
+    'धुंध के मौसम के लिए ऑफ़िस से बात करें।',
+  ]),
+  clean_cooking_fuel: (rec) => ({
+    title: 'LPG, PNG या इंडक्शन अपनाएँ',
+    why: `${lookup(FUEL, text(rec, 'cookingFuel'), 'इस ईंधन')} पर खाना बनाना घरेलू वायु प्रदूषण का बड़ा कारण है; साफ़ ईंधन से ज़्यादातर धुआँ खत्म होता है।`,
+    steps: [
+      'अपने इलाके की LPG कनेक्शन योजनाओं के बारे में पूछें।',
+      'जल्दी गर्म करने और उबालने के लिए इंडक्शन इस्तेमाल करें।',
+    ],
+  }),
+  n95_outdoors: (rec) => ({
+    title: 'बाहर ठीक से फ़िट N95 पहनें',
+    why: `${lookup(MASK, text(rec, 'currentMask'), 'आपके मास्क')} के साथ लगभग ${num(rec, 'inhaledShareNowPct')}% बारीक कण अंदर जाते हैं; ठीक से फ़िट N95 से लगभग ${num(rec, 'inhaledShareN95Pct')}%, यानी ${pct(rec)}% कम।`,
+    steps: [
+      'चेहरे पर अच्छी तरह फ़िट होने वाला प्रमाणित N95 या FFP2 चुनें।',
+      'बच्चों के लिए बच्चों के साइज़ का मास्क लें।',
+      'गीला होने या साँस लेने में मुश्किल होने पर बदल दें।',
+    ],
+  }),
+  sensitive_members: (rec) => ({
+    title: 'संवेदनशील सदस्यों का खास ध्यान रखें',
+    why: `आज की हवा बच्चों, बुज़ुर्गों, गर्भवती महिलाओं और अस्थमा, COPD या दिल की बीमारी वालों के लिए खास तौर पर खतरनाक है: ${lookup(SENSITIVE_ADVICE, text(rec, 'outdoorAdvice'), SENSITIVE_ADVICE.ok)}।`,
+    steps: [
+      'इनहेलर और दवाइयाँ पास रखें।',
+      'साँस फूलना, सीने में जकड़न या घरघराहट दिखे तो डॉक्टर से मिलें।',
+      'उन्हें प्यूरीफ़ायर वाला सबसे साफ़ कमरा दें।',
+    ],
+  }),
+  ncr_grap_check: qualitative(
+    'आज की GRAP पाबंदियाँ देखें',
+    'हवा बहुत खराब होने पर दिल्ली-NCR में चरणबद्ध आपात नियम (GRAP) लागू होते हैं; इनसे गाड़ियों, निर्माण और स्कूलों पर असर पड़ सकता है।',
+    ['CAQM की वेबसाइट पर मौजूदा चरण देखें।', 'गाड़ियों की पाबंदी देखकर सफ़र की योजना बनाएँ।'],
+  ),
+  check_on_neighbours: qualitative(
+    'बुज़ुर्ग और बीमार पड़ोसियों का हाल पूछें',
+    'इतनी खराब हवा में अकेले रहने वाले लोग शायद खुद को बचाना न जानें।',
+    ['हो सके तो मास्क या प्यूरीफ़ायर वाली जगह साझा करें।', 'तबीयत बिगड़े तो डॉक्टर तक पहुँचने में मदद करें।'],
+  ),
+  report_open_burning: qualitative(
+    'खुले में जलाने की शिकायत करें',
+    'पत्ते, कूड़ा या पराली जलाने से धुआँ वहीं फैलता है जहाँ लोग रहते हैं।',
+    ['शहर की प्रदूषण या नगर निगम हेल्पलाइन पर शिकायत करें।', 'सोसाइटी से बगीचे का कचरा न जलाने को कहें।'],
+  ),
+  share_notice: qualitative(
+    'आज की सलाह साझा करें',
+    'एक छोटी सूचना से सोसाइटी, स्कूल या ऑफ़िस मिलकर कदम उठा सकते हैं।',
+    ['अपनी भाषा में सामुदायिक सूचना बनाएँ।', 'इसे सोसाइटी या स्कूल ग्रुप में भेजें।'],
+  ),
+};
+
+function summary(plan: Plan): string {
+  const { index, inversion, cleanestHour } = plan;
+  const reading = `${pack.scales[index.scale]} ${index.value}: ${pack.categories[index.category]}।`;
+  if (inversion.trappedNow && inversion.clearsAtHour !== null) {
+    return `${reading} लगभग ${clock(inversion.clearsAtHour)} तक प्रदूषण ज़मीन के पास फँसा रहेगा।`;
+  }
+  return cleanestHour === null
+    ? reading
+    : `${reading} सबसे साफ़ समय लगभग ${clock(cleanestHour.hour)} है (${cleanestHour.pm25} µg/m³)।`;
+}
+
+/** Hindi text for everything the app says without AI. */
+export const pack: LanguagePack = {
+  recommendations,
+  categories: {
+    good: 'अच्छा',
+    satisfactory: 'संतोषजनक',
+    moderate: 'मध्यम',
+    poor: 'खराब',
+    very_poor: 'बहुत खराब',
+    severe: 'गंभीर',
+    unhealthy_sensitive: 'संवेदनशील लोगों के लिए अस्वस्थ',
+    unhealthy: 'अस्वस्थ',
+    very_unhealthy: 'बहुत अस्वस्थ',
+    hazardous: 'खतरनाक',
+  },
+  scales: { naqi: 'भारत AQI', us_aqi: 'US AQI' },
+  headlines: {
+    normal: 'आज हवा ठीक है',
+    caution: 'हवा मध्यम है: संवेदनशील सदस्य सावधानी रखें',
+    restrict: 'आज हवा अस्वस्थ है: बाहर कम समय बिताएँ',
+    emergency: 'धुंध आपातकाल: घर में रहें और संवेदनशील सदस्यों को बचाएँ',
+  },
+  summary,
+  chatFallback: (plan, topTitles) =>
+    `AI सहायक अभी उपलब्ध नहीं है, इसलिए आज की मानक सलाह यह है। ${summary(plan)} सबसे ज़रूरी: ${topTitles.join('; ')}।`,
+  communityNotice: (plan, audience) =>
+    `${AUDIENCE[audience]}, ${summary(plan)} ${pack.headlines[plan.severity]}। कृपया सबसे ज़्यादा धुंध के समय बच्चों और बुज़ुर्गों को घर में रखें, बाहर N95 मास्क पहनें और कुछ भी न जलाएँ। — SmogSense से साझा`,
+};

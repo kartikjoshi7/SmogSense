@@ -1,10 +1,6 @@
-import { createApp } from '../src/server/app.js';
-import { env } from '../src/server/config.js';
-import { createGeminiClient } from '../src/server/gemini.js';
+import { createServerApp } from '../src/server/main.js';
 
-const app = createApp({
-  gemini: createGeminiClient(env.GEMINI_API_KEY),
-});
+const app = createServerApp();
 
 /**
  * Vercel Node.js function entry. `vercel.json` rewrites every `/api/*` request here,

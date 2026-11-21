@@ -33,6 +33,7 @@ export default defineConfig({
         'src/ui/main.tsx',
         '**/*.d.ts',
         'src/ui/test/**',
+        'src/server/test/**',
         'src/**/fixtures/**',
         '**/*.css',
       ],

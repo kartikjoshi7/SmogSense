@@ -1,0 +1,65 @@
+import { describe, expect, it, vi } from 'vitest';
+import { FIXTURE_NOW, jsonResponse, openMeteoFetch } from '../test/fake-fetch.js';
+import { createAirService, roundLocation } from './air-service.js';
+
+function service(fetch: typeof globalThis.fetch) {
+  let now = FIXTURE_NOW;
+  return {
+    air: createAirService({ fetch, now: () => now }),
+    advanceMinutes: (minutes: number) => {
+      now = new Date(now.getTime() + minutes * 60_000);
+    },
+  };
+}
+
+describe('roundLocation', () => {
+  it('rounds to 0.1° so precise GPS positions are never sent upstream', () => {
+    expect(roundLocation({ lat: 28.61394, lon: 77.20902 })).toEqual({ lat: 28.6, lon: 77.2 });
+  });
+});
+
+describe('createAirService', () => {
+  it('serves repeat requests for the same area and hour from the cache', async () => {
+    const fetch = openMeteoFetch();
+    const { air } = service(fetch);
+
+    await air.getAir({ lat: 28.61, lon: 77.21 });
+    const second = await air.getAir({ lat: 28.62, lon: 77.19 });
+
+    expect(second).toMatchObject({ ok: true, value: { lat: 28.6, lon: 77.2 } });
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('fetches again once the cached data has expired', async () => {
+    const fetch = openMeteoFetch();
+    const { air, advanceMinutes } = service(fetch);
+
+    await air.getAir({ lat: 28.6, lon: 77.2 });
+    advanceMinutes(16);
+    await air.getAir({ lat: 28.6, lon: 77.2 });
+
+    expect(fetch).toHaveBeenCalledTimes(4);
+  });
+
+  it('does not cache failures', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const down = vi.fn<typeof fetch>(() => Promise.resolve(jsonResponse({}, 404)));
+    const { air } = service(down);
+
+    await air.getAir({ lat: 28.6, lon: 77.2 });
+    await air.getAir({ lat: 28.6, lon: 77.2 });
+
+    expect(down).toHaveBeenCalledTimes(4);
+  });
+
+  it('caches place searches regardless of letter case', async () => {
+    const fetch = openMeteoFetch();
+    const { air } = service(fetch);
+
+    await air.searchPlaces('Gurugram');
+    const again = await air.searchPlaces('GURUGRAM');
+
+    expect(again.ok && again.value[0]?.name).toBe('Gurugram');
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+});
