@@ -1,13 +1,9 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { App } from './app.js';
 import { checkA11y } from './test/axe.js';
 import { fakeApi, memoryStore } from './test/fake-api.js';
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
 
 async function startWithExampleFamily() {
   const user = userEvent.setup();
@@ -20,11 +16,12 @@ async function startWithExampleFamily() {
 }
 
 describe('first visit', () => {
-  it('starts on an accessible setup form with focus on its heading', async () => {
+  it('starts on an accessible setup form, leaving focus at the top of the page', async () => {
     fakeApi();
     const { container } = render(<App store={memoryStore()} />);
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Set up your household' })).toHaveFocus();
+    expect(screen.getByRole('heading', { level: 1, name: 'Set up your household' })).toBeVisible();
+    expect(document.body).toHaveFocus();
     expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute(
       'href',
       '#main',
@@ -106,7 +103,9 @@ describe('the plan', () => {
   });
 
   it('reports a failed plan and retries', async () => {
-    fakeApi({ planFailure: { status: 502, error: 'Air-quality data is unavailable right now.' } });
+    fakeApi({
+      failures: { plan: { status: 502, error: 'Air-quality data is unavailable right now.' } },
+    });
     const { user } = await startWithExampleFamily();
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -130,18 +129,17 @@ describe('language and editing', () => {
     expect(document.documentElement.lang).toBe('hi');
   });
 
-  it('reopens the household form and can cancel back to the plan', async () => {
+  it('reopens the household form and can cancel back, moving focus to each new heading', async () => {
     fakeApi();
     const { user } = await startWithExampleFamily();
+    expect(screen.getByRole('heading', { level: 1, name: 'Today in New Delhi' })).toHaveFocus();
     await user.click(screen.getByRole('button', { name: 'Edit household' }));
 
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Set up your household' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Set up your household' })).toHaveFocus();
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Today in New Delhi' }),
-    ).toBeInTheDocument();
+    ).toHaveFocus();
   });
 });
 

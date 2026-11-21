@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Dashboard } from './components/dashboard/dashboard.js';
 import { SelectField } from './components/common/fields.js';
 import { SetupForm } from './components/setup/setup-form.js';
@@ -63,9 +64,28 @@ function Footer() {
   );
 }
 
+/**
+ * The setup form or the plan. When one replaces the other, focus moves to the new screen's
+ * `h1`; on first load focus stays at the top, so Tab reaches the skip link first.
+ */
 function Screen() {
   const setup = activeSetup(useAppState());
-  return setup === null ? <SetupForm /> : <Dashboard {...setup} />;
+  const screen = setup === null ? 'setup' : 'plan';
+  const heading = useRef<HTMLHeadingElement>(null);
+  const shown = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (shown.current !== null && shown.current !== screen) {
+      heading.current?.focus();
+    }
+    shown.current = screen;
+  }, [screen]);
+
+  return setup === null ? (
+    <SetupForm headingRef={heading} />
+  ) : (
+    <Dashboard {...setup} headingRef={heading} />
+  );
 }
 
 /** The SmogSense app: skip link, header, the setup or plan screen, and footer. */

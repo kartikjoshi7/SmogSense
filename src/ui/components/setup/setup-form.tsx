@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type SyntheticEvent } from 'react';
+import { useState, type RefObject, type SyntheticEvent } from 'react';
 import { profileSchema, type Member, type Profile } from '../../../shared/profile.js';
 import { memberName } from '../../members.js';
 import { useAppDispatch, useAppState, useMessages } from '../../state/app-context.js';
@@ -146,11 +146,14 @@ function SetupActions({ showError }: { readonly showError: boolean }) {
 }
 
 /** The household form: location, members and lifestyle, validated before the plan is built. */
-export function SetupForm() {
+export function SetupForm({
+  headingRef,
+}: {
+  readonly headingRef: RefObject<HTMLHeadingElement | null>;
+}) {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const t = useMessages().setup;
-  const heading = useRef<HTMLHeadingElement>(null);
   const [submitted, setSubmitted] = useState(false);
   const form = useSetupDraft({
     profile: state.household?.profile ?? EMPTY_PROFILE,
@@ -159,10 +162,6 @@ export function SetupForm() {
   });
   const { draft } = form;
   const invalid = submitted ? invalidPaths(draft.profile) : new Set<string>();
-
-  useEffect(() => {
-    heading.current?.focus();
-  }, []);
 
   const submit = (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -176,7 +175,7 @@ export function SetupForm() {
 
   return (
     <form className="grid gap-4" noValidate onSubmit={submit}>
-      <h1 ref={heading} tabIndex={-1} className="text-2xl font-bold">
+      <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold">
         {t.title}
       </h1>
       <p className="muted">{t.intro}</p>

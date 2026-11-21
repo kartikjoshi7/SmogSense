@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useState, type RefObject } from 'react';
 import { planHeadline, planSummary } from '../../../core/explain/index.js';
 import type { ExplainResponse, PlanRequest } from '../../../shared/api.js';
 import type { Plan } from '../../../shared/plan.js';
@@ -79,13 +79,14 @@ function PlanView({
 export function Dashboard({
   household,
   location,
+  headingRef,
 }: {
   readonly household: Household;
   readonly location: SavedLocation;
+  readonly headingRef: RefObject<HTMLHeadingElement | null>;
 }) {
   const t = useMessages();
   const { lang } = useAppState();
-  const heading = useRef<HTMLHeadingElement>(null);
   const [dialog, setDialog] = useState<OpenDialog>(null);
   const { state, retry } = usePlan(household.profile, location, lang);
   const request: PlanRequest = {
@@ -96,13 +97,9 @@ export function Dashboard({
     setDialog(null);
   };
 
-  useEffect(() => {
-    heading.current?.focus();
-  }, []);
-
   return (
     <div className="grid gap-4" aria-busy={state.status === 'loading'}>
-      <h1 ref={heading} tabIndex={-1} className="text-2xl font-bold">
+      <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold">
         {t.dashboard.title(location.label)}
       </h1>
       <p role="status" className="muted">

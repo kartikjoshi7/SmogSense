@@ -34,7 +34,7 @@ export function ReadAloudButton({ text }: { readonly text: string }) {
     setSpeaking(true);
   };
   return (
-    <button type="button" className="btn-secondary" aria-pressed={speaking} onClick={toggle}>
+    <button type="button" className="btn-secondary" onClick={toggle}>
       {speaking ? t.readAloud.stop : t.readAloud.start}
     </button>
   );

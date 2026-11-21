@@ -16,7 +16,7 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.app.json', './tsconfig.server.json'],
+        project: ['./tsconfig.app.json', './tsconfig.server.json', './tsconfig.e2e.json'],
         projectService: false,
         warnOnUnsupportedTypeScriptVersion: false,
       },
@@ -145,7 +145,7 @@ export default tseslint.config(
   },
 
   {
-    files: ['**/*.test.ts', '**/*.test.tsx'],
+    files: ['**/*.test.ts', '**/*.test.tsx', 'e2e/**/*.ts'],
     rules: {
       'max-lines-per-function': 'off',
     },

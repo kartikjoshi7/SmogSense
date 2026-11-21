@@ -1,7 +1,9 @@
+import { readFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv, type Plugin, type ViteDevServer } from 'vite';
+import { z } from 'zod';
 
 type ServerModule = typeof import('./src/server/main.js');
 type ServerApp = ReturnType<ServerModule['createServerApp']>;
@@ -33,7 +35,29 @@ function devApi(env: Record<string, string>): Plugin {
   };
 }
 
+const vercelHeadersSchema = z.object({
+  headers: z.array(
+    z.object({
+      source: z.string(),
+      headers: z.array(z.object({ key: z.string(), value: z.string() })),
+    }),
+  ),
+});
+
+/**
+ * The headers `vercel.json` sends with every page (CSP, HSTS and the rest), so `vite preview`
+ * and the end-to-end tests run the production build under the production policy.
+ */
+function pageHeaders(): Record<string, string> {
+  const vercel = vercelHeadersSchema.parse(
+    JSON.parse(readFileSync(new URL('vercel.json', import.meta.url), 'utf8')),
+  );
+  const everyPage = vercel.headers.find((rule) => rule.source === '/(.*)');
+  return Object.fromEntries((everyPage?.headers ?? []).map(({ key, value }) => [key, value]));
+}
+
 export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss(), devApi(loadEnv(mode, process.cwd(), ''))],
   build: { outDir: 'dist' },
+  preview: { headers: pageHeaders() },
 }));

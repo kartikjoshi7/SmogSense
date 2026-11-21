@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { api } from './client.js';
 
 function respond(body: unknown, status = 200) {
@@ -7,10 +7,6 @@ function respond(body: unknown, status = 200) {
     vi.fn(() => Promise.resolve(new Response(JSON.stringify(body), { status }))),
   );
 }
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
 
 describe('api client', () => {
   it('returns validated data', async () => {

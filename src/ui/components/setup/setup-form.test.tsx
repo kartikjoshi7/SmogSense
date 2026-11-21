@@ -1,14 +1,10 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { App } from '../../app.js';
 import { checkA11y } from '../../test/axe.js';
 import { fakeApi, memoryStore } from '../../test/fake-api.js';
 import { nextMemberId } from './defaults.js';
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
 
 function setup() {
   fakeApi();

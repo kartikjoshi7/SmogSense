@@ -1,0 +1,47 @@
+import { screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import type { Inversion } from '../../../shared/plan.js';
+import { renderInApp } from '../../test/render.js';
+import { InversionCard } from './inversion-card.js';
+
+const TRAPPED: Inversion = {
+  trappedNow: true,
+  clearsAtHour: 11,
+  minBlhM: 15,
+  maxBlhM: 640,
+  basis: 'boundary_layer',
+};
+
+describe('InversionCard', () => {
+  it('says when a trapping inversion should clear', () => {
+    renderInApp(<InversionCard inversion={TRAPPED} />);
+
+    expect(
+      screen.getByRole('region', { name: 'Why the air is worse in the morning' }),
+    ).toHaveTextContent('Daytime mixing should clear it around 11:00.');
+    expect(screen.queryByText(/Based on wind speed only/)).not.toBeInTheDocument();
+  });
+
+  it('warns when the inversion may last all day', () => {
+    renderInApp(<InversionCard inversion={{ ...TRAPPED, clearsAtHour: null }} />);
+
+    expect(screen.getByText(/it may not clear today/)).toBeInTheDocument();
+  });
+
+  it('says the air is mixing, and admits when only wind data was available', () => {
+    renderInApp(
+      <InversionCard
+        inversion={{
+          ...TRAPPED,
+          trappedNow: false,
+          minBlhM: null,
+          maxBlhM: null,
+          basis: 'wind_only',
+        }}
+      />,
+    );
+
+    expect(screen.getByText(/Air is mixing normally/)).toBeInTheDocument();
+    expect(screen.getByText(/Based on wind speed only/)).toBeInTheDocument();
+  });
+});

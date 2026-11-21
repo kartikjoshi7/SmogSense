@@ -92,7 +92,6 @@ export function ForecastChart({ plan }: { readonly plan: Plan }) {
         <button
           type="button"
           className="btn-secondary"
-          aria-pressed={asTable}
           onClick={() => {
             setAsTable((v) => !v);
           }}
