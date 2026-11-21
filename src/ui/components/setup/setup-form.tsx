@@ -145,6 +145,37 @@ function SetupActions({ showError }: { readonly showError: boolean }) {
   );
 }
 
+/** The top of the setup screen: what SmogSense does, and the one-click example family. */
+function SetupHero({
+  headingRef,
+  onDemo,
+}: {
+  readonly headingRef: RefObject<HTMLHeadingElement | null>;
+  readonly onDemo: () => void;
+}) {
+  const t = useMessages().setup;
+  return (
+    <div className="hero grid gap-4">
+      <p className="eyebrow">{t.eyebrow}</p>
+      <h1 ref={headingRef} tabIndex={-1} className="text-3xl font-bold sm:text-4xl">
+        {t.title}
+      </h1>
+      <p className="muted text-lg">{t.intro}</p>
+      <ul className="flex flex-wrap gap-2">
+        {t.features.map((feature) => (
+          <li key={feature} className="feature">
+            <span aria-hidden="true">✓</span>
+            {feature}
+          </li>
+        ))}
+      </ul>
+      <button type="button" className="btn-primary justify-self-start" onClick={onDemo}>
+        {t.demo}
+      </button>
+    </div>
+  );
+}
+
 /** The household form: location, members and lifestyle, validated before the plan is built. */
 export function SetupForm({
   headingRef,
@@ -153,7 +184,6 @@ export function SetupForm({
 }) {
   const state = useAppState();
   const dispatch = useAppDispatch();
-  const t = useMessages().setup;
   const [submitted, setSubmitted] = useState(false);
   const form = useSetupDraft({
     profile: state.household?.profile ?? EMPTY_PROFILE,
@@ -174,20 +204,13 @@ export function SetupForm({
   };
 
   return (
-    <form className="grid gap-4" noValidate onSubmit={submit}>
-      <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold">
-        {t.title}
-      </h1>
-      <p className="muted">{t.intro}</p>
-      <button
-        type="button"
-        className="btn-secondary justify-self-start"
-        onClick={() => {
+    <form className="mx-auto grid w-full max-w-3xl gap-5" noValidate onSubmit={submit}>
+      <SetupHero
+        headingRef={headingRef}
+        onDemo={() => {
           form.setDraft({ ...DEMO_HOUSEHOLD, location: DEMO_LOCATION });
         }}
-      >
-        {t.demo}
-      </button>
+      />
       <LocationPicker
         value={draft.location}
         invalid={submitted}

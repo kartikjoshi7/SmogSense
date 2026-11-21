@@ -20,10 +20,10 @@ export function Timeline({
       <h2 id="timeline-heading" className="text-xl font-semibold">
         {t.timeline}
       </h2>
-      <ol className="mt-2 grid gap-1">
+      <ol className="mt-3 grid gap-2">
         {entries.map((entry) => (
           <li key={`${entry.hour}-${entry.recommendationId}`} className="flex gap-3">
-            <span className="w-14 font-mono font-semibold">{clock(entry.hour)}</span>
+            <span className="time-chip">{clock(entry.hour)}</span>
             <span>{items.find((i) => i.rec.id === entry.recommendationId)?.title}</span>
           </li>
         ))}

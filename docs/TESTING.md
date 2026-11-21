@@ -81,10 +81,10 @@ and 90% for the whole project. `npm run coverage`, and with it `npm run check` a
 below them. From the last run:
 
 ```
-Statements   : 99.14% ( 1515/1528 )
-Branches     : 96.63% ( 719/744 )
-Functions    : 98.78% ( 570/577 )
-Lines        : 99.31% ( 1442/1452 )
+Statements   : 99.15% ( 1518/1531 )
+Branches     : 96.64% ( 720/745 )
+Functions    : 98.79% ( 573/580 )
+Lines        : 99.31% ( 1445/1455 )
 ```
 
 `src/core` is at 100% on all four. Test helpers, fixtures and `src/ui/main.tsx` (the file that

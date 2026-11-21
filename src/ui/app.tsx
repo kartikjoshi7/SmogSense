@@ -12,32 +12,46 @@ function Header() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   return (
-    <header className="mx-auto flex max-w-3xl flex-wrap items-end justify-between gap-3 p-4">
-      <div>
-        <p className="text-xl font-bold">{t.app.name}</p>
-        <p className="muted text-sm">{t.app.tagline}</p>
-      </div>
-      <div className="flex flex-wrap items-end gap-3">
-        <SelectField
-          label={t.app.language}
-          value={state.lang}
-          options={UI_LANGUAGE_NAMES}
-          keysAreLanguages
-          onChange={(lang) => {
-            dispatch({ type: 'set_language', lang });
-          }}
-        />
-        {activeSetup(state) === null ? null : (
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() => {
-              dispatch({ type: 'edit_setup' });
+    <header className="app-header">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <span className="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor">
+              <path
+                d="M3 8h10a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </span>
+          <div>
+            <p className="text-lg leading-tight font-bold">{t.app.name}</p>
+            <p className="muted text-sm leading-tight">{t.app.tagline}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <SelectField
+            label={t.app.language}
+            hideLabel
+            value={state.lang}
+            options={UI_LANGUAGE_NAMES}
+            keysAreLanguages
+            onChange={(lang) => {
+              dispatch({ type: 'set_language', lang });
             }}
-          >
-            {t.app.editHousehold}
-          </button>
-        )}
+          />
+          {activeSetup(state) === null ? null : (
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => {
+                dispatch({ type: 'edit_setup' });
+              }}
+            >
+              {t.app.editHousehold}
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );
@@ -47,7 +61,7 @@ function Footer() {
   const t = useMessages().app;
   const { saved } = useAppState();
   return (
-    <footer className="muted mx-auto max-w-3xl p-4 text-sm">
+    <footer className="muted mx-auto max-w-5xl px-4 py-8 text-sm">
       <p>
         {t.dataCredit}{' '}
         <a
@@ -98,7 +112,7 @@ export function App({ store }: { readonly store: KeyValueStore | null }) {
     <AppProvider store={store}>
       <SkipLink />
       <Header />
-      <main id="main" className="mx-auto max-w-3xl p-4">
+      <main id="main" className="mx-auto max-w-5xl px-4 py-6">
         <Screen />
       </main>
       <Footer />

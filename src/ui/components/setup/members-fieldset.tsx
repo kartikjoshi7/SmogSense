@@ -2,7 +2,7 @@ import { useId } from 'react';
 import { MEMBER_NAME_CHARS, PROFILE_LIMITS } from '../../../shared/limits.js';
 import type { Member } from '../../../shared/profile.js';
 import { useMessages } from '../../state/app-context.js';
-import { CheckboxGroup, SelectField } from '../common/fields.js';
+import { CheckboxGroup, SelectField, StepLegend } from '../common/fields.js';
 
 interface MemberRowProps {
   readonly member: Member;
@@ -73,7 +73,7 @@ export function MembersFieldset({
   const t = useMessages().setup.household;
   return (
     <fieldset className="card grid gap-3">
-      <legend className="text-lg font-semibold">{t.legend}</legend>
+      <StepLegend step={2}>{t.legend}</StepLegend>
       <p className="muted text-sm">{t.privacy}</p>
       <ul className="grid gap-3">
         {members.map((member, index) => (

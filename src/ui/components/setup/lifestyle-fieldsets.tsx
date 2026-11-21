@@ -7,6 +7,7 @@ import {
   HourField,
   NumberField,
   SelectField,
+  StepLegend,
 } from '../common/fields.js';
 
 /** Field paths with a validation problem (e.g. "commute.oneWayKm"). */
@@ -65,7 +66,7 @@ export function CommuteFieldset(props: Section<Commute>) {
   const { value, onChange } = props;
   return (
     <fieldset className="card grid gap-3 sm:grid-cols-2">
-      <legend className="text-lg font-semibold">{t.setup.commute.legend}</legend>
+      <StepLegend step={3}>{t.setup.commute.legend}</StepLegend>
       <CommuteTrip {...props} />
       <HourField
         label={t.setup.commute.depart}
@@ -103,7 +104,7 @@ export function ExerciseFieldset({
   const error = useRangeError(section.invalid);
   return (
     <fieldset className="card grid gap-3 sm:grid-cols-2">
-      <legend className="text-lg font-semibold">{t.setup.exercise.legend}</legend>
+      <StepLegend step={4}>{t.setup.exercise.legend}</StepLegend>
       <SelectField
         label={t.setup.exercise.activity}
         value={value.activity}
@@ -241,7 +242,7 @@ export function HomeFieldset({
   const t = useMessages();
   return (
     <fieldset className="card grid gap-3 sm:grid-cols-2">
-      <legend className="text-lg font-semibold">{t.setup.home.legend}</legend>
+      <StepLegend step={5}>{t.setup.home.legend}</StepLegend>
       <RoomFields {...section} />
       <HabitFields {...section} />
       <SelectField

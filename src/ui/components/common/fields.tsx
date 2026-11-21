@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 import { clock } from '../../../core/explain/format.js';
 import { CLOCK_HOURS, type Range } from '../../../shared/limits.js';
 import type { Labels } from '../../i18n/en.js';
@@ -18,19 +18,24 @@ export function SelectField<K extends string>({
   value,
   options,
   keysAreLanguages = false,
+  hideLabel = false,
   onChange,
 }: {
   readonly label: string;
   readonly value: K;
   readonly options: Labels<K>;
   readonly keysAreLanguages?: boolean;
+  /** Keep the label for screen readers only, where the options name themselves (a language). */
+  readonly hideLabel?: boolean;
   readonly onChange: (value: K) => void;
 }) {
   const id = useId();
   const pairs = entries(options);
   return (
     <div className="field">
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id} className={hideLabel ? 'sr-only' : undefined}>
+        {label}
+      </label>
       <select
         id={id}
         value={value}
@@ -175,5 +180,23 @@ export function CheckboxGroup<K extends string>({
         ))}
       </div>
     </fieldset>
+  );
+}
+
+/** A setup step's title with its number; the number is decorative, the title names the group. */
+export function StepLegend({
+  step,
+  children,
+}: {
+  readonly step: number;
+  readonly children: ReactNode;
+}) {
+  return (
+    <legend className="text-lg font-semibold">
+      <span aria-hidden="true" className="step-badge">
+        {step}
+      </span>
+      {children}
+    </legend>
   );
 }

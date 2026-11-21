@@ -78,8 +78,10 @@ function PlanView({
         </button>
       </div>
       <ForecastChart plan={plan} />
-      <InversionCard inversion={plan.inversion} />
-      <Timeline entries={plan.timeline} items={items} />
+      <div className="grid gap-4 md:grid-cols-2">
+        <InversionCard inversion={plan.inversion} />
+        <Timeline entries={plan.timeline} items={items} />
+      </div>
       <PlanSection items={items} household={household} />
       {exercise.activity === 'none' ? null : (
         <WhatIf plan={plan} exercise={exercise} members={members} />

@@ -7,6 +7,7 @@ import {
   type SearchStatus,
 } from '../../hooks/use-location-search.js';
 import { useMessages } from '../../state/app-context.js';
+import { StepLegend } from '../common/fields.js';
 import type { SavedLocation } from '../../state/storage.js';
 
 function placeLabel(place: Place): string {
@@ -86,7 +87,7 @@ export function LocationPicker({
 
   return (
     <fieldset className="card grid gap-3">
-      <legend className="text-lg font-semibold">{t.legend}</legend>
+      <StepLegend step={1}>{t.legend}</StepLegend>
       <button type="button" className="btn-secondary justify-self-start" onClick={locate}>
         {t.useMine}
       </button>

@@ -107,7 +107,7 @@ describe('Dashboard requests', () => {
       answers[1]?.({ plan: mumbai });
       await Promise.resolve();
     });
-    const shown = { selector: '.text-5xl' };
+    const shown = { selector: '.aqi-number' };
     expect(await screen.findByText(String(mumbai.index.value), shown)).toBeInTheDocument();
     await act(async () => {
       answers[0]?.({ plan: delhi });

@@ -27,8 +27,14 @@ export const en = {
       'This browser is not saving your household, so you will need to enter it again after a reload.',
   },
   setup: {
+    eyebrow: 'Smog season planner',
     title: 'Set up your household',
     intro: 'Tell us where you live and how your family spends the day. Names stay on this device.',
+    features: [
+      'Live air-quality forecast',
+      'A plan for every family member',
+      'The impact of every choice, in numbers',
+    ],
     demo: 'Try an example family in Delhi',
     save: 'Show my plan',
     cancel: 'Cancel',

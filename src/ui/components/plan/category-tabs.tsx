@@ -53,7 +53,7 @@ export function CategoryTabs({
             aria-selected={i === active}
             aria-controls={`${baseId}-panel-${item.key}`}
             tabIndex={i === active ? 0 : -1}
-            className={i === active ? 'btn-primary' : 'btn-secondary'}
+            className="tab"
             onClick={() => {
               setActive(i);
             }}

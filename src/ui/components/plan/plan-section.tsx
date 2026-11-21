@@ -25,7 +25,7 @@ export function PlanSection({
         inCategory.length === 0 ? (
           <p className="muted">{t.plan.empty}</p>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid gap-4 md:grid-cols-2">
             {inCategory.map((item) => (
               <RecommendationCard
                 key={item.rec.id}

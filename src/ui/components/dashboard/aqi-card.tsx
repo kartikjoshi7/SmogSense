@@ -21,9 +21,9 @@ function CurrentPollutants({ current }: { readonly current: Pollutants }) {
   return (
     <div className="mt-3">
       <p className="text-sm font-semibold">{t.dashboard.now}</p>
-      <dl className="mt-1 grid grid-cols-3 gap-x-4 gap-y-1 text-sm sm:grid-cols-6">
+      <dl className="mt-2 grid grid-cols-3 gap-2 text-sm sm:grid-cols-6">
         {POLLUTANTS.map(([key, symbol]) => (
-          <div key={key}>
+          <div key={key} className="stat">
             <dt className="font-semibold">{symbol}</dt>
             <dd>{current[key] ?? t.forecast.missing}</dd>
           </div>
@@ -53,10 +53,10 @@ export function AqiCard({
   return (
     <section aria-labelledby="aqi-heading" className={`card band-${index.band}`}>
       <p className="text-sm font-semibold">{t.dashboard.severity[severity]}</p>
-      <p className="mt-1 flex items-baseline gap-3">
-        <span aria-hidden="true" className="band-icon text-3xl" />
-        <span className="text-5xl font-bold">{index.value}</span>
-        <span className="text-lg font-semibold">{categoryLabel(index.category, lang)}</span>
+      <p className="mt-2 flex flex-wrap items-center gap-3">
+        <span aria-hidden="true" className="band-icon" />
+        <span className="aqi-number">{index.value}</span>
+        <span className="text-2xl font-bold">{categoryLabel(index.category, lang)}</span>
       </p>
       <h2
         id="aqi-heading"
