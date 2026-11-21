@@ -74,7 +74,10 @@ export const SETTINGS = {
   aiPromptTopN: 8,
   aiMaxOutputTokens: { explain: 900, chat: 400, notice: 400 },
   /** Longest text the model may return for each part of a reply, in characters. */
-  aiReplyChars: { headline: 160, summary: 600, why: 600, step: 200, notice: 1200 },
+  aiReplyChars: { headline: 120, summary: 600, why: 600, step: 200, notice: 1200 },
+  /** Longest chat answer and community notice the prompts ask for. */
+  aiAnswerSentences: 4,
+  aiNoticeWords: 120,
   /** Most steps the model may write for one recommendation. */
   aiMaxSteps: 3,
   aiCacheTtlMs: 30 * MINUTE_MS,

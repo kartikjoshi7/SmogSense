@@ -1,7 +1,8 @@
 /**
  * Domain coefficients for the SmogSense engine — the only place numbers live.
  * Values marked "estimate" are rounded simplifications for planning guidance, not
- * measurements; README › Assumptions lists each one with its source.
+ * measurements; docs/ARCHITECTURE.md › Assumptions behind the numbers lists each one with its
+ * source.
  */
 import type { AqiCategory, AqiScale, Level, Sensitivity } from '../shared/plan.js';
 import type {

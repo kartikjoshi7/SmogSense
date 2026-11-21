@@ -5,7 +5,7 @@ import { useMessages } from '../../state/app-context.js';
 /** Explains the winter inversion: why pollution sits low in the morning and when it should lift. */
 export function InversionCard({ inversion }: { readonly inversion: Inversion }) {
   const t = useMessages().inversion;
-  let text = t.clear;
+  let text = inversion.basis === 'none' ? t.unknown : t.clear;
   if (inversion.trappedNow) {
     text =
       inversion.clearsAtHour === null ? t.trappedAllDay : t.trapped(clock(inversion.clearsAtHour));

@@ -202,6 +202,8 @@ export const en = {
       'A winter inversion is trapping pollution near the ground, and it may not clear today.',
     clear: 'Air is mixing normally right now, so pollution can disperse.',
     windOnly: 'Based on wind speed only; boundary-layer data is unavailable.',
+    unknown:
+      'Weather data is unavailable right now, so we cannot tell whether pollution is trapped.',
   },
   plan: {
     title: 'Your plan',

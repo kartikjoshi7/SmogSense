@@ -43,14 +43,14 @@ function PlaceResults({
 
 type LocationText = ReturnType<typeof useMessages>['setup']['location'];
 
-/** What the live status line says: the chosen place, progress, a problem, or nothing. */
+/**
+ * What the live status line says: progress or a problem first (even when a place is already
+ * chosen, as when editing a household), then the chosen place, then nothing.
+ */
 function statusText(
   t: LocationText,
   state: { value: SavedLocation | null; status: SearchStatus; found: number; invalid: boolean },
 ): string {
-  if (state.value !== null) {
-    return t.chosen(state.value.label);
-  }
   const progress: Partial<Record<SearchStatus, string>> = {
     searching: t.searching,
     locating: t.locating,
@@ -58,7 +58,14 @@ function statusText(
     failed: t.searchFailed,
   };
   const noMatches = state.status === 'done' && state.found === 0 ? t.noResults : undefined;
-  return progress[state.status] ?? noMatches ?? (state.invalid ? t.required : '');
+  const news = progress[state.status] ?? noMatches;
+  if (news !== undefined) {
+    return news;
+  }
+  if (state.value !== null) {
+    return t.chosen(state.value.label);
+  }
+  return state.invalid ? t.required : '';
 }
 
 /** Choose a location by GPS or by searching for a city; the choice is announced politely. */

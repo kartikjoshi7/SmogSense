@@ -29,7 +29,7 @@ modes, window search with missing hours and no daylight, the indoor model, emiss
 and golden scenarios built on a Delhi forecast shaped like real data: the Sharma family on Severe,
 Very Poor and Moderate days, a healthy couple, a homebound senior, a London household on the US
 AQI, and gaps in the data (too few hours, no boundary-layer height). `constants.test.ts` also fails
-if the README's Assumptions table no longer matches `constants.ts`.
+if the assumptions table in `docs/ARCHITECTURE.md` no longer matches `constants.ts`.
 
 **Server.** Routes through `app.request()`: validation errors, oversized and malformed bodies,
 CORS, security headers, CDN cache headers, 404s, a safe 500, upstream 502 and sparse-data 503,

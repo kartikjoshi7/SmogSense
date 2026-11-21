@@ -85,7 +85,8 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ['!./**', '!../**', '!src/shared/**', '!src/shared'],
+              // Anything that is not a relative path is a package.
+              regex: '^[^.]',
               message: 'core may not import from any npm package',
             },
             {

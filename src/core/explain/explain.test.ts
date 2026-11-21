@@ -126,6 +126,16 @@ describe.each(['en', 'hi'] as const)('standard guidance in %s', (lang) => {
     }
   });
 
+  it('asks a community for as much care as the day needs, and no more', () => {
+    const plan = severePlan();
+    const normal = fallbackCommunityNotice({ ...plan, severity: 'normal' }, 'school', lang);
+    const emergency = fallbackCommunityNotice(plan, 'school', lang);
+
+    expect(emergency).toContain('N95');
+    expect(normal).not.toContain('N95');
+    expect(normal).toContain(planHeadline({ ...plan, severity: 'normal' }, lang));
+  });
+
   it('builds fallback chat answers and community notices from the plan', () => {
     const plan = severePlan();
     const topTitle = explainRecommendation(

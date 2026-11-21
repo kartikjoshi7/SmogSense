@@ -42,12 +42,17 @@ describe('analyzeInversion', () => {
     });
   });
 
-  it('reports nothing trapped past the end of the data', () => {
+  it('says there is no basis past the end of the data or without any weather data', () => {
     const air = makeAir();
+    const noWeather = air.hourly.map((h) => ({ ...h, blhM: null, windKmh: null }));
 
     expect(analyzeInversion(air.hourly, air.hourly.length)).toMatchObject({
       trappedNow: false,
-      basis: 'wind_only',
+      basis: 'none',
+    });
+    expect(analyzeInversion(noWeather, air.nowIndex)).toMatchObject({
+      trappedNow: false,
+      basis: 'none',
     });
   });
 });

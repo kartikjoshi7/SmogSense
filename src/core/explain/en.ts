@@ -1,5 +1,5 @@
 import type { Audience } from '../../shared/api.js';
-import type { OutdoorAdvice } from '../../shared/plan.js';
+import type { OutdoorAdvice, Severity } from '../../shared/plan.js';
 import type { CookingFuel, MaskType } from '../../shared/profile.js';
 import {
   clock,
@@ -253,6 +253,17 @@ const headlines: LanguagePack['headlines'] = {
   emergency: 'Smog emergency: stay indoors and protect sensitive family members',
 };
 
+/** What a community notice asks everyone to do, as strongly as the day calls for. */
+const NOTICE_ADVICE: Readonly<Record<Severity, string>> = {
+  normal: 'Please avoid burning leaves or rubbish, so the air stays clean.',
+  caution:
+    'Children, older people and anyone with asthma or a heart condition should take it easy outdoors. Please avoid burning anything.',
+  restrict:
+    'Please limit time outdoors, keep children and older people in at the smoggiest hours and avoid burning anything.',
+  emergency:
+    'Please stay indoors where you can, wear N95 masks outside and avoid burning anything.',
+};
+
 const summary: LanguagePack['summary'] = (plan) =>
   daySummary(plan, { scales, categories }, PHRASES);
 
@@ -266,5 +277,5 @@ export const pack: LanguagePack = {
   chatFallback: (plan, topTitles) =>
     `The AI assistant is unavailable right now, so here is today's standard guidance. ${summary(plan)} Most important: ${topTitles.join('; ')}.`,
   communityNotice: (plan, audience) =>
-    `${AUDIENCE[audience]}, ${summary(plan)} ${headlines[plan.severity]}. Please keep children and older people indoors at the smoggiest hours, wear N95 masks outside and avoid burning anything. — Shared via SmogSense`,
+    `${AUDIENCE[audience]}, ${summary(plan)} ${headlines[plan.severity]}. ${NOTICE_ADVICE[plan.severity]} — Shared via SmogSense`,
 };

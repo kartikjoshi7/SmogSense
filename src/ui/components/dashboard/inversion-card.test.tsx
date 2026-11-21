@@ -44,4 +44,15 @@ describe('InversionCard', () => {
     expect(screen.getByText(/Air is mixing normally/)).toBeInTheDocument();
     expect(screen.getByText(/Based on wind speed only/)).toBeInTheDocument();
   });
+
+  it('says it cannot tell when there is no weather data', () => {
+    renderInApp(
+      <InversionCard
+        inversion={{ ...TRAPPED, trappedNow: false, minBlhM: null, maxBlhM: null, basis: 'none' }}
+      />,
+    );
+
+    expect(screen.getByText(/Weather data is unavailable/)).toBeInTheDocument();
+    expect(screen.queryByText(/Air is mixing normally/)).not.toBeInTheDocument();
+  });
 });

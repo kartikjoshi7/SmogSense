@@ -5,13 +5,19 @@ import { App } from '../../app.js';
 import { checkA11y } from '../../test/axe.js';
 import { fakeApi, memoryStore } from '../../test/fake-api.js';
 import type { FakeApiOptions } from '../../test/fake-server.js';
-import { nextMemberId } from './defaults.js';
+import { DEMO_HOUSEHOLD, DEMO_LOCATION, nextMemberId } from './defaults.js';
 
-function setup(options: FakeApiOptions = {}) {
+function setup(options: FakeApiOptions = {}, store = memoryStore()) {
   const fetchMock = fakeApi(options);
   const user = userEvent.setup();
-  render(<App store={memoryStore()} />);
+  render(<App store={store} />);
   return Object.assign(user, { fetchMock });
+}
+
+/** Browser storage holding a saved household and place, as after a first visit. */
+function savedStore() {
+  const saved = { lang: 'en', household: DEMO_HOUSEHOLD, location: DEMO_LOCATION };
+  return memoryStore({ 'smogsense:v1': JSON.stringify(saved) });
 }
 
 describe('setup form', () => {
@@ -35,6 +41,18 @@ describe('setup form', () => {
 
     expect(await screen.findByText(/City search is unavailable right now/)).toBeInTheDocument();
     expect(screen.queryByText(/No places found/)).not.toBeInTheDocument();
+  });
+
+  it('still reports a failed search when editing a household that has a place', async () => {
+    const user = setup({ failures: { geocode: { status: 502, error: 'Down' } } }, savedStore());
+    await user.click(await screen.findByRole('button', { name: 'Edit household' }));
+    expect(screen.getByText(`Location: ${DEMO_LOCATION.label}`)).toBeInTheDocument();
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Search for a city or town' }),
+      'Guru{Enter}',
+    );
+
+    expect(await screen.findByText(/City search is unavailable right now/)).toBeInTheDocument();
   });
 
   it('only searches once the query is long enough, by button or Enter', async () => {

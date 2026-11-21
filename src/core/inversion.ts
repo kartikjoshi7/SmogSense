@@ -14,18 +14,20 @@ function isStagnant(reading: HourlyReading): boolean {
 /**
  * Whether winter-inversion conditions trap pollution near the ground now, and the hour in the
  * next 24 when daytime mixing (boundary layer ≥ 500 m) should clear it. Without boundary-layer
- * data it falls back to wind speed alone and says so in `basis`.
+ * data it falls back to wind speed alone, and with no weather data at all it says so: `basis`
+ * is then "none" and nothing is reported as trapped.
  */
 export function analyzeInversion(hourly: readonly HourlyReading[], nowIndex: number): Inversion {
   const horizon = hourly.slice(nowIndex, nowIndex + PLAN_HORIZON_HOURS);
   const current = horizon[0];
   if (current === undefined || current.blhM === null) {
+    const hasWind = current !== undefined && current.windKmh !== null;
     return {
-      trappedNow: current !== undefined && isStagnant(current),
+      trappedNow: hasWind && isStagnant(current),
       clearsAtHour: null,
       minBlhM: null,
       maxBlhM: null,
-      basis: 'wind_only',
+      basis: hasWind ? 'wind_only' : 'none',
     };
   }
   const heights = horizon.map((h) => h.blhM).filter((v): v is number => v !== null);

@@ -1,5 +1,5 @@
 import type { Audience } from '../../shared/api.js';
-import type { OutdoorAdvice } from '../../shared/plan.js';
+import type { OutdoorAdvice, Severity } from '../../shared/plan.js';
 import type { CookingFuel, MaskType } from '../../shared/profile.js';
 import {
   clock,
@@ -229,6 +229,14 @@ const headlines: LanguagePack['headlines'] = {
   emergency: 'धुंध आपातकाल: घर में रहें और संवेदनशील सदस्यों को बचाएँ',
 };
 
+/** What a community notice asks everyone to do, as strongly as the day calls for. */
+const NOTICE_ADVICE: Readonly<Record<Severity, string>> = {
+  normal: 'कृपया पत्ते या कूड़ा न जलाएँ, ताकि हवा साफ़ रहे।',
+  caution: 'बच्चे, बुज़ुर्ग और अस्थमा या दिल की बीमारी वाले लोग बाहर सावधानी रखें। कृपया कुछ भी न जलाएँ।',
+  restrict: 'कृपया बाहर कम समय बिताएँ, सबसे ज़्यादा धुंध के समय बच्चों और बुज़ुर्गों को घर में रखें और कुछ भी न जलाएँ।',
+  emergency: 'कृपया जहाँ हो सके घर में रहें, बाहर N95 मास्क पहनें और कुछ भी न जलाएँ।',
+};
+
 const summary: LanguagePack['summary'] = (plan) =>
   daySummary(plan, { scales, categories }, PHRASES);
 
@@ -242,5 +250,5 @@ export const pack: LanguagePack = {
   chatFallback: (plan, topTitles) =>
     `AI सहायक अभी उपलब्ध नहीं है, इसलिए आज की मानक सलाह यह है। ${summary(plan)} सबसे ज़रूरी: ${topTitles.join('; ')}।`,
   communityNotice: (plan, audience) =>
-    `${AUDIENCE[audience]}, ${summary(plan)} ${headlines[plan.severity]}। कृपया सबसे ज़्यादा धुंध के समय बच्चों और बुज़ुर्गों को घर में रखें, बाहर N95 मास्क पहनें और कुछ भी न जलाएँ। — SmogSense से साझा`,
+    `${AUDIENCE[audience]}, ${summary(plan)} ${headlines[plan.severity]}। ${NOTICE_ADVICE[plan.severity]} — SmogSense से साझा`,
 };

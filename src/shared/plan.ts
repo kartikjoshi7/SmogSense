@@ -49,7 +49,8 @@ const inversionSchema = z.object({
   clearsAtHour: hourSchema.nullable(),
   minBlhM: z.number().min(0).nullable(),
   maxBlhM: z.number().min(0).nullable(),
-  basis: z.enum(['boundary_layer', 'wind_only']),
+  /** What the judgement rests on; "none" when neither boundary-layer nor wind data exists. */
+  basis: z.enum(['boundary_layer', 'wind_only', 'none']),
 });
 export type Inversion = z.infer<typeof inversionSchema>;
 

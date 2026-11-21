@@ -86,8 +86,8 @@ export function explainPrompt({ plan, profile, lang }: ExplainInput): string {
     `LANGUAGE: ${ENGLISH_NAMES[lang]}`,
     `HOUSEHOLD: ${household(profile)}`,
     `FACTS: ${facts(plan, topRecommendations(plan), true)}`,
-    'TASK: Write a headline (under 90 characters) and a two-sentence summary of today for this household.',
-    'Then, for every recommendation id in FACTS, write "why" (at most two sentences that use its impact numbers) and up to three short "steps".',
+    `TASK: Write a headline of at most ${SETTINGS.aiReplyChars.headline} characters and a two-sentence summary of today for this household.`,
+    `Then, for every recommendation id in FACTS, write "why" (at most two sentences that use its impact numbers) and up to ${SETTINGS.aiMaxSteps} short "steps".`,
   ].join('\n');
 }
 
@@ -105,7 +105,7 @@ export function chatPrompt({ plan, profile, lang, question, history }: ChatInput
     `FACTS: ${facts(plan, topRecommendations(plan), true)}`,
     `<conversation>\n${turns === '' ? '(none)' : turns}\n</conversation>`,
     `<user_question>${asData(question)}</user_question>`,
-    'TASK: Answer the question in at most four sentences, using the FACTS.',
+    `TASK: Answer the question in at most ${SETTINGS.aiAnswerSentences} sentences, using the FACTS.`,
   ].join('\n');
 }
 
@@ -118,6 +118,6 @@ export function communityPrompt({ plan, audience, lang }: NoticeInput): string {
     `LANGUAGE: ${ENGLISH_NAMES[lang]}`,
     `AUDIENCE: ${AUDIENCE_NAMES[audience]}`,
     `FACTS: ${facts(plan, shared, false)}`,
-    'TASK: Write a notice of at most 120 words for a messaging group: the air today, when it is cleanest, and three things everyone should do. Do not mention any household.',
+    `TASK: Write a notice of at most ${SETTINGS.aiNoticeWords} words for a messaging group: the air today, when it is cleanest, and three things everyone should do. Do not mention any household.`,
   ].join('\n');
 }

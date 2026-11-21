@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { INDEX_BANDS, INDEX_VALUES } from '../shared/limits.js';
 import * as C from './constants.js';
 
-/** The README with runs of spaces collapsed, since Prettier pads table columns. */
-const README = readFileSync(new URL('../../README.md', import.meta.url), 'utf8').replace(
+/** The architecture doc with runs of spaces collapsed, since Prettier pads table columns. */
+const DOC = readFileSync(new URL('../../docs/ARCHITECTURE.md', import.meta.url), 'utf8').replace(
   / +/g,
   ' ',
 );
@@ -31,7 +31,7 @@ function byMode(factor: (mode: C.CommuteModeFactors) => number): string {
   return pairs(Object.fromEntries(modes.map(([mode, factors]) => [mode, factor(factors)])));
 }
 
-/** The constant names and values the README's Assumptions table must show, in its order. */
+/** The constant names and values the assumptions table must show, in its order. */
 const ASSUMPTIONS: readonly (readonly [string, string])[] = [
   ['AQI_SCALES.naqi', breakpoints(C.AQI_SCALES.naqi)],
   ['AQI_SCALES.us_aqi', breakpoints(C.AQI_SCALES.us_aqi)],
@@ -94,13 +94,13 @@ function namesIn(row: string): string[] {
   );
 }
 
-describe('README › Assumptions', () => {
+describe('ARCHITECTURE.md › Assumptions behind the numbers', () => {
   it.each(ASSUMPTIONS)('shows the current value of %s', (name, value) => {
-    expect(README).toContain(`| \`${name}\` | ${value} |`);
+    expect(DOC).toContain(`| \`${name}\` | ${value} |`);
   });
 
   it('lists the assumptions in the same order as this test', () => {
-    const positions = ASSUMPTIONS.map(([name]) => README.indexOf(`| \`${name}\` |`));
+    const positions = ASSUMPTIONS.map(([name]) => DOC.indexOf(`| \`${name}\` |`));
 
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
   });
