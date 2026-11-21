@@ -84,4 +84,20 @@ describe('fetchJson', () => {
       error: 'invalid_response',
     });
   });
+
+  it('treats a body cut off mid-read as a network failure and retries it', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const cutOff = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.error(new TypeError('terminated'));
+      },
+    });
+    const flaky = sequence(
+      () => new Response(cutOff, { status: 200 }),
+      () => jsonResponse({ value: 7 }),
+    );
+
+    expect(await fetchJson(url, schema, deps(flaky))).toEqual({ ok: true, value: { value: 7 } });
+    expect(flaky).toHaveBeenCalledTimes(2);
+  });
 });

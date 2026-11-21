@@ -35,7 +35,7 @@ repos:
         language: system
         files: \.(ts|tsx)$
       - id: repo-rules
-        name: Repository rules (one branch, small files, no .env)
+        name: Repository rules (one branch, tracked files under 9 MB, no .env)
         entry: npm run check:repo
         language: system
         always_run: true

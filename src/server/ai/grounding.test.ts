@@ -67,8 +67,8 @@ describe('reading numbers', () => {
     ['Telugu', '17 శాతం తక్కువ'],
     ['Malayalam', '17 ശതമാനം കുറവ്'],
     ['Punjabi', '17 ਪ੍ਰਤੀਸ਼ਤ ਘੱਟ'],
-    ['Kannada, word first', 'ಶೇ 17 ಕಡಿಮೆ'],
-    ['Bengali, word first', 'শতকরা ১৭ ভাগ কম'],
+    ['Kannada (word before the number)', 'ಶೇ 17 ಕಡಿಮೆ'],
+    ['Bengali (word before the number)', 'শতকরা ১৭ ভাগ কম'],
   ])('treats a small number with the %s word for "percent" as a measurement', (_lang, text) => {
     expect(isGrounded(text, new Set())).toBe(false);
   });

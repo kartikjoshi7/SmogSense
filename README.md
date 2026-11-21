@@ -157,16 +157,14 @@ caching, a cool-down after a 429 and a daily budget ([Efficiency](docs/EFFICIENC
 
 ## Features
 
-![The plan's five tabs (low-emission routines, indoor air hacks, sustainable alternatives, protection and community) above three recommendation cards, each with its measured benefit, its effort, who it is for, why and how, and a label saying whether the AI or standard guidance wrote it](docs/images/recommendations.png)
+![The plan's five tabs (low-emission routines, indoor air hacks, sustainable alternatives, protection and community) above three recommendation cards, each with its benefit (a measured cut or a qualitative level), its effort, why and how, and a label saying whether the AI or standard guidance wrote it](docs/images/recommendations.png)
 
-- **Low-emission routines:** the cleanest hour to exercise or air the home, moving exercise
-  indoors on bad days, an N95 for the commute, and a timeline for the day.
-- **Indoor air hacks:** a purifier, sealing gaps, shut windows, cooking ventilation, no incense or
-  smoking indoors, and heating without smoke, each with the room's PM2.5 before and after.
-- **Sustainable alternatives:** metro, bus, carpool, cycling, walking, working from home and
-  cleaner cooking fuel, each with the CO₂ it saves a week.
-- **Protection and community:** fitted masks, extra care for sensitive members, the GRAP check in
-  Delhi NCR, checking on neighbours, reporting open burning and a shareable notice.
+- **A plan in five tabs named after the brief:** low-emission routines, indoor air hacks,
+  sustainable alternatives, protection and community. Measurable actions show their own numbers
+  (exposure cut, the room's PM2.5 before and after, CO₂ saved a week); the others show a benefit
+  level. Every action and the code behind it is listed in
+  [Alignment](docs/ALIGNMENT.md#requirement-traceability).
+- **A timeline for the day:** when to exercise, air the home, wear a mask or run the purifier.
 - **What if:** drag the exercise time and see the dose change, computed in the browser.
 - **Honest AI:** every card says whether the AI or standard guidance wrote it, and the AI may
   quote only the plan's own numbers.
@@ -193,7 +191,7 @@ api/                     the Vercel function that hands /api/* to the Hono app
 src/                     the app in four layers: core, shared, server and ui
 e2e/                     Playwright tests against the production build
 docs/                    one doc per judging area, the architecture, the decisions and screenshots
-scripts/                 check-repo.mjs: one branch, small files, no .env files
+scripts/                 check-repo.mjs: one branch, tracked files under 9 MB, no .env files
 .github/workflows/       CI (check and e2e jobs) and CodeQL
 AGENTS.md                the engineering rules every change follows
 .pre-commit-config.yaml  optional checks before each commit, using the npm scripts

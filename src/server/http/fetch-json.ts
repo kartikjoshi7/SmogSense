@@ -34,7 +34,16 @@ async function attempt<T>(url: URL, schema: ZodType<T>, deps: HttpDeps): Promise
     await response.body?.cancel();
     return failure('http', response.status >= 500);
   }
-  const parsed = schema.safeParse(await response.json().catch(() => undefined));
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch (error: unknown) {
+    // Only a body that is not JSON is an invalid answer; a timeout or reset mid-body is not.
+    return error instanceof SyntaxError
+      ? failure('invalid_response', false)
+      : classifyThrown(error);
+  }
+  const parsed = schema.safeParse(body);
   return parsed.success
     ? { ...ok(parsed.data), retryable: false }
     : failure('invalid_response', false);

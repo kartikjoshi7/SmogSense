@@ -32,9 +32,12 @@ export function AppProvider({
 }) {
   const [state, dispatch] = useReducer(appReducer, store, (s) => initialState(loadState(s)));
 
+  // Saved only when a saved field changes, not on every transient change such as `editing`.
+  const { lang, household, location } = state;
   useEffect(() => {
-    dispatch({ type: 'save_result', saved: saveState(store, toPersisted(state)) });
-  }, [store, state]);
+    const saved = saveState(store, toPersisted({ lang, household, location }));
+    dispatch({ type: 'save_result', saved });
+  }, [store, lang, household, location]);
 
   useEffect(() => {
     document.documentElement.lang = state.lang;

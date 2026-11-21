@@ -37,6 +37,22 @@ describe('createAirService', () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
+  it('never serves a past hour as "now": in India the local hour turns at :30 UTC', async () => {
+    const fetch = openMeteoFetch();
+    const { air, advanceMinutes } = service(fetch);
+    advanceMinutes(20); // 06:50 in Delhi
+    const before = await air.getAir({ lat: 28.6, lon: 77.2 });
+    advanceMinutes(13); // 07:03 in Delhi: within 15 minutes, but a new local hour
+    const after = await air.getAir({ lat: 28.6, lon: 77.2 });
+    if (!before.ok || !after.ok) {
+      throw new Error('expected air data');
+    }
+
+    expect(fetch).toHaveBeenCalledTimes(4);
+    expect(before.value.hourly[before.value.nowIndex]?.time).toBe('2026-11-21T06:00');
+    expect(after.value.hourly[after.value.nowIndex]?.time).toBe('2026-11-21T07:00');
+  });
+
   it('fetches again once the cached data has expired', async () => {
     const fetch = openMeteoFetch();
     const { air, advanceMinutes } = service(fetch);

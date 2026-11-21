@@ -23,8 +23,11 @@ test.describe('a family plans its day', () => {
     await page.getByRole('button', { name: 'Community notice' }).click();
     const notice = page.getByRole('dialog', { name: 'Community notice' });
     await notice.getByRole('combobox', { name: 'Who is it for?' }).selectOption('school');
-    await notice.getByRole('button', { name: 'Create notice' }).click();
+    const create = notice.getByRole('button', { name: 'Create notice' });
+    await create.click();
     await expect(notice.getByText(FAKE_AI.notice)).toBeVisible();
+    // Writing the notice never pushes keyboard focus out of the dialog.
+    await expect(create).toBeFocused();
     await notice.getByRole('button', { name: 'Copy' }).click();
     await expect(notice.getByRole('button', { name: 'Copied' })).toBeVisible();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(FAKE_AI.notice);

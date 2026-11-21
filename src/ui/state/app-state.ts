@@ -49,6 +49,10 @@ export function activeSetup(
 }
 
 /** What gets saved: everything except transient flags. */
-export function toPersisted(state: AppState): Persisted {
-  return { lang: state.lang, household: state.household, location: state.location };
+export function toPersisted({
+  lang,
+  household,
+  location,
+}: Pick<AppState, 'lang' | 'household' | 'location'>): Persisted {
+  return { lang, household, location };
 }

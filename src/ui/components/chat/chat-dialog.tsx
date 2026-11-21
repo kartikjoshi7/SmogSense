@@ -34,10 +34,11 @@ function MessageList({ messages }: { readonly messages: readonly ChatMessage[] }
 }
 
 function Suggestions({
-  disabled,
+  busy,
   onPick,
 }: {
-  readonly disabled: boolean;
+  /** An answer is on its way: the buttons stay focusable but do nothing. */
+  readonly busy: boolean;
   readonly onPick: (question: string) => void;
 }) {
   const t = useMessages().chat;
@@ -48,9 +49,11 @@ function Suggestions({
           <button
             type="button"
             className="btn-secondary text-left"
-            disabled={disabled}
+            aria-disabled={busy}
             onClick={() => {
-              onPick(suggestion);
+              if (!busy) {
+                onPick(suggestion);
+              }
             }}
           >
             {suggestion}
@@ -108,7 +111,8 @@ function ChatForm({
       <button
         type="submit"
         className="btn-primary justify-self-start"
-        disabled={status === 'sending' || question.trim() === ''}
+        disabled={question.trim() === ''}
+        aria-disabled={status === 'sending'}
       >
         {t.send}
       </button>
@@ -131,11 +135,14 @@ export function ChatDialog({
   const input = useRef<HTMLTextAreaElement>(null);
   const { messages, status, ask } = useChat(request);
   const send = async (text: string) => {
-    if (text.trim() !== '' && (await ask(text.trim(), lang))) {
-      setQuestion('');
-      // The suggestion that was clicked is gone now; keep focus in the dialog, ready for more.
-      input.current?.focus();
+    if (status === 'sending' || text.trim() === '') {
+      return;
     }
+    if (await ask(text.trim(), lang)) {
+      setQuestion('');
+    }
+    // Answered or not, focus goes back to the question box (a clicked suggestion may be gone).
+    input.current?.focus();
   };
   return (
     <Dialog title={t.chat.title} closeLabel={t.actions.close} onClose={onClose}>
@@ -150,10 +157,7 @@ export function ChatDialog({
         />
       </div>
       {messages.length === 0 ? (
-        <Suggestions
-          disabled={status === 'sending'}
-          onPick={(suggestion) => void send(suggestion)}
-        />
+        <Suggestions busy={status === 'sending'} onPick={(suggestion) => void send(suggestion)} />
       ) : null}
       <MessageList messages={messages} />
       <ChatForm

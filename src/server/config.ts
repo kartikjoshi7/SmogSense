@@ -19,7 +19,14 @@ const envSchema = z.object({
     emptyToUndefined,
     z.enum(['OFF', 'MINIMAL', 'LOW']).default('MINIMAL'),
   ),
-  ALLOWED_ORIGIN: z.preprocess(emptyToUndefined, z.url().optional()),
+  /** Kept as a bare origin, so `https://example.org/` still matches the browser's `Origin`. */
+  ALLOWED_ORIGIN: z.preprocess(
+    emptyToUndefined,
+    z
+      .url()
+      .transform((url) => new URL(url).origin)
+      .optional(),
+  ),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
@@ -31,6 +38,8 @@ export function parseConfig(raw: Record<string, unknown>): EnvConfig {
 
 export const SECOND_MS = 1000;
 const MINUTE_MS = SECONDS_PER_MINUTE * SECOND_MS;
+/** Every time zone's local hour starts on a UTC quarter hour (offsets are whole quarters). */
+const QUARTER_HOUR_MINUTES = 15;
 const DAY_SECONDS = HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE;
 
 /** Runtime limits and timings — every operational number lives here. */
@@ -42,7 +51,12 @@ export const SETTINGS = {
   /** Extra attempts after a network error or 5xx from Open-Meteo. */
   upstreamRetries: 1,
   cacheMaxEntries: 500,
-  airCacheTtlMs: 15 * MINUTE_MS,
+  /**
+   * Air data is cached per UTC quarter hour, for at most that long, so an entry never outlives
+   * the local hour its "now" was taken in (in India the local hour turns at :30 UTC).
+   */
+  airCacheSlotMinutes: QUARTER_HOUR_MINUTES,
+  airCacheTtlMs: QUARTER_HOUR_MINUTES * MINUTE_MS,
   geocodeCacheTtlMs: DAY_SECONDS * SECOND_MS,
   /** How long the CDN may keep place search results (they change rarely). */
   geocodeCdnMaxAgeSeconds: DAY_SECONDS,

@@ -33,6 +33,12 @@ describe('parseConfig', () => {
     });
   });
 
+  it('keeps only the origin of ALLOWED_ORIGIN, so a trailing slash or path still matches', () => {
+    expect(parseConfig({ ALLOWED_ORIGIN: 'https://example.org/app/' }).ALLOWED_ORIGIN).toBe(
+      'https://example.org',
+    );
+  });
+
   it.each([
     ['an origin without a scheme', { ALLOWED_ORIGIN: 'smog-sense-sigma.vercel.app' }],
     ['a model list with no model in it', { GEMINI_MODELS: ' , ' }],

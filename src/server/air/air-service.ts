@@ -28,6 +28,12 @@ function roundLocation(location: Location): Location {
   };
 }
 
+/** The UTC hour and quarter of a moment, e.g. `2026-11-21T01:1` for 01:15–01:29 UTC. */
+function cacheSlot(now: Date): string {
+  const slot = Math.floor(now.getUTCMinutes() / SETTINGS.airCacheSlotMinutes);
+  return `${now.toISOString().slice(0, 13)}:${String(slot)}`;
+}
+
 /** Only successful lookups are cached; a failure is tried again on the next request. */
 const succeeded = (result: { readonly ok: boolean }): boolean => result.ok;
 
@@ -53,9 +59,8 @@ export function createAirService(deps: AirServiceDeps): AirService {
   return {
     getAir(location) {
       const rounded = roundLocation(location);
-      const hour = deps.now().toISOString().slice(0, 13);
       return airCache.getOrLoad(
-        [rounded.lat, rounded.lon, hour].join(':'),
+        [rounded.lat, rounded.lon, cacheSlot(deps.now())].join(':'),
         () => fetchAirData(rounded, { ...http, now: deps.now }),
         succeeded,
       );

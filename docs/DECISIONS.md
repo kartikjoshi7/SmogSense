@@ -67,7 +67,7 @@ person, one repository and a free hosting tier.
 hands it every `/api/*` request as a Web-standard `Request`; in development a small Vite plugin
 serves the same app on the UI's port; in tests the same app answers inside the page.
 
-**Turned down.** Next.js: a full framework, replacing Vite, for a single-page app with five
+**Turned down.** Next.js: a full framework, replacing Vite, for a single-page app with six API
 routes. Express: Node-specific request objects and a separate harness to test them. A separate
 backend host: a second deployment and cross-origin calls.
 
@@ -201,7 +201,7 @@ recorded responses.
 **Decision.** The forecast is hand-written SVG with a table view, styling is Tailwind, and state
 is one React context with a reducer.
 
-**Turned down.** A charting library: tens of kilobytes for one line chart, and canvas charts are
+**Turned down.** A charting library: tens of kilobytes for one bar chart, and canvas charts are
 hard to make accessible. A component kit: weight and styling we would fight. A state library:
 more machinery than three values need.
 

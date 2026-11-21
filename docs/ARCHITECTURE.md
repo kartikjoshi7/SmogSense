@@ -92,7 +92,7 @@ constant there; `src/core/constants.test.ts` fails if one is missing or shows an
 POST /api/plan  { profile, location }
   secureHeaders → CORS → bodyLimit → data rate limit → Zod body validation
   → loadPlan: AirService.getAir(location)
-      round the location → TtlCache (key: lat, lon, UTC hour; 15 min) → on a miss,
+      round the location → TtlCache (key: lat, lon, UTC quarter hour; 15 min) → on a miss,
       Open-Meteo air quality + weather forecast in parallel (timeouts and retries: Security)
       → Zod-validated, merged by local hour (without the forecast: no inversion or daylight data)
   → buildPlan(profile, air) → 200 { plan } | 502 data unavailable | 503 not enough data

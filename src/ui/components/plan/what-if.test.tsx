@@ -1,7 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { makeAir } from '../../../core/fixtures/air.js';
-import { HEALTHY_COUPLE } from '../../../core/fixtures/profiles.js';
+import { HEALTHY_COUPLE, SHARMA_FAMILY } from '../../../core/fixtures/profiles.js';
 import { findRecommendation } from '../../../core/fixtures/recommendations.js';
 import { buildPlan } from '../../../core/plan.js';
 import type { Plan } from '../../../shared/plan.js';
@@ -37,6 +37,28 @@ function show(plan: Plan) {
 }
 
 describe('WhatIf', () => {
+  it('gives the same usual-time dose as the plan’s advice to exercise indoors', () => {
+    const result = buildPlan(SHARMA_FAMILY, makeAir({ scale: 2.4 }));
+    if (!result.ok) {
+      throw new Error(result.error);
+    }
+    const indoors = findRecommendation(result.value, 'exercise_indoors');
+    expect(indoors).toBeDefined();
+    renderInApp(
+      <WhatIf
+        plan={result.value}
+        exercise={SHARMA_FAMILY.exercise}
+        members={SHARMA_FAMILY.members}
+      />,
+    );
+
+    expect(
+      screen.getByText(`(usual time: ${String(indoors?.impact.doseBeforeUg)} µg)`, {
+        exact: false,
+      }),
+    ).toBeInTheDocument();
+  });
+
   it('gives the same doses as the plan’s own exercise advice, over the whole session', async () => {
     const plan = planOnPoorDay();
     const advice = findRecommendation(plan, 'exercise_window');

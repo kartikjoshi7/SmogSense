@@ -12,6 +12,7 @@ const ageGroupSchema = z.enum(['infant', 'child', 'teen', 'adult', 'senior']);
 export type AgeGroup = z.infer<typeof ageGroupSchema>;
 
 const conditionSchema = z.enum(['asthma', 'copd', 'heart', 'pregnancy']);
+export type Condition = z.infer<typeof conditionSchema>;
 
 const memberSchema = z.object({
   id: memberIdSchema,
@@ -80,6 +81,7 @@ export type SmokyHeating = z.infer<typeof smokyHeatingSchema>;
 
 /** How often incense, dhoop or mosquito coils are burned at home. */
 const incenseSchema = z.enum(['never', 'sometimes', 'daily']);
+export type Incense = z.infer<typeof incenseSchema>;
 
 export const homeSchema = z.object({
   purifierCount: rangeSchema(PROFILE_LIMITS.purifierCount).int(),

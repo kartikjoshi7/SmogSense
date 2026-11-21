@@ -3,9 +3,11 @@ import type {
   Airtightness,
   CommuteAlternative,
   CommuteMode,
+  Condition,
   CookingFuel,
   ExerciseActivity,
   Heating,
+  Incense,
   MaskType,
 } from '../../shared/profile.js';
 import type { Labels } from './labels.js';
@@ -98,7 +100,7 @@ export const options = {
     copd: 'COPD',
     heart: 'Heart disease',
     pregnancy: 'Pregnancy',
-  },
+  } satisfies Labels<Condition>,
   commuteMode: {
     none: 'Doesn’t commute',
     walk: 'Walk',
@@ -140,7 +142,7 @@ export const options = {
     biomass: 'Wood or dung',
     kerosene: 'Kerosene',
   } satisfies Labels<CookingFuel>,
-  incense: { never: 'Never', sometimes: 'Sometimes', daily: 'Daily' },
+  incense: { never: 'Never', sometimes: 'Sometimes', daily: 'Daily' } satisfies Labels<Incense>,
   heating: {
     none: 'No heating',
     electric: 'Electric heater',

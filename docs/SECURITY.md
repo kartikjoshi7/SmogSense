@@ -107,5 +107,8 @@ queries also reach unchanged code. Its findings go to the repository's code-scan
 ## Known limits
 
 - Per-instance rate limits, caches and AI budget, as above.
+- The limits count requests per IP address, before the AI cache is consulted. People behind one
+  address (a school or office network) share the daily AI allowance, and once it is spent they get
+  standard guidance until the next day; the plan itself is never limited by it.
 - There are no accounts, so nothing server-side is tied to a person; the trade-off is that a
   household profile lives in one browser and is lost if storage is cleared.

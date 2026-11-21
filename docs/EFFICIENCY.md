@@ -37,8 +37,8 @@ own functions, with no network call.
 
 ## What the browser downloads
 
-- Gzip sizes from the last build: main bundle 124.0 kB, CSS 5.2 kB, and lazy chunks of 1.3 kB
-  (chat), 1.0 kB (community) and 0.8 kB (the dialog they share).
+- Gzip sizes from the last build: main bundle 124.1 kB, CSS 5.2 kB, and lazy chunks of 1.3 kB
+  (chat), 1.1 kB (community) and 0.8 kB (the dialog they share).
 - What the main bundle holds, measured by splitting a build by origin (gzip): React and React DOM
   67.5 kB, Zod with the shared schemas 28.6 kB, the engine with its English and Hindi text
   19.0 kB (the Hindi text alone 4.7 kB) and the rest of the UI 11.0 kB. Why Zod is worth its

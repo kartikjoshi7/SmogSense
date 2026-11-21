@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Audience, PlanRequest } from '../../../shared/api.js';
 import { NATIVE_NAMES, type Language } from '../../../shared/languages.js';
-import { useCommunityNotice } from '../../hooks/use-community-notice.js';
+import { useCommunityNotice, type NoticeState } from '../../hooks/use-community-notice.js';
 import { useShareNotice, type ShareStatus } from '../../hooks/use-share-notice.js';
 import { useAppState, useMessages } from '../../state/app-context.js';
 import { Dialog } from '../common/dialog.js';
@@ -32,6 +32,32 @@ function NoticeActions({ notice }: { readonly notice: string }) {
         {problem[status] ?? ''}
       </p>
     </div>
+  );
+}
+
+/** The notice being written, the finished notice with its actions, or what went wrong. */
+function NoticeOutcome({ state }: { readonly state: NoticeState }) {
+  const t = useMessages().community;
+  return (
+    <>
+      {/* Only the progress and the outcome are announced, not the buttons under the notice. */}
+      <div aria-live="polite" className="grid gap-2">
+        {state.status === 'generating' ? <p className="muted">{t.generating}</p> : null}
+        {state.status === 'error' ? <p className="field-error">{t.error}</p> : null}
+        {state.status === 'busy' ? <p className="field-error">{t.busy}</p> : null}
+        {state.status === 'ready' ? (
+          <p className="card whitespace-pre-line" lang={state.lang}>
+            {state.notice}
+          </p>
+        ) : null}
+      </div>
+      {state.status === 'ready' ? (
+        <>
+          <SourceTag source={state.source} />
+          <NoticeActions notice={state.notice} />
+        </>
+      ) : null}
+    </>
   );
 }
 
@@ -66,30 +92,20 @@ export function CommunityDialog({
           keysAreLanguages
           onChange={setLang}
         />
+        {/* Never `disabled` while writing: a disabled button drops keyboard focus out of the dialog. */}
         <button
           type="button"
           className="btn-primary justify-self-start"
-          disabled={state.status === 'generating'}
-          onClick={() => void generate(audience, lang)}
+          aria-disabled={state.status === 'generating'}
+          onClick={() => {
+            if (state.status !== 'generating') {
+              void generate(audience, lang);
+            }
+          }}
         >
-          {state.status === 'generating' ? t.community.generating : t.community.generate}
+          {t.community.generate}
         </button>
-        {/* Only the outcome is announced: the notice or the problem, not its buttons. */}
-        <div aria-live="polite" className="grid gap-2">
-          {state.status === 'error' ? <p className="field-error">{t.community.error}</p> : null}
-          {state.status === 'busy' ? <p className="field-error">{t.community.busy}</p> : null}
-          {state.status === 'ready' ? (
-            <p className="card whitespace-pre-line" lang={state.lang}>
-              {state.notice}
-            </p>
-          ) : null}
-        </div>
-        {state.status === 'ready' ? (
-          <>
-            <SourceTag source={state.source} />
-            <NoticeActions notice={state.notice} />
-          </>
-        ) : null}
+        <NoticeOutcome state={state} />
       </div>
     </Dialog>
   );

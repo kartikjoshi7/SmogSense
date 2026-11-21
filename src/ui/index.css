@@ -247,7 +247,7 @@ textarea {
     color: var(--primary-fg);
     box-shadow: 0 6px 16px -8px var(--primary);
   }
-  .btn-primary:hover:not(:disabled) {
+  .btn-primary:hover:not(:disabled, [aria-disabled='true']) {
     transform: translateY(-1px);
   }
   .btn-secondary {
@@ -255,11 +255,12 @@ textarea {
     background: var(--surface);
     color: var(--fg);
   }
-  .btn-secondary:hover:not(:disabled) {
+  .btn-secondary:hover:not(:disabled, [aria-disabled='true']) {
     border-color: var(--primary);
     background: var(--surface-2);
   }
-  button:disabled {
+  button:disabled,
+  button[aria-disabled='true'] {
     opacity: 0.6;
     cursor: not-allowed;
   }

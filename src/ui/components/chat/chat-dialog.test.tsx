@@ -96,6 +96,7 @@ describe('ChatDialog', () => {
     await ask('Can we go out?');
 
     expect(await screen.findByText(/Too many questions for now/)).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Your question' })).toHaveFocus();
   });
 
   it('labels an answer written without the AI as standard guidance', async () => {
@@ -139,7 +140,7 @@ describe('ChatDialog', () => {
     await user.click(screen.getByRole('button', { name: 'Is it safe to open the windows today?' }));
 
     for (const suggestion of screen.getAllByRole('button', { name: /\?$/ })) {
-      expect(suggestion).toBeDisabled();
+      expect(suggestion).toHaveAttribute('aria-disabled', 'true');
     }
     expect(screen.getByRole('status')).toHaveTextContent('Thinking…');
   });
