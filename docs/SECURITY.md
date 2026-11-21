@@ -94,6 +94,12 @@ validated coordinates and the city-search query.
 CI runs `npm audit --audit-level=high` on every push. Installs use `npm ci` with the committed
 lockfile.
 
+## Static analysis
+
+CodeQL (`.github/workflows/codeql.yml`) scans the JavaScript and TypeScript with the
+`security-extended` queries on every push and pull request to `main`, and weekly so that new
+queries also reach unchanged code. Its findings go to the repository's code-scanning alerts.
+
 ## Known limits
 
 - Per-instance rate limits, caches and AI budget, as above.
