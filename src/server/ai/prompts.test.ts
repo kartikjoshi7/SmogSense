@@ -20,12 +20,14 @@ describe('prompts', () => {
     expect(SYSTEM_INSTRUCTION).toMatch(/doctor/);
   });
 
-  it('sends the household as ids, age groups and conditions with the facts', () => {
+  it('sends the household as ids and age groups with the facts, never health conditions', () => {
     const plan = severePlan();
     const prompt = explainPrompt(plan, SHARMA_FAMILY, 'hi', plan.recommendations.slice(0, 2));
 
     expect(prompt).toContain('LANGUAGE: Hindi');
-    expect(prompt).toContain('{"id":"dadaji","ageGroup":"senior","conditions":["copd"]}');
+    expect(prompt).toContain('[{"id":"riya","ageGroup":"adult"},{"id":"aarav","ageGroup":"child"}');
+    expect(prompt).toContain('"householdSensitivity":"high"');
+    expect(prompt).not.toMatch(/conditions|asthma|copd/);
     expect(prompt).toContain(`"value":${plan.index.value}`);
     expect(prompt).toContain(`"id":"${plan.recommendations[0]?.id ?? ''}"`);
     expect(prompt).not.toContain(`"id":"${plan.recommendations[2]?.id ?? ''}"`);

@@ -48,6 +48,8 @@ export const en = {
     },
     household: {
       legend: 'Who lives with you?',
+      privacy:
+        'Names stay on this device. Age groups and health conditions go to SmogSense to build your plan and are not stored. The AI that words the plan (Google Gemini) gets age groups and who needs extra care, never names or conditions.',
       name: 'Name (stays on this device)',
       ageGroup: 'Age group',
       conditions: 'Health conditions',

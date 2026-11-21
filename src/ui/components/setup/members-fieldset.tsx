@@ -75,6 +75,7 @@ export function MembersFieldset({
   return (
     <fieldset className="card grid gap-3">
       <legend className="text-lg font-semibold">{t.legend}</legend>
+      <p className="muted text-sm">{t.privacy}</p>
       <ul className="grid gap-3">
         {members.map((member, index) => (
           <MemberRow

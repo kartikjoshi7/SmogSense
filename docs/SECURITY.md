@@ -68,8 +68,12 @@ implements it and the test that checks it.
 
 ## Privacy
 
-- Family members' names stay in the browser. Requests carry member ids (`m1`, `m2`…), age groups
-  and conditions only; community notices are prompted without member ids at all.
+- Family members' names stay in the browser. Requests to the server carry member ids (`m1`,
+  `m2`…), age groups and health conditions, which the engine needs; nothing is stored.
+- Prompts to Gemini carry member ids and age groups, never conditions: the model learns who needs
+  extra care only from the plan (the household's sensitivity level and the members each
+  recommendation is for). Community notices are prompted without member ids at all
+  (`ai/prompts.ts`, `prompts.test.ts`). The setup form says all this next to the household fields.
 - Locations are rounded to 0.1° (about 11 km) before they reach Open-Meteo or a cache
   (`air/air-service.ts`, `air-service.test.ts`).
 - Logs go through `logger.ts` only, and only failures are logged: upstream failures with the host

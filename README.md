@@ -82,11 +82,11 @@ How `buildPlan(profile, air)` in `src/core/plan.ts` decides:
 **GenAI usage.** Gemini (through `@google/genai`) is used in three places, all in
 `src/server/ai/`:
 
-| Use              | Route                 | What the model gets and returns                                                                                                                                                        |
-| ---------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Plan narrator    | `POST /api/explain`   | The top 8 recommendations with their numbers, the household's member ids, age groups and conditions (never names), the language → JSON headline, summary, and `why` + `steps` per item |
-| Ask SmogSense    | `POST /api/chat`      | The plan's facts, up to 6 earlier turns and the question inside `<user_question>` delimiters → JSON answer                                                                             |
-| Community notice | `POST /api/community` | The plan's facts without any member ids, the audience and language → JSON notice                                                                                                       |
+| Use              | Route                 | What the model gets and returns                                                                                                                                                                 |
+| ---------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Plan narrator    | `POST /api/explain`   | The top 8 recommendations with their numbers, the household's member ids and age groups (never names or health conditions), the language → JSON headline, summary, and `why` + `steps` per item |
+| Ask SmogSense    | `POST /api/chat`      | The plan's facts, up to 6 earlier turns and the question inside `<user_question>` delimiters → JSON answer                                                                                      |
+| Community notice | `POST /api/community` | The plan's facts without any member ids, the audience and language → JSON notice                                                                                                                |
 
 Every reply must match a JSON schema (sent to the model and checked again with Zod) and pass the
 numeric grounding check in `grounding.ts`. Anything that fails, times out or cannot be reached is

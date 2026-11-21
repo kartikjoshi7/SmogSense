@@ -41,7 +41,7 @@ Dependencies point one way: `ui → shared, core` · `server → shared, core` �
 
 - The Gemini key is server-side only: `GEMINI_API_KEY`, read in `src/server/config.ts`. It never appears in client code, logs or git. `.env.example` lists variable names only.
 - Every route has Zod validation and a body-size limit, plus rate limiting on AI routes, strict CORS and secure headers. Responses never include stack traces. Logs never include personal data.
-- Household member names stay on the device. Requests send member ids, age groups and conditions only.
+- Household member names stay on the device. Requests send member ids, age groups and conditions only, and prompts to the model never include conditions. The setup form says so.
 - Render AI output as plain text (never `dangerouslySetInnerHTML`). User text goes into prompts as delimited data, kept separate from the system instruction.
 - Outbound requests go only to fixed hosts (Open-Meteo, Gemini), with timeouts.
 
