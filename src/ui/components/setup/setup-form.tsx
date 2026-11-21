@@ -119,13 +119,13 @@ function SetupActions({ showError }: { readonly showError: boolean }) {
   const { editing } = useAppState();
   const dispatch = useAppDispatch();
   return (
-    <>
+    <div className="action-bar">
       {showError ? (
         <p role="alert" className="field-error">
           {t.errors}
         </p>
       ) : null}
-      <div className="flex flex-wrap gap-3">
+      <div className="ms-auto flex flex-wrap gap-3">
         <button type="submit" className="btn-primary">
           {t.save}
         </button>
@@ -141,7 +141,7 @@ function SetupActions({ showError }: { readonly showError: boolean }) {
           </button>
         ) : null}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -155,23 +155,27 @@ function SetupHero({
 }) {
   const t = useMessages().setup;
   return (
-    <div className="hero grid gap-4">
-      <p className="eyebrow">{t.eyebrow}</p>
-      <h1 ref={headingRef} tabIndex={-1} className="text-3xl font-bold sm:text-4xl">
-        {t.title}
-      </h1>
-      <p className="muted text-lg">{t.intro}</p>
-      <ul className="flex flex-wrap gap-2">
-        {t.features.map((feature) => (
-          <li key={feature} className="feature">
-            <span aria-hidden="true">✓</span>
-            {feature}
-          </li>
-        ))}
-      </ul>
-      <button type="button" className="btn-primary justify-self-start" onClick={onDemo}>
-        {t.demo}
-      </button>
+    <div className="hero grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-center">
+      <div className="grid gap-3">
+        <p className="eyebrow">{t.eyebrow}</p>
+        <h1 ref={headingRef} tabIndex={-1} className="text-3xl font-bold sm:text-4xl">
+          {t.title}
+        </h1>
+        <p className="muted text-lg">{t.intro}</p>
+      </div>
+      <div className="grid gap-4">
+        <ul className="flex flex-wrap gap-2">
+          {t.features.map((feature) => (
+            <li key={feature} className="feature">
+              <span aria-hidden="true">✓</span>
+              {feature}
+            </li>
+          ))}
+        </ul>
+        <button type="button" className="btn-primary justify-self-start" onClick={onDemo}>
+          {t.demo}
+        </button>
+      </div>
     </div>
   );
 }
@@ -204,28 +208,30 @@ export function SetupForm({
   };
 
   return (
-    <form className="mx-auto grid w-full max-w-3xl gap-5" noValidate onSubmit={submit}>
+    <form className="grid gap-5" noValidate onSubmit={submit}>
       <SetupHero
         headingRef={headingRef}
         onDemo={() => {
           form.setDraft({ ...DEMO_HOUSEHOLD, location: DEMO_LOCATION });
         }}
       />
-      <LocationPicker
-        value={draft.location}
-        invalid={submitted}
-        onChange={(location) => {
-          form.setDraft((d) => ({ ...d, location }));
-        }}
-      />
-      <MembersFieldset
-        members={draft.profile.members}
-        names={draft.names}
-        onChange={form.changeMember}
-        onAdd={form.addMember}
-        onRemove={form.removeMember}
-      />
-      <LifestyleSections draft={draft} invalid={invalid} update={form.update} />
+      <div className="setup-steps">
+        <LocationPicker
+          value={draft.location}
+          invalid={submitted}
+          onChange={(location) => {
+            form.setDraft((d) => ({ ...d, location }));
+          }}
+        />
+        <MembersFieldset
+          members={draft.profile.members}
+          names={draft.names}
+          onChange={form.changeMember}
+          onAdd={form.addMember}
+          onRemove={form.removeMember}
+        />
+        <LifestyleSections draft={draft} invalid={invalid} update={form.update} />
+      </div>
       <SetupActions showError={submitted && (invalid.size > 0 || draft.location === null)} />
     </form>
   );

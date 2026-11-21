@@ -13,7 +13,7 @@ function Header() {
   const dispatch = useAppDispatch();
   return (
     <header className="app-header">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
         <div className="flex items-center gap-3">
           <span className="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor">
@@ -61,7 +61,7 @@ function Footer() {
   const t = useMessages().app;
   const { saved } = useAppState();
   return (
-    <footer className="muted mx-auto max-w-5xl px-4 py-8 text-sm">
+    <footer className="muted mx-auto max-w-7xl px-4 py-8 text-sm">
       <p>
         {t.dataCredit}{' '}
         <a
@@ -112,7 +112,7 @@ export function App({ store }: { readonly store: KeyValueStore | null }) {
     <AppProvider store={store}>
       <SkipLink />
       <Header />
-      <main id="main" className="mx-auto max-w-5xl px-4 py-6">
+      <main id="main" className="mx-auto max-w-7xl px-4 py-6">
         <Screen />
       </main>
       <Footer />

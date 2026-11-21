@@ -147,6 +147,43 @@ textarea {
     font-weight: 600;
   }
 
+  /* The setup steps flow into two balanced columns on wide screens, in reading order. */
+  .setup-steps {
+    display: grid;
+    gap: 1.25rem;
+  }
+  @media (min-width: 1024px) {
+    .setup-steps {
+      display: block;
+      columns: 2;
+      column-gap: 1.25rem;
+    }
+    .setup-steps > * {
+      break-inside: avoid;
+      margin-bottom: 1.25rem;
+    }
+  }
+  /* The setup form's actions; on tablets and up they stay in view at the bottom of the screen. */
+  .action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  @media (min-width: 768px) {
+    .action-bar {
+      position: sticky;
+      bottom: 1rem;
+      z-index: 10;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+    }
+  }
+
   /* ------------------------------------------------------------ Surfaces */
   .surface {
     background: var(--surface);

@@ -77,15 +77,19 @@ function PlanView({
           {t.actions.notice}
         </button>
       </div>
-      <ForecastChart plan={plan} />
-      <div className="grid gap-4 md:grid-cols-2">
-        <InversionCard inversion={plan.inversion} />
-        <Timeline entries={plan.timeline} items={items} />
+      <div className="grid gap-5 lg:grid-cols-12 lg:items-start">
+        <div className="grid gap-5 md:grid-cols-2 lg:col-span-5 lg:grid-cols-1">
+          <InversionCard inversion={plan.inversion} />
+          <Timeline entries={plan.timeline} items={items} />
+        </div>
+        <div className="grid gap-5 lg:col-span-7">
+          <ForecastChart plan={plan} />
+          {exercise.activity === 'none' ? null : (
+            <WhatIf plan={plan} exercise={exercise} members={members} />
+          )}
+        </div>
       </div>
       <PlanSection items={items} household={household} />
-      {exercise.activity === 'none' ? null : (
-        <WhatIf plan={plan} exercise={exercise} members={members} />
-      )}
     </>
   );
 }
