@@ -54,6 +54,21 @@ body {
   outline-offset: 2px;
 }
 
+/*
+ * Grid items, fieldsets and form controls may shrink below their content's width, so a long
+ * option or a wide system font wraps on a narrow phone instead of pushing the page sideways.
+ */
+.grid > *,
+fieldset {
+  min-width: 0;
+}
+input,
+select,
+textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
 @layer components {
   .skip-link {
     position: absolute;
