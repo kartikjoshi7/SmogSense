@@ -26,10 +26,12 @@ const ANY_DIGITS = /\p{Nd}/gu;
 interface Quantity {
   readonly value: number;
   readonly measured: boolean;
+  /** Decimal places written, so "1.2" matches 1.24 but not 1.7. */
+  readonly decimals: number;
 }
 
-/** How far a quoted number may be from a fact and still count as that fact rounded. */
-const ROUNDING_TOLERANCE = 0.5;
+/** A quoted number matches a fact rounded to its last written digit: half a unit of that digit. */
+const HALF_A_UNIT = 0.5;
 
 /**
  * The value of a decimal digit in any script. Unicode encodes every script's digits as runs of
@@ -58,6 +60,7 @@ function extractQuantities(text: string): Quantity[] {
   const ascii = toAsciiDigits(text);
   return Array.from(ascii.matchAll(NUMBER), (match) => ({
     value: Number(match[0].replace(/,/g, '')),
+    decimals: match[0].split('.')[1]?.length ?? 0,
     measured:
       MEASURE_AFTER.test(ascii.slice(match.index + match[0].length)) ||
       MEASURE_BEFORE.test(ascii.slice(0, match.index)),
@@ -89,11 +92,12 @@ export function allowedNumbers(plan: Plan): ReadonlySet<number> {
   return allowed;
 }
 
-function isAllowed({ value, measured }: Quantity, allowed: ReadonlySet<number>): boolean {
+function isAllowed({ value, measured, decimals }: Quantity, allowed: ReadonlySet<number>): boolean {
   if (!measured && Number.isInteger(value) && value <= MAX_PLAIN_INTEGER) {
     return true;
   }
-  return [...allowed].some((fact) => Math.abs(fact - value) <= ROUNDING_TOLERANCE);
+  const tolerance = HALF_A_UNIT / 10 ** decimals;
+  return [...allowed].some((fact) => Math.abs(fact - value) <= tolerance);
 }
 
 /**

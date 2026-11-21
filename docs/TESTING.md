@@ -48,7 +48,7 @@ axe (jsdom cannot measure colour contrast; the end-to-end axe run does). They co
 (search, a failed search, short queries, GPS allowed and denied, validation messages linked to
 fields, adding and removing members), every lifestyle field, the plan (tabs with arrow keys, an
 empty category, table view, missing forecast hours, retry after an error, a message for each
-error status), the what-if slider (its doses equal the plan's own exercise advice; a session past
+error status, a slow answer for a place already left never shown), the what-if slider (its doses equal the plan's own exercise advice; a session past
 the forecast says so), language switching, saving and restoring the household (and the notice when the browser cannot
 save it), both dialogs
 (focus trap, Esc, focus return, the first answer announced, focus kept after a suggestion,

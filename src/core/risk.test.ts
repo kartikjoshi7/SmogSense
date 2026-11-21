@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Member } from '../shared/profile.js';
-import { highRiskMemberIds, householdSensitivity, outdoorAdvice } from './risk.js';
+import { householdSensitivity, outdoorAdvice, sensitiveMemberIds } from './risk.js';
 
 const adult: Member = { id: 'a', ageGroup: 'adult', conditions: [] };
 const child: Member = { id: 'c', ageGroup: 'child', conditions: [] };
@@ -32,9 +32,9 @@ describe('householdSensitivity', () => {
   });
 });
 
-describe('highRiskMemberIds', () => {
-  it('lists only high-sensitivity members', () => {
-    expect(highRiskMemberIds([adult, child, infant, asthmaticTeen])).toEqual(['i', 't']);
+describe('sensitiveMemberIds', () => {
+  it('lists every member in a sensitive group, children included', () => {
+    expect(sensitiveMemberIds([adult, child, infant, asthmaticTeen])).toEqual(['c', 'i', 't']);
   });
 });
 
@@ -44,7 +44,9 @@ describe('outdoorAdvice', () => {
     [1, 'high', 'ok'],
     [2, 'normal', 'ok'],
     [2, 'high', 'reduce'],
-    [3, 'elevated', 'reduce'],
+    [1, 'elevated', 'ok'],
+    [2, 'elevated', 'reduce'],
+    [3, 'elevated', 'avoid'],
     [3, 'high', 'avoid'],
     [4, 'normal', 'avoid'],
     [4, 'high', 'stay_indoors'],

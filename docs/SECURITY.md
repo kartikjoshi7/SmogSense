@@ -57,7 +57,7 @@ implements it and the test that checks it.
 - The model may only use the plan's numbers, and is told to write them with the digits 0–9 in
   every language. `ai/grounding.ts` reads every number in the reply, whatever script its digits
   are in (Devanagari, Bengali, Tamil and the rest are converted first), and rejects any that is
-  not one of the plan's numbers within rounding; a rejected reply is replaced by standard guidance
+  not one of the plan's numbers rounded to the digits written ("1.2" may stand for 1.24, not 1.7); a rejected reply is replaced by standard guidance
   (`grounding.test.ts`, `ai-service.test.ts`). Its limits: whole numbers up to 24 pass as clock
   hours or counts unless a percent sign, a unit of mass or the word for "percent" in one of the ten
   languages is next to them; numbers spelled out in words are not read; and a number may come from

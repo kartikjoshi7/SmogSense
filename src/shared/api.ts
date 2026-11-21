@@ -16,14 +16,14 @@ export const API_STATUS = {
 /** A point on the map. The server rounds it to 0.1° before using it. */
 export type Location = z.infer<typeof coordinatesSchema>;
 
-/** City search text: letters (any script), spaces and simple punctuation only. */
+/** City search text: letters and digits (any script), spaces and simple punctuation only. */
 export const geocodeQuerySchema = z.object({
   q: z
     .string()
     .trim()
     .min(PLACE_QUERY_CHARS.min)
     .max(PLACE_QUERY_CHARS.max)
-    .regex(/^[\p{L}\p{M} ,.'-]+$/u, 'Use letters, spaces and simple punctuation only'),
+    .regex(/^[\p{L}\p{M}\p{N} ,.'()-]+$/u, 'Use letters, digits, spaces and simple punctuation'),
   /** The interface language, for place names in the user's script. */
   lang: uiLanguageSchema.default('en'),
 });

@@ -307,7 +307,7 @@ export const SEVERITY_BAND = {
 /** The AQI band at which each outdoor advice starts for most people. */
 export const OUTDOOR_ADVICE_BAND = { reduce: 3, avoid: 4, stayIndoors: 5 } as const;
 
-/** How many bands sooner highly sensitive people get each outdoor advice. */
+/** How many bands sooner sensitive groups (children included) get each outdoor advice. */
 export const SENSITIVE_ADVICE_SHIFT = 1;
 
 // ---------------------------------------------------------------- When actions apply

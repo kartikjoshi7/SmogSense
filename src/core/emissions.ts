@@ -113,5 +113,5 @@ export function commuteSwaps(commute: Commute, ambientPm25: number): CommuteSwap
   return commute.alternatives
     .map((alternative) => evaluateSwap(commute, alternative, ambientPm25))
     .filter((swap): swap is CommuteSwap => swap !== null)
-    .filter((swap) => swap.co2SavedKgPerWeek > 0 || swap.exposureReductionPct > 0);
+    .filter((swap) => swap.co2SavedKgPerWeek > 0);
 }

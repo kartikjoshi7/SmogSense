@@ -6,7 +6,7 @@ import { candidate, type Candidate, type PlanContext } from './context.js';
 function n95Outdoors(ctx: PlanContext): Candidate[] {
   const { mask } = ctx.profile;
   const sensitiveAtRisk =
-    ctx.highRiskIds.length > 0 && ctx.index.band >= ACTION_BAND.alertSensitive;
+    ctx.sensitiveIds.length > 0 && ctx.index.band >= ACTION_BAND.alertSensitive;
   if (mask === 'n95' || (ctx.index.band < ACTION_BAND.maskEveryone && !sensitiveAtRisk)) {
     return [];
   }
@@ -27,7 +27,7 @@ function n95Outdoors(ctx: PlanContext): Candidate[] {
 
 /** Personal precautions for infants, seniors and anyone with a heart or lung condition or pregnancy. */
 function sensitiveMembers(ctx: PlanContext): Candidate[] {
-  if (ctx.highRiskIds.length === 0 || ctx.index.band < ACTION_BAND.alertSensitive) {
+  if (ctx.sensitiveIds.length === 0 || ctx.index.band < ACTION_BAND.alertSensitive) {
     return [];
   }
   return [
@@ -35,7 +35,7 @@ function sensitiveMembers(ctx: PlanContext): Candidate[] {
       id: 'sensitive_members',
       category: 'protection',
       effort: 'low',
-      memberIds: [...ctx.highRiskIds],
+      memberIds: [...ctx.sensitiveIds],
       impact: { level: 'high' },
       facts: { outdoorAdvice: ctx.advice, indexValue: ctx.index.value },
     }),

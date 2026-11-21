@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
-import type { Place } from '../../shared/api.js';
-import { PLACE_QUERY_CHARS } from '../../shared/limits.js';
+import { geocodeQuerySchema, type Place } from '../../shared/api.js';
 import { api } from '../api/client.js';
 import { UI_SETTINGS } from '../settings.js';
 import { useAppState } from '../state/app-context.js';
@@ -8,9 +7,9 @@ import type { SavedLocation } from '../state/storage.js';
 
 export type SearchStatus = 'idle' | 'searching' | 'done' | 'failed' | 'locating' | 'denied';
 
-/** Whether a query is long enough to search for. */
+/** Whether the server would accept a query: the same schema checks it on both sides. */
 export function isSearchable(query: string): boolean {
-  return query.trim().length >= PLACE_QUERY_CHARS.min;
+  return geocodeQuerySchema.shape.q.safeParse(query).success;
 }
 
 /**

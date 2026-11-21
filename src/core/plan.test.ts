@@ -158,9 +158,9 @@ describe('buildPlan — other households and places', () => {
     const p = plan(SHARMA_FAMILY, air);
 
     expect(p).toMatchObject({ severity: 'normal', index: { scale: 'us_aqi', value: 56 } });
-    expect(ids(p)).not.toEqual(
-      expect.arrayContaining(['exercise_window', 'n95_outdoors', 'sensitive_members']),
-    );
+    for (const id of ['exercise_window', 'n95_outdoors', 'sensitive_members'] as const) {
+      expect(ids(p), id).not.toContain(id);
+    }
     expect(ids(p)).not.toContain('ncr_grap_check');
     expect(planHeadline(p, 'en')).toBe('A normal day: no extra precautions needed');
   });
@@ -185,9 +185,9 @@ describe('buildPlan — other households and places', () => {
     const p = plan(HOMEBOUND_SENIOR, makeAir());
 
     expect(p.recommendations.map((r) => r.category)).not.toContain('alternative');
-    expect(ids(p)).not.toEqual(
-      expect.arrayContaining(['n95_outdoors', 'commute_protection', 'cooking_ventilation']),
-    );
+    for (const id of ['n95_outdoors', 'commute_protection', 'cooking_ventilation'] as const) {
+      expect(ids(p), id).not.toContain(id);
+    }
     expect(find(p, 'run_purifier')?.effort).toBe('low');
   });
 

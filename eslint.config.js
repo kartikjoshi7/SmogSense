@@ -44,14 +44,20 @@ export default tseslint.config(
   {
     plugins: { 'import-x': importXPlugin },
     settings: {
+      // Without these, import-x skips TypeScript files when following imports, so no-cycle sees nothing.
+      'import-x/extensions': ['.ts', '.tsx', '.js', '.mjs'],
+      'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx'] },
       'import-x/resolver-next': [
         importXPlugin.createNodeResolver({
           extensions: ['.ts', '.tsx', '.js', '.mjs'],
+          // Imports name the compiled `.js` file (AGENTS.md rule 10); the source is `.ts` or `.tsx`.
+          extensionAlias: { '.js': ['.ts', '.tsx', '.js'] },
         }),
       ],
     },
     rules: {
       'import-x/no-cycle': 'error',
+      'import-x/no-unresolved': 'error',
       'import-x/no-duplicates': 'error',
       'import-x/no-self-import': 'error',
     },

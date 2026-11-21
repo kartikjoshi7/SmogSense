@@ -21,6 +21,15 @@ describe('reading numbers', () => {
     expect(isGrounded('13.5% more', allowed)).toBe(false);
   });
 
+  it('matches a number only to a fact it rounds from, at the precision written', () => {
+    const allowed = new Set([1.24, 0.4, 201.3]);
+
+    expect(isGrounded('It saves 1.2 kg a week.', allowed)).toBe(true);
+    expect(isGrounded('The room reads 201 µg/m³.', allowed)).toBe(true);
+    expect(isGrounded('It saves 1.7 kg a week.', allowed)).toBe(false);
+    expect(isGrounded('It saves 0.9 kg a week.', allowed)).toBe(false);
+  });
+
   it('reads Devanagari digits in Hindi text', () => {
     const allowed = new Set([2.5, 201, 28]);
 

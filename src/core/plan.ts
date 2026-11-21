@@ -11,7 +11,7 @@ import { indoorAirCandidates } from './recommendations/indoor-air.js';
 import { protectionCandidates } from './recommendations/protection.js';
 import { rank } from './recommendations/rank.js';
 import { routineCandidates } from './recommendations/routine.js';
-import { highRiskMemberIds, householdSensitivity, outdoorAdvice } from './risk.js';
+import { sensitiveMemberIds, householdSensitivity, outdoorAdvice } from './risk.js';
 import { severityMode } from './severity.js';
 import { analyzeInversion } from './inversion.js';
 import { bestActivityWindow, ventilationHour } from './windows.js';
@@ -46,7 +46,7 @@ function buildContext(profile: Profile, air: AirData, index: IndexReading): Plan
     sensitivity,
     advice: outdoorAdvice(index.band, sensitivity),
     severity: severityMode(index.band, sensitivity),
-    highRiskIds: highRiskMemberIds(profile.members),
+    sensitiveIds: sensitiveMemberIds(profile.members),
     ambientPm25: index.pm25Mean24h,
     exerciseWindow:
       exercise.activity === 'none'

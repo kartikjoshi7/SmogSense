@@ -18,7 +18,8 @@ export interface PlanContext {
   readonly sensitivity: Sensitivity;
   readonly advice: OutdoorAdvice;
   readonly severity: Severity;
-  readonly highRiskIds: readonly string[];
+  /** Members in a sensitive group, who get personal alerts. */
+  readonly sensitiveIds: readonly string[];
   /** Representative outdoor PM2.5 for indoor and commute estimates (24-hour mean). */
   readonly ambientPm25: number;
   /** Cleanest daylight window for the household's exercise, if any. */

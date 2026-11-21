@@ -1,8 +1,12 @@
-import { screen } from '@testing-library/react';
-import { createRef } from 'react';
+import { act, render, screen } from '@testing-library/react';
+import { createRef, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { makeAir } from '../../../core/fixtures/air.js';
+import { buildPlan } from '../../../core/plan.js';
+import type { AirData } from '../../../shared/air.js';
+import { AppProvider } from '../../state/app-context.js';
 import { checkA11y } from '../../test/axe.js';
-import { fakeApi } from '../../test/fake-api.js';
+import { fakeApi, memoryStore } from '../../test/fake-api.js';
 import { renderInApp } from '../../test/render.js';
 import { DEMO_HOUSEHOLD, DEMO_LOCATION } from '../setup/defaults.js';
 import { Dashboard } from './dashboard.js';
@@ -40,5 +44,64 @@ describe('Dashboard errors', () => {
     showDashboard();
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/Your plan could not be loaded/);
+  });
+});
+
+/** The plan the engine builds for the example family from this air data. */
+function planFrom(air: AirData) {
+  const result = buildPlan(DEMO_HOUSEHOLD.profile, air);
+  if (!result.ok) {
+    throw new Error(result.error);
+  }
+  return result.value;
+}
+
+describe('Dashboard requests', () => {
+  it('never shows a slow plan for a place the household has already left', async () => {
+    const delhi = planFrom(makeAir());
+    const mumbai = planFrom(makeAir({ scale: 2.4 }));
+    expect(delhi.index.value).not.toBe(mumbai.index.value);
+    const answers: ((body: unknown) => void)[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        (path: string) =>
+          new Promise<Response>((resolve) => {
+            if (path === '/api/plan') {
+              answers.push((body) => {
+                resolve(Response.json(body));
+              });
+            }
+          }),
+      ),
+    );
+    const store = memoryStore();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <AppProvider store={store}>{children}</AppProvider>
+    );
+    const dashboard = (label: string) => (
+      <Dashboard
+        household={DEMO_HOUSEHOLD}
+        location={{ ...DEMO_LOCATION, lat: label === 'Mumbai' ? 19.07 : DEMO_LOCATION.lat, label }}
+        headingRef={createRef<HTMLHeadingElement>()}
+      />
+    );
+    const view = render(dashboard('New Delhi'), { wrapper });
+    view.rerender(dashboard('Mumbai'));
+
+    await act(async () => {
+      answers[1]?.({ plan: mumbai });
+      await Promise.resolve();
+    });
+    const shown = { selector: '.text-5xl' };
+    expect(await screen.findByText(String(mumbai.index.value), shown)).toBeInTheDocument();
+    await act(async () => {
+      answers[0]?.({ plan: delhi });
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByText(String(delhi.index.value), shown)).not.toBeInTheDocument();
+    expect(screen.getByText(String(mumbai.index.value), shown)).toBeInTheDocument();
+    expect(await checkA11y(view.container)).toEqual([]);
   });
 });

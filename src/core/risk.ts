@@ -26,9 +26,9 @@ export function householdSensitivity(members: readonly Member[]): Sensitivity {
   return levels.includes('elevated') ? 'elevated' : 'normal';
 }
 
-/** Ids of members with high sensitivity, who get personal alerts. */
-export function highRiskMemberIds(members: readonly Member[]): string[] {
-  return members.filter((m) => memberSensitivity(m) === 'high').map((m) => m.id);
+/** Ids of members in a sensitive group (children, infants, seniors, health conditions): they get personal alerts. */
+export function sensitiveMemberIds(members: readonly Member[]): string[] {
+  return members.filter((m) => memberSensitivity(m) !== 'normal').map((m) => m.id);
 }
 
 const NO_EXERTION: ReadonlySet<OutdoorAdvice> = new Set(['avoid', 'stay_indoors']);
@@ -39,11 +39,11 @@ export function outdoorExertionUnsafe(advice: OutdoorAdvice, severity: Severity)
 }
 
 /**
- * Outdoor-activity advice for an AQI band (0–5) and sensitivity. Highly sensitive people get
- * each step one band sooner; at the worst band everyone stays indoors.
+ * Outdoor-activity advice for an AQI band (0–5) and sensitivity. Sensitive groups, children
+ * included, get each step one band sooner; at the worst band everyone stays indoors.
  */
 export function outdoorAdvice(band: number, sensitivity: Sensitivity): OutdoorAdvice {
-  const felt = sensitivity === 'high' ? band + SENSITIVE_ADVICE_SHIFT : band;
+  const felt = sensitivity === 'normal' ? band : band + SENSITIVE_ADVICE_SHIFT;
   if (felt >= OUTDOOR_ADVICE_BAND.stayIndoors) {
     return 'stay_indoors';
   }
