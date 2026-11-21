@@ -3,7 +3,7 @@ import type { Location, Place } from '../../shared/api.js';
 import { TtlCache } from '../cache.js';
 import { SETTINGS } from '../config.js';
 import type { FetchFailure } from '../http/fetch-json.js';
-import { ok, type Result } from '../result.js';
+import { ok, type Result } from '../../core/result.js';
 import { searchPlaces } from './geocode.js';
 import { fetchAirData, type AirFailure } from './open-meteo.js';
 
@@ -19,7 +19,7 @@ export interface AirServiceDeps {
 }
 
 /** Round to 0.1° (about 11 km): enough for city-scale air data, and less precise than GPS. */
-export function roundLocation(location: Location): Location {
+function roundLocation(location: Location): Location {
   const factor = 10 ** SETTINGS.coordinateDecimals;
   return {
     lat: Math.round(location.lat * factor) / factor,

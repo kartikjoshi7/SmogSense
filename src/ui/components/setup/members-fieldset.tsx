@@ -1,10 +1,8 @@
 import { useId } from 'react';
-import type { Member } from '../../../shared/profile.js';
+import { PROFILE_LIMITS, type Member } from '../../../shared/profile.js';
 import { useMessages } from '../../state/app-context.js';
+import { MEMBER_NAME_CHARS } from '../../state/storage.js';
 import { CheckboxGroup, SelectField } from '../common/fields.js';
-
-const MAX_MEMBERS = 8;
-const MAX_NAME_LENGTH = 40;
 
 interface MemberRowProps {
   readonly member: Member;
@@ -26,7 +24,7 @@ function MemberRow({ member, name, position, canRemove, onChange, onRemove }: Me
         <input
           id={nameId}
           value={name}
-          maxLength={MAX_NAME_LENGTH}
+          maxLength={MEMBER_NAME_CHARS}
           autoComplete="off"
           onChange={(e) => {
             onChange(member, e.target.value);
@@ -94,7 +92,7 @@ export function MembersFieldset({
       <button
         type="button"
         className="btn-secondary justify-self-start"
-        disabled={members.length >= MAX_MEMBERS}
+        disabled={members.length >= PROFILE_LIMITS.members.max}
         onClick={onAdd}
       >
         {t.add}

@@ -3,10 +3,12 @@ import {
   CAR_MODES,
   CARPOOL_OCCUPANTS,
   COMMUTE_MODES,
+  DECIMALS,
   MAX_CYCLE_KM,
   MAX_WALK_KM,
 } from './constants.js';
 import { inhaledDoseUg, reduction } from './exposure.js';
+import { roundTo } from './round.js';
 
 /** A realistic change to the commute and what it does to emissions and exposure. */
 export interface CommuteSwap {
@@ -16,17 +18,13 @@ export interface CommuteSwap {
   readonly exposureReductionPct: number;
 }
 
-/** Kilograms rounded to one decimal, the precision every CO₂ figure is shown at. */
-export function roundKg(kg: number): number {
-  return Math.round(kg * 10) / 10;
+/** Kilograms at the precision every CO₂ figure is shown at. */
+function roundKg(kg: number): number {
+  return roundTo(kg, DECIMALS.co2Kg);
 }
 
 /** Weekly CO₂ of a commute in kg (round trip on each commuting day). */
-export function weeklyCommuteCo2Kg(
-  mode: CommuteMode,
-  oneWayKm: number,
-  daysPerWeek: number,
-): number {
+function weeklyCommuteCo2Kg(mode: CommuteMode, oneWayKm: number, daysPerWeek: number): number {
   return COMMUTE_MODES[mode].co2KgPerKm * oneWayKm * 2 * daysPerWeek;
 }
 

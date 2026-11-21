@@ -1,6 +1,5 @@
 import type { Level } from '../../shared/plan.js';
-import type { CookingFuel } from '../../shared/profile.js';
-import { PURIFIER_NIGHT_HOUR } from '../constants.js';
+import { PURIFIER_NIGHT_HOUR, SMOKY_FUELS } from '../constants.js';
 import { reduction } from '../exposure.js';
 import { indoorHacks, type IndoorHack, type IndoorHackId } from '../indoor.js';
 import { candidate, type Candidate, type PlanContext } from './context.js';
@@ -12,8 +11,6 @@ const HACK_EFFORT: Readonly<Record<IndoorHackId, Level>> = {
   stop_incense: 'low',
   no_indoor_smoking: 'high',
 };
-
-const SMOKY_FUELS: ReadonlySet<CookingFuel> = new Set(['biomass', 'kerosene']);
 
 function hackCandidate(ctx: PlanContext, hack: IndoorHack): Candidate {
   const { home } = ctx.profile;
@@ -44,7 +41,7 @@ function hackCandidate(ctx: PlanContext, hack: IndoorHack): Candidate {
 /** Cooking smoke advice: always worth it on biomass or kerosene, or without an exhaust. */
 function cookingVentilation(ctx: PlanContext): Candidate[] {
   const { cookingFuel, hasExhaustOrChimney } = ctx.profile.home;
-  const smoky = SMOKY_FUELS.has(cookingFuel);
+  const smoky = SMOKY_FUELS.includes(cookingFuel);
   if (!smoky && hasExhaustOrChimney) {
     return [];
   }

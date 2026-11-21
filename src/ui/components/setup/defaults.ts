@@ -1,3 +1,4 @@
+import { DEFAULT_PURIFIER_CADR_M3H } from '../../../core/constants.js';
 import type { Profile } from '../../../shared/profile.js';
 import type { Household, SavedLocation } from '../../state/storage.js';
 
@@ -21,7 +22,7 @@ export const EMPTY_PROFILE: Profile = {
   },
   home: {
     purifierCount: 0,
-    purifierCadrM3h: 250,
+    purifierCadrM3h: DEFAULT_PURIFIER_CADR_M3H,
     roomAreaM2: 12,
     airtightness: 'average',
     cookingFuel: 'lpg',

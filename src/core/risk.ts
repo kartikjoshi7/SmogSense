@@ -5,7 +5,7 @@ import type { Member } from '../shared/profile.js';
  * How sensitive one member is to particulate pollution: "high" with any health condition or
  * as an infant or senior, "elevated" for children, otherwise "normal".
  */
-export function memberSensitivity(member: Member): Sensitivity {
+function memberSensitivity(member: Member): Sensitivity {
   if (
     member.conditions.length > 0 ||
     member.ageGroup === 'infant' ||

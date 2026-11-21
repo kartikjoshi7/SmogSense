@@ -1,15 +1,16 @@
 import type { Audience } from '../../shared/api.js';
-import type { OutdoorAdvice, Plan, Recommendation } from '../../shared/plan.js';
+import type { OutdoorAdvice } from '../../shared/plan.js';
 import {
   clock,
+  daySummary,
   impact,
-  kg,
   lookup,
   num,
   pct,
+  templateKit,
   text,
   type LanguagePack,
-  type Template,
+  type Phrases,
 } from './format.js';
 
 const MASK: Readonly<Record<string, string>> = {
@@ -33,33 +34,18 @@ const AUDIENCE: Readonly<Record<Audience, string>> = {
   workplace: 'Dear colleagues',
 };
 
-function indoor(title: string, lead: string, steps: readonly string[]): Template {
-  return (rec) => ({
-    title,
-    why: `${lead} Indoor PM2.5 goes from about ${impact(rec, 'indoorBeforeUgM3')} to ${impact(rec, 'indoorAfterUgM3')} µg/m³ (${pct(rec)}% less).`,
-    steps,
-  });
-}
+const PHRASES: Phrases = {
+  indoorChange: (before, after, percent) =>
+    `Indoor PM2.5 goes from about ${before} to ${after} µg/m³ (${percent}% less).`,
+  co2Saved: (kg, exposureClause) => `This saves ${kg} kg of CO₂ a week${exposureClause}.`,
+  exposureDown: (percent) => ` and cuts the PM2.5 you breathe on the way by ${percent}%`,
+  exposureUp: (percent) => `; in-transit exposure rises by ${percent}%, so wear an N95`,
+  reading: (scale, value, category) => `${scale} ${value}: ${category}.`,
+  trappedUntil: (time) => `Pollution is trapped near the ground until about ${time}.`,
+  cleanestAt: (time, pm25) => `The cleanest hour is around ${time} (${pm25} µg/m³).`,
+};
 
-function exposureClause(rec: Recommendation): string {
-  const change = pct(rec);
-  if (change > 0) {
-    return ` and cuts the PM2.5 you breathe on the way by ${change}%`;
-  }
-  return change < 0 ? `; in-transit exposure rises by ${-change}%, so wear an N95` : '';
-}
-
-function swap(title: string, steps: readonly string[]): Template {
-  return (rec) => ({
-    title,
-    why: `This saves ${kg(rec)} kg of CO₂ a week${exposureClause(rec)}.`,
-    steps,
-  });
-}
-
-function qualitative(title: string, why: string, steps: readonly string[]): Template {
-  return () => ({ title, why, steps });
-}
+const { indoor, swap, qualitative } = templateKit(PHRASES);
 
 const recommendations: LanguagePack['recommendations'] = {
   exercise_window: (rec) => ({
@@ -240,42 +226,40 @@ const recommendations: LanguagePack['recommendations'] = {
   ),
 };
 
-function summary(plan: Plan): string {
-  const { index, inversion, cleanestHour } = plan;
-  const reading = `${pack.scales[index.scale]} ${index.value}: ${pack.categories[index.category]}.`;
-  if (inversion.trappedNow && inversion.clearsAtHour !== null) {
-    return `${reading} Pollution is trapped near the ground until about ${clock(inversion.clearsAtHour)}.`;
-  }
-  return cleanestHour === null
-    ? reading
-    : `${reading} The cleanest hour is around ${clock(cleanestHour.hour)} (${cleanestHour.pm25} µg/m³).`;
-}
+const categories: LanguagePack['categories'] = {
+  good: 'Good',
+  satisfactory: 'Satisfactory',
+  moderate: 'Moderate',
+  poor: 'Poor',
+  very_poor: 'Very poor',
+  severe: 'Severe',
+  unhealthy_sensitive: 'Unhealthy for sensitive groups',
+  unhealthy: 'Unhealthy',
+  very_unhealthy: 'Very unhealthy',
+  hazardous: 'Hazardous',
+};
+
+const scales: LanguagePack['scales'] = { naqi: 'India AQI', us_aqi: 'US AQI' };
+
+const headlines: LanguagePack['headlines'] = {
+  normal: 'The air is fine today',
+  caution: 'Moderate air: sensitive family members should take it easy',
+  restrict: 'Unhealthy air today: limit time outdoors',
+  emergency: 'Smog emergency: stay indoors and protect sensitive family members',
+};
+
+const summary: LanguagePack['summary'] = (plan) =>
+  daySummary(plan, { scales, categories }, PHRASES);
 
 /** English text for everything the app says without AI. */
 export const pack: LanguagePack = {
   recommendations,
-  categories: {
-    good: 'Good',
-    satisfactory: 'Satisfactory',
-    moderate: 'Moderate',
-    poor: 'Poor',
-    very_poor: 'Very poor',
-    severe: 'Severe',
-    unhealthy_sensitive: 'Unhealthy for sensitive groups',
-    unhealthy: 'Unhealthy',
-    very_unhealthy: 'Very unhealthy',
-    hazardous: 'Hazardous',
-  },
-  scales: { naqi: 'India AQI', us_aqi: 'US AQI' },
-  headlines: {
-    normal: 'The air is fine today',
-    caution: 'Moderate air: sensitive family members should take it easy',
-    restrict: 'Unhealthy air today: limit time outdoors',
-    emergency: 'Smog emergency: stay indoors and protect sensitive family members',
-  },
+  categories,
+  scales,
+  headlines,
   summary,
   chatFallback: (plan, topTitles) =>
     `The AI assistant is unavailable right now, so here is today's standard guidance. ${summary(plan)} Most important: ${topTitles.join('; ')}.`,
   communityNotice: (plan, audience) =>
-    `${AUDIENCE[audience]}, ${summary(plan)} ${pack.headlines[plan.severity]}. Please keep children and older people indoors at the smoggiest hours, wear N95 masks outside and avoid burning anything. — Shared via SmogSense`,
+    `${AUDIENCE[audience]}, ${summary(plan)} ${headlines[plan.severity]}. Please keep children and older people indoors at the smoggiest hours, wear N95 masks outside and avoid burning anything. — Shared via SmogSense`,
 };

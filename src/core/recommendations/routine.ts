@@ -1,14 +1,12 @@
 import type { OutdoorAdvice } from '../../shared/plan.js';
 import {
   ACTION_BAND,
-  AGE_FACTOR,
   COMMUTE_MODES,
-  EXERCISE_BREATHING_M3H,
   MASK_REDUCTION,
   MIN_WORTHWHILE_REDUCTION_PCT,
 } from '../constants.js';
 import { dailyCommuteDoseUg } from '../emissions.js';
-import { inhaledDoseUg, reduction } from '../exposure.js';
+import { exerciseDoseUg, reduction } from '../exposure.js';
 import { currentRoom, indoorPm25 } from '../indoor.js';
 import { candidate, type Candidate, type PlanContext } from './context.js';
 
@@ -19,16 +17,8 @@ function exerciserIds(ctx: PlanContext): string[] {
   return id === null ? [] : [id];
 }
 
-/** PM2.5 inhaled during one exercise session at a given concentration, for whoever exercises. */
 function exerciseDose(ctx: PlanContext, concentration: number): number {
-  const { activity, durationMin, memberId } = ctx.profile.exercise;
-  const member = ctx.profile.members.find((m) => m.id === memberId);
-  return inhaledDoseUg({
-    concentration,
-    hours: durationMin / 60,
-    breathingM3h: EXERCISE_BREATHING_M3H[activity],
-    ageFactor: member === undefined ? 1 : AGE_FACTOR[member.ageGroup],
-  });
+  return exerciseDoseUg(ctx.profile.exercise, ctx.profile.members, concentration);
 }
 
 function exerciseIndoors(ctx: PlanContext): Candidate {

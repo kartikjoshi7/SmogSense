@@ -14,13 +14,14 @@ import {
   type ChatTurn,
   type CommunityResponse,
   type ExplainResponse,
-  type Language,
   type TextSource,
 } from '../../shared/api.js';
+import type { Language } from '../../shared/languages.js';
 import type { Plan, Recommendation } from '../../shared/plan.js';
 import type { Profile } from '../../shared/profile.js';
 import { TtlCache } from '../cache.js';
 import { SETTINGS } from '../config.js';
+import * as logger from '../logger.js';
 import type { AiClient } from './gemini-client.js';
 import { allowedNumbers, isGrounded } from './grounding.js';
 import { SYSTEM_INSTRUCTION, chatPrompt, communityPrompt, explainPrompt } from './prompts.js';
@@ -56,6 +57,30 @@ export interface AiService {
   communityNotice(plan: Plan, audience: Audience, lang: Language): Promise<CommunityResponse>;
 }
 
+/** Record AI text that was dropped for quoting numbers the plan does not contain. */
+function logUngrounded(kind: 'explain' | 'chat' | 'notice', rejected: number): void {
+  if (rejected > 0) {
+    logger.warn('AI text failed the grounding check', { kind, rejected });
+  }
+}
+
+/**
+ * AI-written text when the model answered and every number in it is a plan fact, else null.
+ * A reply dropped by the grounding check is logged.
+ */
+function groundedText(
+  kind: 'chat' | 'notice',
+  text: string | null,
+  allowed: ReadonlySet<number>,
+): string | null {
+  if (text === null) {
+    return null;
+  }
+  const passes = isGrounded(text, allowed);
+  logUngrounded(kind, passes ? 0 : 1);
+  return passes ? text : null;
+}
+
 function cacheKey(...parts: readonly unknown[]): string {
   return createHash('sha256').update(JSON.stringify(parts)).digest('hex');
 }
@@ -87,9 +112,7 @@ function explainItem(
 ): ExplainResponse['items'][number] {
   const standard = explainRecommendation(rec, lang);
   const written = ai.reply?.items.find((item) => item.id === rec.id);
-  const grounded =
-    written !== undefined && isGrounded([written.why, ...written.steps].join(' '), ai.allowed);
-  return grounded
+  return written !== undefined && isGrounded([written.why, ...written.steps].join(' '), ai.allowed)
     ? { id: rec.id, title: standard.title, why: written.why, steps: written.steps, source: 'ai' }
     : { id: rec.id, ...standard, steps: [...standard.steps], source: 'fallback' };
 }
@@ -103,25 +126,38 @@ function overallSource(parts: readonly TextSource[]): ExplainResponse['source'] 
   return aiCount === parts.length ? 'ai' : 'mixed';
 }
 
+/** How many parts of a reply were written but dropped by the grounding check. */
+function droppedParts(
+  reply: ExplanationReply,
+  items: readonly ExplainResponse['items'][number][],
+  introSource: TextSource,
+): number {
+  const droppedItems = items.filter(
+    (item) => item.source === 'fallback' && reply.items.some((written) => written.id === item.id),
+  ).length;
+  return droppedItems + (introSource === 'fallback' ? 1 : 0);
+}
+
 /** Merge a Gemini reply (or none) with standard guidance, keeping only grounded AI text. */
-export function composeExplanation(
+function composeExplanation(
   plan: Plan,
   lang: Language,
   reply: ExplanationReply | null,
 ): ExplainResponse {
   const allowed = allowedNumbers(plan);
   const items = plan.recommendations.map((rec) => explainItem(rec, lang, { reply, allowed }));
-  const intro =
-    reply !== null && isGrounded(`${reply.headline} ${reply.summary}`, allowed) ? reply : null;
+  const introGrounded = reply !== null && isGrounded(`${reply.headline} ${reply.summary}`, allowed);
+  const intro = introGrounded ? reply : null;
+  const introSource: TextSource = intro === null ? 'fallback' : 'ai';
+  if (reply !== null) {
+    logUngrounded('explain', droppedParts(reply, items, introSource));
+  }
   return {
     headline: intro?.headline ?? planHeadline(plan, lang),
     summary: intro?.summary ?? planSummary(plan, lang),
-    introSource: intro === null ? 'fallback' : 'ai',
+    introSource,
     items,
-    source: overallSource([
-      intro === null ? 'fallback' : 'ai',
-      ...items.map((item) => item.source),
-    ]),
+    source: overallSource([introSource, ...items.map((item) => item.source)]),
   };
 }
 
@@ -137,49 +173,51 @@ export function createAiService(deps: {
 
   return {
     explain(plan, profile, lang) {
-      const top = plan.recommendations.slice(0, SETTINGS.aiExplainTopN);
-      return memo(
-        explanations,
-        cacheKey('explain', lang, top, plan.index, profile.members),
-        async () => {
-          const reply = await deps.client.generate({
-            system: SYSTEM_INSTRUCTION,
-            prompt: explainPrompt(plan, profile, lang, top),
-            schema: explanationReply,
-            maxOutputTokens: SETTINGS.aiMaxOutputTokens.explain,
-          });
-          return composeExplanation(plan, lang, reply.ok ? reply.value : null);
-        },
-      );
+      // The response carries standard text for every recommendation, so it is keyed on the
+      // whole plan, not only on the part the model sees.
+      return memo(explanations, cacheKey('explain', lang, plan, profile.members), async () => {
+        const top = plan.recommendations.slice(0, SETTINGS.aiExplainTopN);
+        const reply = await deps.client.generate({
+          system: SYSTEM_INSTRUCTION,
+          prompt: explainPrompt(plan, profile, lang, top),
+          schema: explanationReply,
+          maxOutputTokens: SETTINGS.aiMaxOutputTokens.explain,
+        });
+        return composeExplanation(plan, lang, reply.ok ? reply.value : null);
+      });
     },
 
     chat(input) {
-      const key = cacheKey('chat', input.lang, input.question, input.history, input.plan);
-      return memo(answers, key, async () => {
+      const prompt = chatPrompt(input.plan, input.profile, input.lang, input);
+      return memo(answers, cacheKey('chat', prompt), async () => {
         const reply = await deps.client.generate({
           system: SYSTEM_INSTRUCTION,
-          prompt: chatPrompt(input.plan, input.profile, input.lang, input),
+          prompt,
           schema: chatReply,
           maxOutputTokens: SETTINGS.aiMaxOutputTokens.chat,
         });
-        return reply.ok && isGrounded(reply.value.answer, allowedNumbers(input.plan))
-          ? { answer: reply.value.answer, source: 'ai' }
-          : { answer: fallbackChatAnswer(input.plan, input.lang), source: 'fallback' };
+        const allowed = allowedNumbers(input.plan);
+        const answer = groundedText('chat', reply.ok ? reply.value.answer : null, allowed);
+        return answer === null
+          ? { answer: fallbackChatAnswer(input.plan, input.lang), source: 'fallback' }
+          : { answer, source: 'ai' };
       });
     },
 
     communityNotice(plan, audience, lang) {
-      const key = cacheKey('notice', lang, audience, plan.index, plan.severity, plan.cleanestHour);
-      return memo(notices, key, async () => {
+      const prompt = communityPrompt(plan, audience, lang);
+      return memo(notices, cacheKey('notice', prompt), async () => {
         const reply = await deps.client.generate({
           system: SYSTEM_INSTRUCTION,
-          prompt: communityPrompt(plan, audience, lang),
+          prompt,
           schema: noticeReply,
           maxOutputTokens: SETTINGS.aiMaxOutputTokens.notice,
         });
-        return reply.ok && isGrounded(reply.value.notice, allowedNumbers(plan))
-          ? { notice: reply.value.notice, source: 'ai' }
-          : { notice: fallbackCommunityNotice(plan, audience, lang), source: 'fallback' };
+        const allowed = allowedNumbers(plan);
+        const notice = groundedText('notice', reply.ok ? reply.value.notice : null, allowed);
+        return notice === null
+          ? { notice: fallbackCommunityNotice(plan, audience, lang), source: 'fallback' }
+          : { notice, source: 'ai' };
       });
     },
   };

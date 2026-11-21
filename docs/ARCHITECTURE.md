@@ -17,24 +17,25 @@ e2e/              Playwright tests against the production build
 
 Dependencies point one way: `ui → shared, core`, `server → shared, core`, `core → shared`
 (types only). ESLint enforces it: `src/core` may not import a package or anything from `ui` or
-`server`, and `import-x/no-cycle` rejects import cycles anywhere.
+`server`, `src/ui` may not import `server` (only its test harness runs the real app), and
+`import-x/no-cycle` rejects import cycles anywhere.
 
 ## The engine (`src/core`)
 
 `buildPlan(profile, air)` in `plan.ts` is the only entry point the rest of the app needs. It
 returns either a plan or `insufficient_data`; it never throws for bad data.
 
-| Module                      | Responsibility                                                                                          |
-| --------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `aqi.ts`                    | Sub-indexes from CPCB and EPA breakpoints, scale choice by country or time zone, 24-hour headline index |
-| `risk.ts`, `severity.ts`    | Member and household sensitivity, outdoor advice, the four severity modes                               |
-| `windows.ts`, `exposure.ts` | Cleanest daylight window and ventilation hour from hourly PM2.5; inhaled dose and % reduction           |
-| `indoor.ts`                 | Steady-state room mass balance and the before/after effect of each indoor hack                          |
-| `emissions.ts`              | Weekly commute CO₂ and in-transit dose for each mode, and the swaps that apply                          |
-| `inversion.ts`              | Trapped-or-mixing analysis from boundary-layer height, with a wind-only fallback                        |
-| `recommendations/*`         | One file per category builds candidates; `rank.ts` scores and orders them                               |
-| `explain/*`                 | Standard guidance (English and Hindi) for every recommendation, headline and fallback                   |
-| `constants.ts`              | Every coefficient, each with its source (listed in the README)                                          |
+| Module                      | Responsibility                                                                                              |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `aqi.ts`                    | Sub-indexes from CPCB and EPA breakpoints, scale choice by time zone (India → NAQI), 24-hour headline index |
+| `risk.ts`, `severity.ts`    | Member and household sensitivity, outdoor advice, the four severity modes                                   |
+| `windows.ts`, `exposure.ts` | Cleanest daylight window and ventilation hour from hourly PM2.5; inhaled dose and % reduction               |
+| `indoor.ts`                 | Steady-state room mass balance and the before/after effect of each indoor hack                              |
+| `emissions.ts`              | Weekly commute CO₂ and in-transit dose for each mode, and the swaps that apply                              |
+| `inversion.ts`              | Trapped-or-mixing analysis from boundary-layer height, with a wind-only fallback                            |
+| `recommendations/*`         | One file per category builds candidates; `rank.ts` scores and orders them                                   |
+| `explain/*`                 | Standard guidance (English and Hindi) for every recommendation, headline and fallback                       |
+| `constants.ts`              | Every coefficient, each with its source (listed in the README)                                              |
 
 ## Request flow
 
@@ -49,20 +50,23 @@ POST /api/plan  { profile, location }
 
 POST /api/explain  { profile, location, lang }
   same middleware with the AI rate limit (10/min) → loadPlan
-  → AiService.explain: cache (SHA-256 of language, top items, index, members; 30 min)
+  → AiService.explain: cache (SHA-256 of language, the whole plan and the members; 30 min)
   → GeminiClient.generate: each model in order, skipping cooled-down ones, within the daily budget,
-    JSON schema in the request, Zod on the reply
-  → composeExplanation: grounded AI text per item, standard guidance for the rest
-  → 200 { headline, summary, items[], source }
+    JSON schema in the request, Zod on the reply (a rejected reply is logged with its reason)
+  → grounded AI text per item, standard guidance for the rest (dropped AI text is logged)
+  → 200 { headline, summary, introSource, items[], source }
 ```
 
-`/api/chat` and `/api/community` follow the same path as `/api/explain` with their own prompts and
-caches. `GET /api/geocode` validates the query, calls Open-Meteo's geocoding API through the same
-`fetchJson` wrapper and sets a one-day CDN cache header.
+`/api/chat` and `/api/community` follow the same path as `/api/explain` with their own prompts;
+their caches are keyed on a SHA-256 of the exact prompt. `GET /api/geocode` validates the query,
+calls Open-Meteo's geocoding API through the same `fetchJson` wrapper and sets a one-day CDN cache
+header.
 
-**Errors.** Services return typed results (`{ ok: true, value } | { ok: false, error }`) instead of
-throwing. Each failure maps to one status and safe message in `http/errors.ts`; anything
-unexpected becomes a logged 500 with the body `{ "error": "Internal error" }`.
+**Errors.** The engine, the services and the UI's API client share one `Result` type
+(`core/result.ts`: `{ ok: true, value } | { ok: false, error }`) instead of throwing. Each server
+failure maps to one status and safe message in `http/errors.ts`; anything unexpected becomes a
+logged 500 with the body `{ "error": "Internal error" }`. The UI shows its own message for each
+status, in the interface language.
 
 **Dependency injection.** `src/server/main.ts` is the only place real dependencies are created
 (`fetch`, the clock, the Gemini SDK call). Tests pass fakes to `createApp`, `createAirService`,
@@ -73,14 +77,20 @@ unexpected becomes a logged 500 with the body `{ "error": "Internal error" }`.
 - **State:** one `AppProvider` with a reducer (`state/app-state.ts`) holds the language, household
   and location. `state/storage.ts` is the only code that touches `localStorage`, and it validates
   what it reads with Zod, so corrupt or outdated data is ignored.
-- **Data:** `hooks/use-plan.ts` loads the plan, then its explanation. It cancels requests when the
-  household, place or language changes and tags each result with the request it answers, so a slow
-  old answer is never shown. `api/client.ts` validates every response against the shared schemas.
+- **Data:** components render; hooks in `hooks/` do the work. `use-plan.ts` loads the plan, then
+  its explanation: a new household or place reloads both, a new language asks only for new wording.
+  It cancels superseded requests and tags each result with the request it answers, so a slow old
+  answer is never shown. `use-location-search.ts`, `use-chat.ts` and `use-community-notice.ts`
+  handle search, chat and notices. `api/client.ts` is the only code that calls `fetch`, and it
+  validates every response against the shared schemas. Browser-side timings live in
+  `settings.ts`.
 - **Screens:** `SetupForm` and `Dashboard`; `App` moves focus to the new screen's heading when one
   replaces the other. The chat and community dialogs are loaded with `React.lazy` when first
   opened, and share one `Dialog` component.
 - **Instant text:** the plan renders with standard guidance from `src/core/explain` as soon as
   `/api/plan` answers; AI wording replaces it item by item when `/api/explain` arrives.
+- **What-if:** the slider calls the engine's own `activityMeanPm25` and `exerciseDoseUg`, so its
+  doses match the plan's exercise advice exactly, with no network call.
 
 ## Build and deploy
 

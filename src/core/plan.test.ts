@@ -4,7 +4,7 @@ import { planSchema, type Plan, type RecommendationId } from '../shared/plan.js'
 import type { Profile } from '../shared/profile.js';
 import { makeAir } from './fixtures/air.js';
 import { HEALTHY_COUPLE, HOMEBOUND_SENIOR, SHARMA_FAMILY } from './fixtures/profiles.js';
-import { buildPlan, pollutantsAt } from './plan.js';
+import { buildPlan } from './plan.js';
 
 const SEVERE = 2.4;
 const POOR = 0.8;
@@ -130,7 +130,6 @@ describe('buildPlan — other households and places', () => {
   it('uses the US AQI in London and keeps a moderate day calm', () => {
     const air = makeAir({
       pm25Day: Array<number>(24).fill(12),
-      countryCode: 'GB',
       timezone: 'Europe/London',
       lat: 51.5,
       lon: -0.12,
@@ -178,13 +177,12 @@ describe('buildPlan — other households and places', () => {
   });
 });
 
-describe('pollutantsAt', () => {
-  it('reads every pollutant at the hour asked for', () => {
-    const hourly = makeAir({ pm10Day: Array.from({ length: 24 }, () => 210) }).hourly;
-    const [first] = hourly;
+describe('current pollutants', () => {
+  it('reads every pollutant at the current hour', () => {
+    const air = makeAir({ pm10Day: Array.from({ length: 24 }, () => 210) });
 
-    expect(pollutantsAt(hourly, 0)).toEqual({
-      pm25: first?.pm25,
+    expect(plan(SHARMA_FAMILY, air).current).toEqual({
+      pm25: air.hourly[air.nowIndex]?.pm25,
       pm10: 210,
       no2: null,
       o3: null,
@@ -193,8 +191,11 @@ describe('pollutantsAt', () => {
     });
   });
 
-  it('reports no readings for an hour outside the data', () => {
-    expect(pollutantsAt([], 3)).toEqual({
+  it('reports no readings when the current hour is missing from the data', () => {
+    const air = makeAir();
+    const pastTheEnd = { ...air, nowIndex: air.hourly.length };
+
+    expect(plan(SHARMA_FAMILY, pastTheEnd).current).toEqual({
       pm25: null,
       pm10: null,
       no2: null,

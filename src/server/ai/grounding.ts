@@ -30,7 +30,7 @@ function toAsciiDigits(text: string): string {
  * Every number written in the text, reading "1,234" and "12.5" as single numbers, and whether it
  * is a measurement (followed by %, kg, µg and the like).
  */
-export function extractQuantities(text: string): Quantity[] {
+function extractQuantities(text: string): Quantity[] {
   const ascii = toAsciiDigits(text);
   return Array.from(ascii.matchAll(NUMBER), (match) => ({
     value: Number(match[0].replace(/,/g, '')),

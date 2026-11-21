@@ -3,17 +3,23 @@ import type { AqiCategory, AqiScale, IndexReading } from '../shared/plan.js';
 import {
   AQI_MAX,
   AQI_SCALES,
+  DECIMALS,
   INDEX_MIN_VALID_HOURS,
   INDEX_WINDOW_HOURS,
   INDIA_TIMEZONES,
   type AqiBand,
   type AqiScaleDefinition,
 } from './constants.js';
-
-export type IndexResult =
-  { ok: true; value: IndexReading } | { ok: false; error: 'insufficient_data' };
+import { fail, ok, type Result } from './result.js';
+import { roundTo } from './round.js';
 
 type Pollutant = 'pm25' | 'pm10';
+
+/**
+ * Decimals a mean is first rounded to, so float error cannot push it below a breakpoint
+ * (24 readings of 9.1 average to 9.0999…, which must still truncate to 9.1).
+ */
+const FLOAT_ERROR_DECIMALS = 6;
 
 /** Truncate (not round) to the given number of decimals, as EPA requires; null leaves it as is. */
 function truncate(value: number, decimals: number | null): number {
@@ -21,18 +27,14 @@ function truncate(value: number, decimals: number | null): number {
     return value;
   }
   const factor = 10 ** decimals;
-  return Math.floor(value * factor + Number.EPSILON) / factor;
+  return Math.floor(roundTo(value * factor, FLOAT_ERROR_DECIMALS)) / factor;
 }
 
 /**
  * Sub-index for one pollutant: find the band whose range contains the concentration and
  * interpolate, I = (iHi − iLo) / (cHi − cLo) × (C − cLo) + iLo. Beyond the table it is 500.
  */
-export function subIndex(
-  concentration: number,
-  pollutant: Pollutant,
-  bands: readonly AqiBand[],
-): number {
+function subIndex(concentration: number, pollutant: Pollutant, bands: readonly AqiBand[]): number {
   if (concentration <= 0) {
     return 0;
   }
@@ -45,7 +47,7 @@ export function subIndex(
 }
 
 /** Band number (0 = best) and category of an index value; values past the table stay in the worst band. */
-export function classify(
+function classify(
   value: number,
   bands: AqiScaleDefinition['bands'],
 ): { band: number; category: AqiCategory } {
@@ -59,12 +61,9 @@ export function classify(
   return result;
 }
 
-/** India's NAQI for Indian locations (by country code, or by time zone when unknown); US AQI elsewhere. */
-export function selectScale(countryCode: string | null, timezone: string): AqiScale {
-  if (countryCode === 'IN') {
-    return 'naqi';
-  }
-  return countryCode === null && INDIA_TIMEZONES.includes(timezone) ? 'naqi' : 'us_aqi';
+/** India's NAQI for locations in an Indian time zone; US AQI everywhere else. */
+function selectScale(timezone: string): AqiScale {
+  return INDIA_TIMEZONES.includes(timezone) ? 'naqi' : 'us_aqi';
 }
 
 function mean(values: readonly number[]): number {
@@ -96,24 +95,21 @@ function pollutantIndex(
  * Headline index from the trailing 24-hour PM2.5 and PM10 means (PM10 only when complete),
  * on the scale that fits the location. Needs at least 16 valid PM2.5 hours.
  */
-export function computeIndex(air: AirData): IndexResult {
+export function computeIndex(air: AirData): Result<IndexReading, 'insufficient_data'> {
   const pm25 = trailingValues(air, 'pm25');
   if (pm25.length < INDEX_MIN_VALID_HOURS) {
-    return { ok: false, error: 'insufficient_data' };
+    return fail('insufficient_data');
   }
-  const scale = selectScale(air.countryCode, air.timezone);
+  const scale = selectScale(air.timezone);
   const def = AQI_SCALES[scale];
   const value = Math.max(
     pollutantIndex(pm25, 'pm25', def),
     pollutantIndex(trailingValues(air, 'pm10'), 'pm10', def),
   );
-  return {
-    ok: true,
-    value: {
-      scale,
-      value,
-      ...classify(value, def.bands),
-      pm25Mean24h: Math.round(mean(pm25) * 10) / 10,
-    },
-  };
+  return ok({
+    scale,
+    value,
+    ...classify(value, def.bands),
+    pm25Mean24h: roundTo(mean(pm25), DECIMALS.pm25Mean),
+  });
 }

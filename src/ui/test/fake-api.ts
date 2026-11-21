@@ -1,24 +1,15 @@
 import { vi } from 'vitest';
-import { fakeReply, type FakeApiOptions } from './fake-server.js';
+import { createFakeApi, type FakeApiOptions } from './fake-server.js';
 
-function pathOf(input: Parameters<typeof fetch>[0]): string {
-  if (typeof input === 'string') {
-    return new URL(input, 'http://localhost').pathname;
-  }
-  return input instanceof URL ? input.pathname : new URL(input.url).pathname;
-}
-
-/** Stub `fetch` with the fake SmogSense API from `fake-server.ts`. */
+/**
+ * Stub `fetch` with the fake SmogSense API from `fake-server.ts`. The abort signal stays with
+ * the caller: the UI checks it itself when a reply arrives.
+ */
 export function fakeApi(options: FakeApiOptions = {}) {
-  const fetchMock = vi.fn((input: Parameters<typeof fetch>[0], init?: RequestInit) => {
-    const body: unknown = typeof init?.body === 'string' ? JSON.parse(init.body) : null;
-    const reply = fakeReply(pathOf(input), body, options);
-    return Promise.resolve(
-      new Response(JSON.stringify(reply.body), {
-        status: reply.status,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    );
+  const reply = createFakeApi(options);
+  const fetchMock = vi.fn((input: string, init: RequestInit = {}) => {
+    const { signal: _signal, ...rest } = init;
+    return reply(new Request(new URL(input, 'http://localhost'), rest));
   });
   vi.stubGlobal('fetch', fetchMock);
   return fetchMock;

@@ -1,26 +1,26 @@
+import type { Context } from 'hono';
 import { validator } from 'hono/validator';
-import type { ZodError, ZodType } from 'zod';
+import type { ZodType } from 'zod';
 
-function describeIssues(error: ZodError): { path: string; message: string }[] {
-  return error.issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message }));
+/** The parsed value, or a 400 that lists each problem by field path. */
+function parseOr400<T>(schema: ZodType<T>, value: unknown, c: Context) {
+  const parsed = schema.safeParse(value);
+  if (parsed.success) {
+    return parsed.data;
+  }
+  const issues = parsed.error.issues.map((issue) => ({
+    path: issue.path.join('.'),
+    message: issue.message,
+  }));
+  return c.json({ error: 'Invalid request', issues }, 400);
 }
 
-/** Validate the JSON body against a schema; invalid input gets a 400 listing each problem. */
+/** Validate the JSON body against a schema. */
 export function jsonBody<T>(schema: ZodType<T>) {
-  return validator('json', (value, c) => {
-    const parsed = schema.safeParse(value);
-    return parsed.success
-      ? parsed.data
-      : c.json({ error: 'Invalid request', issues: describeIssues(parsed.error) }, 400);
-  });
+  return validator('json', (value, c) => parseOr400(schema, value, c));
 }
 
-/** Validate query parameters against a schema; invalid input gets a 400 listing each problem. */
+/** Validate query parameters against a schema. */
 export function queryParams<T>(schema: ZodType<T>) {
-  return validator('query', (value, c) => {
-    const parsed = schema.safeParse(value);
-    return parsed.success
-      ? parsed.data
-      : c.json({ error: 'Invalid request', issues: describeIssues(parsed.error) }, 400);
-  });
+  return validator('query', (value, c) => parseOr400(schema, value, c));
 }

@@ -1,43 +1,57 @@
 import { useState } from 'react';
-import type { Audience, Language, PlanRequest, TextSource } from '../../../shared/api.js';
-import { api } from '../../api/client.js';
-import { LANGUAGE_NAMES } from '../../i18n/languages.js';
+import type { Audience, PlanRequest } from '../../../shared/api.js';
+import { NATIVE_NAMES, type Language } from '../../../shared/languages.js';
+import { useCommunityNotice } from '../../hooks/use-community-notice.js';
 import { useAppState, useMessages } from '../../state/app-context.js';
 import { Dialog } from '../common/dialog.js';
 import { SelectField } from '../common/fields.js';
 import { SourceTag } from '../common/source-tag.js';
 
-type NoticeState =
-  | { readonly status: 'idle' | 'generating' | 'error' }
-  | { readonly status: 'ready'; readonly notice: string; readonly source: TextSource };
+type ActionStatus = 'idle' | 'copied' | 'copy_failed' | 'share_failed';
 
+/** True when the person closed the share sheet themselves, which is not a failure. */
+function isCancelled(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError';
+}
+
+/** Copy and share buttons; when the browser refuses either, say so and suggest the other. */
 function NoticeActions({ notice }: { readonly notice: string }) {
   const t = useMessages().community;
-  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<ActionStatus>('idle');
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(notice);
+      setStatus('copied');
+    } catch {
+      setStatus('copy_failed');
+    }
+  };
+  const share = async () => {
+    try {
+      await navigator.share({ text: notice });
+    } catch (error: unknown) {
+      setStatus(isCancelled(error) ? 'idle' : 'share_failed');
+    }
+  };
+  const problem: Partial<Record<ActionStatus, string>> = {
+    copy_failed: t.copyFailed,
+    share_failed: t.shareFailed,
+  };
   return (
-    <div className="flex flex-wrap gap-2">
-      <button
-        type="button"
-        className="btn-secondary"
-        onClick={() => {
-          void navigator.clipboard.writeText(notice).then(() => {
-            setCopied(true);
-          });
-        }}
-      >
-        {copied ? t.copied : t.copy}
-      </button>
-      {'share' in navigator ? (
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={() => {
-            void navigator.share({ text: notice }).catch(() => undefined);
-          }}
-        >
-          {t.share}
+    <div className="grid gap-2">
+      <div className="flex flex-wrap gap-2">
+        <button type="button" className="btn-secondary" onClick={() => void copy()}>
+          {status === 'copied' ? t.copied : t.copy}
         </button>
-      ) : null}
+        {'share' in navigator ? (
+          <button type="button" className="btn-secondary" onClick={() => void share()}>
+            {t.share}
+          </button>
+        ) : null}
+      </div>
+      <p role="status" className="field-error">
+        {problem[status] ?? ''}
+      </p>
     </div>
   );
 }
@@ -54,13 +68,7 @@ export function CommunityDialog({
   const { lang: uiLang } = useAppState();
   const [audience, setAudience] = useState<Audience>('housing_society');
   const [lang, setLang] = useState<Language>(uiLang);
-  const [state, setState] = useState<NoticeState>({ status: 'idle' });
-
-  const generate = async () => {
-    setState({ status: 'generating' });
-    const result = await api.community({ ...request, lang, audience });
-    setState(result.ok ? { status: 'ready', ...result.data } : { status: 'error' });
-  };
+  const { state, generate } = useCommunityNotice(request);
 
   return (
     <Dialog title={t.community.title} closeLabel={t.actions.close} onClose={onClose}>
@@ -75,14 +83,14 @@ export function CommunityDialog({
         <SelectField
           label={t.community.language}
           value={lang}
-          options={LANGUAGE_NAMES}
+          options={NATIVE_NAMES}
           onChange={setLang}
         />
         <button
           type="button"
           className="btn-primary justify-self-start"
           disabled={state.status === 'generating'}
-          onClick={() => void generate()}
+          onClick={() => void generate(audience, lang)}
         >
           {state.status === 'generating' ? t.community.generating : t.community.generate}
         </button>
@@ -90,7 +98,9 @@ export function CommunityDialog({
           {state.status === 'error' ? <p className="field-error">{t.community.error}</p> : null}
           {state.status === 'ready' ? (
             <>
-              <p className="card whitespace-pre-line">{state.notice}</p>
+              <p className="card whitespace-pre-line" lang={state.lang}>
+                {state.notice}
+              </p>
               <SourceTag source={state.source} />
               <NoticeActions notice={state.notice} />
             </>

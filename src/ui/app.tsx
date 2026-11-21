@@ -1,12 +1,11 @@
 import { useEffect, useRef } from 'react';
+import { UI_LANGUAGE_NAMES } from '../shared/languages.js';
 import { Dashboard } from './components/dashboard/dashboard.js';
 import { SelectField } from './components/common/fields.js';
 import { SetupForm } from './components/setup/setup-form.js';
 import { activeSetup } from './state/app-state.js';
 import { AppProvider, useAppDispatch, useAppState, useMessages } from './state/app-context.js';
 import type { KeyValueStore } from './state/storage.js';
-
-const UI_LANGUAGES = { en: 'English', hi: 'हिन्दी' } as const;
 
 function Header() {
   const t = useMessages();
@@ -22,7 +21,7 @@ function Header() {
         <SelectField
           label={t.app.language}
           value={state.lang}
-          options={UI_LANGUAGES}
+          options={UI_LANGUAGE_NAMES}
           onChange={(lang) => {
             dispatch({ type: 'set_language', lang });
           }}

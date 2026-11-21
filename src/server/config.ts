@@ -44,6 +44,8 @@ export const SETTINGS = {
   cacheMaxEntries: 500,
   airCacheTtlMs: 15 * MINUTE_MS,
   geocodeCacheTtlMs: 24 * 60 * MINUTE_MS,
+  /** How long the CDN may keep place search results (they change rarely). */
+  geocodeCdnMaxAgeSeconds: 24 * 60 * 60,
   /** Decimal places coordinates are rounded to before any lookup (0.1° ≈ 11 km). */
   coordinateDecimals: 1,
   rateLimitWindowMs: MINUTE_MS,
@@ -53,6 +55,8 @@ export const SETTINGS = {
   rateLimitMaxClients: 10_000,
   /** Origin allowed during local development. */
   devOrigin: 'http://localhost:5173',
+  /** How long a browser may reuse a CORS preflight answer. */
+  corsMaxAgeSeconds: 600,
   /** Per-model timeout for one Gemini call. */
   aiTimeoutMs: 8_000,
   /** How long a model that answered 429 is skipped. */

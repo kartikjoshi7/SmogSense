@@ -102,15 +102,22 @@ describe('createGeminiClient', () => {
   });
 
   it.each([
-    ['not JSON', 'Stay in'],
-    ['the wrong shape', '{"reply":"Stay in"}'],
-    ['an empty reply', undefined],
-  ])('reports invalid output for %s', async (_label, text) => {
+    ['not JSON', 'Stay in', 'not_json'],
+    ['the wrong shape', '{"reply":"Stay in"}', 'off_schema'],
+    ['an empty reply', undefined, 'empty'],
+  ])('rejects %s, logs why, and tries the next model', async (_label, text, reason) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const generate = vi.fn<GenerateContent>(() => reply(text));
 
     expect(await client(generate).ai.generate(request)).toEqual({
       ok: false,
-      error: 'invalid_output',
+      error: 'unavailable',
+    });
+    expect(modelsCalled(generate)).toEqual(['lite', 'flash']);
+    expect(JSON.parse(String(warn.mock.calls[0]?.[0]))).toMatchObject({
+      message: 'Gemini reply rejected',
+      model: 'lite',
+      reason,
     });
   });
 

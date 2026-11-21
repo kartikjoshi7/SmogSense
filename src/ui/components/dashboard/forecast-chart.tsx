@@ -34,6 +34,22 @@ function ForecastTable({ plan }: { readonly plan: Plan }) {
   );
 }
 
+/** An hour with no forecast: a dashed outline the full height of the chart, never a zero bar. */
+function MissingBar({ x, width, height }: { x: number; width: number; height: number }) {
+  return (
+    <rect
+      x={x + 2}
+      y={1}
+      width={width - 4}
+      height={height - 2}
+      fill="none"
+      stroke="var(--muted)"
+      strokeDasharray="3 3"
+      data-missing="true"
+    />
+  );
+}
+
 function ForecastBars({
   plan,
   descriptionId,
@@ -41,7 +57,7 @@ function ForecastBars({
   readonly plan: Plan;
   readonly descriptionId: string;
 }) {
-  const values = plan.forecast.map((p) => p.pm25 ?? 0);
+  const values = plan.forecast.flatMap((p) => (p.pm25 === null ? [] : [p.pm25]));
   const max = Math.max(1, ...values);
   const barWidth = WIDTH / Math.max(1, plan.forecast.length);
   const usable = HEIGHT - LABEL_SPACE;
@@ -54,17 +70,20 @@ function ForecastBars({
       className="w-full"
     >
       {plan.forecast.map((point, i) => {
-        const height = ((point.pm25 ?? 0) / max) * usable;
         const clean = point.hour === plan.cleanestHour?.hour;
         return (
           <g key={point.time}>
-            <rect
-              x={i * barWidth + 1}
-              y={usable - height}
-              width={barWidth - 2}
-              height={height}
-              fill={clean ? 'var(--bar-clean)' : 'var(--bar)'}
-            />
+            {point.pm25 === null ? (
+              <MissingBar x={i * barWidth} width={barWidth} height={usable} />
+            ) : (
+              <rect
+                x={i * barWidth + 1}
+                y={usable - (point.pm25 / max) * usable}
+                width={barWidth - 2}
+                height={(point.pm25 / max) * usable}
+                fill={clean ? 'var(--bar-clean)' : 'var(--bar)'}
+              />
+            )}
             {i % LABEL_EVERY_HOURS === 0 ? (
               <text x={i * barWidth} y={HEIGHT - 4} fontSize="11" fill="currentColor">
                 {clock(point.hour).slice(0, 2)}
@@ -83,6 +102,7 @@ export function ForecastChart({ plan }: { readonly plan: Plan }) {
   const [asTable, setAsTable] = useState(false);
   const descriptionId = useId();
   const cleanest = plan.cleanestHour;
+  const missing = plan.forecast.filter((point) => point.pm25 === null).length;
   return (
     <section aria-labelledby="forecast-heading" className="card grid gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -101,6 +121,7 @@ export function ForecastChart({ plan }: { readonly plan: Plan }) {
       </div>
       <p id={descriptionId} className="muted">
         {cleanest === null ? t.noClean : t.description(clock(cleanest.hour), cleanest.pm25)}
+        {missing === 0 ? '' : ` ${t.missingNote(missing)}`}
       </p>
       {asTable ? (
         <ForecastTable plan={plan} />

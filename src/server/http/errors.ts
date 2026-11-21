@@ -28,3 +28,8 @@ export function planFailureResponse(c: Context, failure: PlanFailure): Response 
   const { status, message } = RESPONSES[failure];
   return c.json({ error: message }, status);
 }
+
+/** The response when Open-Meteo's place search fails, whatever the cause. */
+export function geocodeFailureResponse(c: Context): Response {
+  return c.json({ error: 'Place search is unavailable right now.' }, UPSTREAM.status);
+}

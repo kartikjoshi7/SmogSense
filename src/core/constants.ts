@@ -8,6 +8,7 @@ import type {
   AgeGroup,
   Airtightness,
   CommuteMode,
+  CookingFuel,
   ExerciseActivity,
   MaskType,
 } from '../shared/profile.js';
@@ -94,13 +95,16 @@ export const INDEX_WINDOW_HOURS = 24;
 /** Minimum valid hours for a 24-hour mean (CPCB's 16-of-24-hours completeness rule). */
 export const INDEX_MIN_VALID_HOURS = 16;
 
-/** Time zones that identify an Indian location when no country code is known. */
+/** Time zones of Indian locations. Open-Meteo returns the IANA zone of the coordinates. */
 export const INDIA_TIMEZONES: readonly string[] = ['Asia/Kolkata', 'Asia/Calcutta'];
 
-// ---------------------------------------------------------------- Forecast horizon
+// ---------------------------------------------------------------- Forecast horizon and precision
 
 /** How far ahead the plan looks, in hours. */
 export const PLAN_HORIZON_HOURS = 24;
+
+/** Decimal places engine figures are rounded to: display precision, not measurement precision. */
+export const DECIMALS = { pm25Mean: 1, windowMean: 2, doseUg: 1, co2Kg: 1 } as const;
 
 // ---------------------------------------------------------------- Winter inversion
 
@@ -265,6 +269,9 @@ export const CEILING_HEIGHT_M = 2.8;
 
 /** Clean-air delivery rate assumed for a typical home purifier, m³/h (estimate). */
 export const DEFAULT_PURIFIER_CADR_M3H = 250;
+
+/** Cooking fuels that fill the home with smoke: solid biomass and kerosene (WHO household-energy guidance). */
+export const SMOKY_FUELS: readonly CookingFuel[] = ['biomass', 'kerosene'];
 
 /** PM2.5 emitted while burning, µg/h (order-of-magnitude estimates). */
 export const INDOOR_SOURCE_UG_PER_H = {

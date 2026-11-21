@@ -1,4 +1,7 @@
-/** The outcome of an operation that can fail in an expected way. */
+/**
+ * The outcome of an operation that can fail in an expected way. Used everywhere: the engine,
+ * the server's services and the UI's API client.
+ */
 export type Result<T, E> =
   { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: E };
 

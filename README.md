@@ -68,22 +68,16 @@ How `buildPlan(profile, air)` in `src/core/plan.ts` decides:
 1. **Set up (no sign-up).** Choose a place by GPS or city search, add family members (their names
    stay on the device) and describe the commute, exercise and home. The Delhi example family fills
    the form in one click.
-2. **Today.** `POST /api/plan` fetches the air-quality and weather forecasts in parallel, rounds
-   the location to 0.1°, caches the result and runs the engine. The plan appears at once with
-   standard guidance; `POST /api/explain` then swaps in Gemini's wording item by item.
+2. **Today.** `POST /api/plan` gets the place's air-quality and weather forecast from Open-Meteo
+   and runs the engine; no AI is involved, so the plan appears at once with standard guidance.
+   `POST /api/explain` then swaps in Gemini's wording item by item. The request flow, caches and
+   error handling are in [Architecture](docs/ARCHITECTURE.md).
 3. **The plan.** An AQI card (number, category in words, icon and colour, and every pollutant
    measured this hour), the hourly PM2.5 chart
    with a table view, the inversion card, the day's timeline, five tabs named after the brief and a
    "what if" slider that recomputes exercise exposure in the browser with the same engine.
 4. **Ask and share.** A chat dialog for questions such as "Can the children play outside at 4 pm?"
    and a community notice that can be copied or shared. Both are loaded only when opened.
-
-```
-Browser (React 19)                        Vercel function (Hono)
-  setup → plan → chat / notice    ──►      /api/geocode  /api/plan            ──► Open-Meteo
-  same src/core engine for what-if         /api/explain  /api/chat  /api/community ──► Gemini
-  profile in localStorage                  Zod on every boundary, rate limits, caches, fallback
-```
 
 **GenAI usage.** Gemini (through `@google/genai`) is used in three places, all in
 `src/server/ai/`:
@@ -107,8 +101,8 @@ the text.
 - One call explains the whole plan, and only its 8 highest-priority items.
 - AI answers are cached (30 minutes for plans and notices, 10 for chat); fallbacks are never
   cached, so the next request can reach the model again.
-- A model that answers 429 is skipped for 10 minutes; a daily budget (`GEMINI_DAILY_BUDGET`,
-  200 by default) stops calls before the quota does; AI routes allow 10 requests a minute per IP.
+- A model that answers 429 is skipped for 10 minutes, and a daily budget (`GEMINI_DAILY_BUDGET`,
+  200 by default) stops calls before the quota does. Rate limits are in [Security](docs/SECURITY.md).
 - The plan itself never waits for the AI: `/api/plan` makes no model call.
 
 **Run it locally** (Node 22+):
@@ -117,9 +111,9 @@ the text.
 npm ci
 cp .env.example .env.local   # add GEMINI_API_KEY; without it the app uses standard guidance
 npm run dev                  # UI and API on http://localhost:5173
-npm run check                # typecheck, lint, format, knip, tests with coverage, build
-npm run test:e2e             # Playwright against the production build
 ```
+
+The quality gates and test suites are described in [Testing](docs/TESTING.md).
 
 ## Assumptions
 

@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Member } from '../shared/profile.js';
-import {
-  highRiskMemberIds,
-  householdSensitivity,
-  memberSensitivity,
-  outdoorAdvice,
-} from './risk.js';
+import { highRiskMemberIds, householdSensitivity, outdoorAdvice } from './risk.js';
 
 const adult: Member = { id: 'a', ageGroup: 'adult', conditions: [] };
 const child: Member = { id: 'c', ageGroup: 'child', conditions: [] };
@@ -13,7 +8,7 @@ const infant: Member = { id: 'i', ageGroup: 'infant', conditions: [] };
 const senior: Member = { id: 's', ageGroup: 'senior', conditions: [] };
 const asthmaticTeen: Member = { id: 't', ageGroup: 'teen', conditions: ['asthma'] };
 
-describe('memberSensitivity', () => {
+describe('one member’s sensitivity', () => {
   it.each([
     [adult, 'normal'],
     [child, 'elevated'],
@@ -21,7 +16,7 @@ describe('memberSensitivity', () => {
     [senior, 'high'],
     [asthmaticTeen, 'high'],
   ] as const)('%o is %s', (member, expected) => {
-    expect(memberSensitivity(member)).toBe(expected);
+    expect(householdSensitivity([member])).toBe(expected);
   });
 });
 

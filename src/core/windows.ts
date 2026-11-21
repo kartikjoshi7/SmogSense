@@ -1,5 +1,7 @@
 import type { Daylight, HourlyReading } from '../shared/air.js';
-import { PLAN_HORIZON_HOURS } from './constants.js';
+import { DECIMALS, PLAN_HORIZON_HOURS } from './constants.js';
+import { reduction } from './exposure.js';
+import { roundTo } from './round.js';
 
 export interface WindowSearch {
   /** Index of the current hour; the search covers the next 24 hours from here. */
@@ -25,27 +27,45 @@ interface Candidate {
 }
 
 /** Whether a local timestamp falls inside any daylight interval (all times share one zone). */
-export function isDaylight(time: string, daylight: readonly Daylight[]): boolean {
+function isDaylight(time: string, daylight: readonly Daylight[]): boolean {
   return daylight.some((d) => time >= d.sunrise && time <= d.sunset);
 }
 
 /** Distance between two clock hours, going the short way round (0–12). */
-export function hourDistance(a: number, b: number): number {
+function hourDistance(a: number, b: number): number {
   const diff = Math.abs(a - b);
   return Math.min(diff, 24 - diff);
 }
 
-function roundTo2(value: number): number {
-  return Math.round(value * 100) / 100;
+/** Whole clock hours an activity occupies: a part hour counts as a whole one, and at least one. */
+function spanHours(durationMin: number): number {
+  return Math.max(1, Math.ceil(durationMin / 60));
 }
 
 /** Mean PM2.5 over `span` hours from `start`, or null if any of those hours is missing. */
-function spanMean(hourly: readonly HourlyReading[], start: number, span: number): number | null {
-  const values = hourly
+function spanMean(
+  readings: readonly Pick<HourlyReading, 'pm25'>[],
+  start: number,
+  span: number,
+): number | null {
+  const values = readings
     .slice(start, start + span)
     .map((h) => h.pm25)
     .filter((v): v is number => v !== null);
   return values.length < span ? null : values.reduce((sum, v) => sum + v, 0) / span;
+}
+
+/**
+ * Mean PM2.5 over an activity of `durationMin` starting at `readings[start]`, as the plan's
+ * exercise window computes it; null when any hour it covers is missing or beyond the readings.
+ */
+export function activityMeanPm25(
+  readings: readonly Pick<HourlyReading, 'pm25'>[],
+  start: number,
+  durationMin: number,
+): number | null {
+  const mean = spanMean(readings, start, spanHours(durationMin));
+  return mean === null ? null : roundTo(mean, DECIMALS.windowMean);
 }
 
 /** Every complete window starting in the next 24 hours, with its mean PM2.5. */
@@ -68,10 +88,7 @@ function isBetter(candidate: Candidate, best: Candidate, usualHour: number | nul
 }
 
 function reductionPct(usual: Candidate | null, best: Candidate): number | null {
-  if (usual === null || usual.mean === 0) {
-    return null;
-  }
-  return Math.round(((usual.mean - best.mean) / usual.mean) * 100);
+  return usual === null || usual.mean === 0 ? null : reduction(usual.mean, best.mean).percent;
 }
 
 /**
@@ -82,7 +99,7 @@ export function bestActivityWindow(
   hourly: readonly HourlyReading[],
   search: WindowSearch,
 ): ActivityWindow | null {
-  const span = Math.max(1, Math.ceil(search.durationMin / 60));
+  const span = spanHours(search.durationMin);
   const all = candidates(hourly, search.fromIndex, span);
   const best = all
     .filter((c) => isDaylight(c.time, search.daylight))
@@ -96,8 +113,8 @@ export function bestActivityWindow(
   const usual = all.find((c) => c.hour === search.usualHour) ?? null;
   return {
     startHour: best.hour,
-    meanPm25: roundTo2(best.mean),
-    usualMeanPm25: usual === null ? null : roundTo2(usual.mean),
+    meanPm25: roundTo(best.mean, DECIMALS.windowMean),
+    usualMeanPm25: usual === null ? null : roundTo(usual.mean, DECIMALS.windowMean),
     reductionPct: reductionPct(usual, best),
   };
 }

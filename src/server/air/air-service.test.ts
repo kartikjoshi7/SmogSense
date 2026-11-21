@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { FIXTURE_NOW, jsonResponse, openMeteoFetch } from '../test/fake-fetch.js';
-import { createAirService, roundLocation } from './air-service.js';
+import { FIXTURE_NOW, jsonResponse, openMeteoFetch, requestUrl } from '../test/fake-fetch.js';
+import { createAirService } from './air-service.js';
 
 function service(fetch: typeof globalThis.fetch) {
   let now = FIXTURE_NOW;
@@ -12,9 +12,16 @@ function service(fetch: typeof globalThis.fetch) {
   };
 }
 
-describe('roundLocation', () => {
-  it('rounds to 0.1° so precise GPS positions are never sent upstream', () => {
-    expect(roundLocation({ lat: 28.61394, lon: 77.20902 })).toEqual({ lat: 28.6, lon: 77.2 });
+describe('location privacy', () => {
+  it('rounds to 0.1° so precise GPS positions are never sent upstream', async () => {
+    const fetch = openMeteoFetch();
+    await service(fetch).air.getAir({ lat: 28.61394, lon: 77.20902 });
+
+    const sent = requestUrl(fetch.mock.calls[0]?.[0]);
+    expect([sent.searchParams.get('latitude'), sent.searchParams.get('longitude')]).toEqual([
+      '28.6',
+      '77.2',
+    ]);
   });
 });
 

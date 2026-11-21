@@ -1,11 +1,21 @@
 import { z } from 'zod';
+import { hourSchema, rangeSchema, type Range } from './primitives.js';
+
+/** Bounds on every number in a profile, shared by the schema and the setup form's inputs. */
+export const PROFILE_LIMITS = {
+  members: { min: 1, max: 8 },
+  oneWayKm: { min: 0, max: 100 },
+  daysPerWeek: { min: 0, max: 7 },
+  durationMin: { min: 10, max: 180 },
+  purifierCount: { min: 0, max: 5 },
+  purifierCadrM3h: { min: 50, max: 1000 },
+  roomAreaM2: { min: 5, max: 60 },
+} as const satisfies Record<string, Range>;
 
 /** Short opaque id for a household member. Display names never leave the device. */
 const memberIdSchema = z
   .string()
   .regex(/^[a-z0-9-]{1,12}$/, 'Member ids are 1–12 lowercase letters, digits or hyphens');
-
-const hourSchema = z.number().int().min(0).max(23);
 
 const ageGroupSchema = z.enum(['infant', 'child', 'teen', 'adult', 'senior']);
 export type AgeGroup = z.infer<typeof ageGroupSchema>;
@@ -40,10 +50,10 @@ export type CommuteAlternative = z.infer<typeof commuteAlternativeSchema>;
 
 const commuteSchema = z.object({
   mode: commuteModeSchema,
-  oneWayKm: z.number().min(0).max(100),
+  oneWayKm: rangeSchema(PROFILE_LIMITS.oneWayKm),
   departHour: hourSchema,
   returnHour: hourSchema,
-  daysPerWeek: z.number().int().min(0).max(7),
+  daysPerWeek: rangeSchema(PROFILE_LIMITS.daysPerWeek).int(),
   alternatives: z.array(commuteAlternativeSchema).max(6),
 });
 export type Commute = z.infer<typeof commuteSchema>;
@@ -56,7 +66,7 @@ const exerciseSchema = z.object({
   /** The member who usually exercises; null when it is the whole family or unknown. */
   memberId: memberIdSchema.nullable(),
   usualHour: hourSchema,
-  durationMin: z.number().int().min(10).max(180),
+  durationMin: rangeSchema(PROFILE_LIMITS.durationMin).int(),
   canMoveIndoors: z.boolean(),
 });
 export type Exercise = z.infer<typeof exerciseSchema>;
@@ -71,10 +81,10 @@ export type CookingFuel = z.infer<typeof cookingFuelSchema>;
 const incenseSchema = z.enum(['never', 'sometimes', 'daily']);
 
 const homeSchema = z.object({
-  purifierCount: z.number().int().min(0).max(5),
-  purifierCadrM3h: z.number().min(50).max(1000),
+  purifierCount: rangeSchema(PROFILE_LIMITS.purifierCount).int(),
+  purifierCadrM3h: rangeSchema(PROFILE_LIMITS.purifierCadrM3h),
   /** Floor area of the room the family spends most time in. */
-  roomAreaM2: z.number().min(5).max(60),
+  roomAreaM2: rangeSchema(PROFILE_LIMITS.roomAreaM2),
   airtightness: airtightnessSchema,
   cookingFuel: cookingFuelSchema,
   hasExhaustOrChimney: z.boolean(),
@@ -89,7 +99,7 @@ export type MaskType = z.infer<typeof maskTypeSchema>;
 /** Everything the engine needs to know about a household. Contains no names. */
 export const profileSchema = z
   .object({
-    members: z.array(memberSchema).min(1).max(8),
+    members: z.array(memberSchema).min(PROFILE_LIMITS.members.min).max(PROFILE_LIMITS.members.max),
     commute: commuteSchema,
     exercise: exerciseSchema,
     home: homeSchema,

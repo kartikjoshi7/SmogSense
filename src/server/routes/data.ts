@@ -1,12 +1,13 @@
 import { Hono } from 'hono';
 import { geocodeQuerySchema, planRequestSchema } from '../../shared/api.js';
 import type { AirService } from '../air/air-service.js';
-import { planFailureResponse } from '../http/errors.js';
+import { SETTINGS } from '../config.js';
+import { geocodeFailureResponse, planFailureResponse } from '../http/errors.js';
 import { jsonBody, queryParams } from '../middleware/validate.js';
 import { loadPlan } from '../plan-service.js';
 
-/** Place results change rarely; let the CDN keep them for a day. */
-const GEOCODE_CACHE_CONTROL = 'public, s-maxage=86400, stale-while-revalidate=86400';
+const GEOCODE_MAX_AGE = SETTINGS.geocodeCdnMaxAgeSeconds;
+const GEOCODE_CACHE_CONTROL = `public, s-maxage=${GEOCODE_MAX_AGE}, stale-while-revalidate=${GEOCODE_MAX_AGE}`;
 
 /** Deterministic routes: city search and the household plan (no AI involved). */
 export function dataRoutes(air: AirService) {
@@ -14,7 +15,7 @@ export function dataRoutes(air: AirService) {
     .get('/geocode', queryParams(geocodeQuerySchema), async (c) => {
       const result = await air.searchPlaces(c.req.valid('query').q);
       if (!result.ok) {
-        return c.json({ error: 'Place search is unavailable right now.' }, 502);
+        return geocodeFailureResponse(c);
       }
       c.header('Cache-Control', GEOCODE_CACHE_CONTROL);
       return c.json({ places: result.value });

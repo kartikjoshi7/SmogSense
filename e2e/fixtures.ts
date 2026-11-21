@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test as base, type Page } from '@playwright/test';
-import { fakeReply, type FakeApiOptions } from '../src/ui/test/fake-server.js';
+import { createFakeApi, type FakeApiOptions } from '../src/ui/test/fake-server.js';
 
 interface Fixtures {
   /** How the mocked `/api/*` behaves; change it per file with `test.use({ api: { … } })`. */
@@ -9,14 +9,26 @@ interface Fixtures {
   readonly problems: string[];
 }
 
-/** Playwright's `test` with the SmogSense API mocked in the page and a zero-error check. */
+/** Playwright's `test` with the fake SmogSense API behind `/api/*` and a zero-error check. */
 export const test = base.extend<Fixtures>({
   api: [{}, { option: true }],
   page: async ({ page, api }, provide) => {
+    const fakeApi = createFakeApi(api);
     await page.route('**/api/**', async (route) => {
       const request = route.request();
-      const reply = fakeReply(new URL(request.url()).pathname, request.postDataJSON(), api);
-      await route.fulfill({ status: reply.status, json: reply.body });
+      const contentType = await request.headerValue('content-type');
+      const response = await fakeApi(
+        new Request(request.url(), {
+          method: request.method(),
+          headers: contentType === null ? {} : { 'Content-Type': contentType },
+          body: request.postData(),
+        }),
+      );
+      await route.fulfill({
+        status: response.status,
+        contentType: 'application/json',
+        body: await response.text(),
+      });
     });
     await provide(page);
   },

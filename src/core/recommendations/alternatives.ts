@@ -1,5 +1,6 @@
 import type { Level, RecommendationId } from '../../shared/plan.js';
 import type { CommuteAlternative } from '../../shared/profile.js';
+import { SMOKY_FUELS } from '../constants.js';
 import { commuteSwaps, type CommuteSwap } from '../emissions.js';
 import { candidate, type Candidate, type PlanContext } from './context.js';
 
@@ -39,7 +40,7 @@ function swapCandidate(ctx: PlanContext, swap: CommuteSwap): Candidate {
 /** Switching away from biomass or kerosene cooking: the largest household-smoke cut available. */
 function cleanCookingFuel(ctx: PlanContext): Candidate[] {
   const { cookingFuel } = ctx.profile.home;
-  if (cookingFuel !== 'biomass' && cookingFuel !== 'kerosene') {
+  if (!SMOKY_FUELS.includes(cookingFuel)) {
     return [];
   }
   return [

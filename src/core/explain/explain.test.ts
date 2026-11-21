@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Language } from '../../shared/api.js';
+import type { Language } from '../../shared/languages.js';
 import { planSchema, type Plan, type Recommendation } from '../../shared/plan.js';
 import { makeAir } from '../fixtures/air.js';
 import { SHARMA_FAMILY } from '../fixtures/profiles.js';

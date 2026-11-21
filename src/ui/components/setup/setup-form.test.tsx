@@ -4,13 +4,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { App } from '../../app.js';
 import { checkA11y } from '../../test/axe.js';
 import { fakeApi, memoryStore } from '../../test/fake-api.js';
+import type { FakeApiOptions } from '../../test/fake-server.js';
 import { nextMemberId } from './defaults.js';
 
-function setup() {
-  fakeApi();
+function setup(options: FakeApiOptions = {}) {
+  const fetchMock = fakeApi(options);
   const user = userEvent.setup();
   render(<App store={memoryStore()} />);
-  return user;
+  return Object.assign(user, { fetchMock });
 }
 
 describe('setup form', () => {
@@ -23,6 +24,27 @@ describe('setup form', () => {
     await user.click(await screen.findByRole('button', { name: 'Use Gurugram, Haryana, India' }));
 
     expect(screen.getByText('Location: Gurugram, Haryana, India')).toBeInTheDocument();
+  });
+
+  it('tells a failed search apart from a search that found nothing', async () => {
+    const user = setup({ failures: { geocode: { status: 502, error: 'Down' } } });
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Search for a city or town' }),
+      'Guru{Enter}',
+    );
+
+    expect(await screen.findByText(/City search is unavailable right now/)).toBeInTheDocument();
+    expect(screen.queryByText(/No places found/)).not.toBeInTheDocument();
+  });
+
+  it('only searches once the query is long enough, by button or Enter', async () => {
+    const user = setup();
+    const box = screen.getByRole('searchbox', { name: 'Search for a city or town' });
+    await user.type(box, 'G{Enter}');
+
+    expect(screen.getByRole('button', { name: 'Search' })).toBeDisabled();
+    expect(user.fetchMock).not.toHaveBeenCalled();
+    expect(box).toHaveAttribute('maxLength', '60');
   });
 
   it('uses the device location when allowed, and explains when it is not', async () => {

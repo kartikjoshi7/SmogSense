@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Place } from '../../shared/api.js';
 import { fetchJson, type FetchFailure, type HttpDeps } from '../http/fetch-json.js';
-import { ok, type Result } from '../result.js';
+import { ok, type Result } from '../../core/result.js';
 
 const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 const MAX_RESULTS = 5;

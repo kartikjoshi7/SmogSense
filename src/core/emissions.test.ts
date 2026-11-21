@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Commute } from '../shared/profile.js';
-import { commuteSwaps, dailyCommuteDoseUg, roundKg, weeklyCommuteCo2Kg } from './emissions.js';
+import { commuteSwaps, dailyCommuteDoseUg } from './emissions.js';
 
 const carCommute: Commute = {
   mode: 'car_petrol',
@@ -11,10 +11,12 @@ const carCommute: Commute = {
   alternatives: ['metro', 'carpool', 'wfh', 'cycle'],
 };
 
-describe('weeklyCommuteCo2Kg', () => {
-  it('counts a round trip on every commuting day', () => {
-    expect(roundKg(weeklyCommuteCo2Kg('car_petrol', 18, 5))).toBe(30.6);
-    expect(weeklyCommuteCo2Kg('cycle', 18, 5)).toBe(0);
+describe('weekly commute CO₂', () => {
+  it('counts a round trip on every commuting day: cycling 5 km saves all 8.5 kg', () => {
+    const short: Commute = { ...carCommute, oneWayKm: 5, alternatives: ['cycle'] };
+
+    // 0.17 kg/km × 5 km × 2 trips × 5 days; cycling emits nothing.
+    expect(commuteSwaps(short, 125)[0]?.co2SavedKgPerWeek).toBe(8.5);
   });
 });
 

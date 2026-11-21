@@ -2,9 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { makeAir } from '../../core/fixtures/air.js';
 import { SHARMA_FAMILY } from '../../core/fixtures/profiles.js';
 import { buildPlan } from '../../core/plan.js';
-import { allowedNumbers, extractQuantities, isGrounded } from './grounding.js';
-
-const values = (text: string) => extractQuantities(text).map((q) => q.value);
+import { allowedNumbers, isGrounded } from './grounding.js';
 
 function severePlan() {
   const result = buildPlan(SHARMA_FAMILY, makeAir({ scale: 2.4 }));
@@ -14,13 +12,20 @@ function severePlan() {
   return result.value;
 }
 
-describe('extractQuantities', () => {
-  it('reads decimals, thousands separators and percentages', () => {
-    expect(values('PM2.5 hit 1,234 µg/m³, 12.5% more')).toEqual([2.5, 1234, 12.5]);
+describe('reading numbers', () => {
+  it('reads decimals and thousands separators as single numbers', () => {
+    const allowed = new Set([2.5, 1234, 12.5]);
+
+    expect(isGrounded('PM2.5 hit 1,234 µg/m³, 12.5% more', allowed)).toBe(true);
+    expect(isGrounded('PM2.5 hit 1,235 µg/m³', allowed)).toBe(false);
+    expect(isGrounded('13.5% more', allowed)).toBe(false);
   });
 
   it('reads Devanagari digits in Hindi text', () => {
-    expect(values('PM2.5 २०१ से घटकर २८ µg/m³')).toEqual([2.5, 201, 28]);
+    const allowed = new Set([2.5, 201, 28]);
+
+    expect(isGrounded('PM2.5 २०१ से घटकर २८ µg/m³', allowed)).toBe(true);
+    expect(isGrounded('PM2.5 ९९९ µg/m³', allowed)).toBe(false);
   });
 });
 
@@ -43,13 +48,13 @@ describe('isGrounded', () => {
     expect(isGrounded(`PM2.5 is ${plan.current.pm25 ?? 0} right now.`, allowed)).toBe(true);
   });
 
-  it('marks numbers given as a percentage or a mass as measurements', () => {
-    expect(extractQuantities('cuts 20% and 3 kg, at 14:00')).toEqual([
-      { value: 20, measured: true },
-      { value: 3, measured: true },
-      { value: 14, measured: false },
-      { value: 0, measured: false },
-    ]);
+  it('treats a small number as a clock time or count unless a percent or mass follows it', () => {
+    const none = new Set<number>();
+
+    expect(isGrounded('Go out at 14:00 for 3 short walks.', none)).toBe(true);
+    expect(isGrounded('This cuts 20%.', none)).toBe(false);
+    expect(isGrounded('This saves 3 kg.', none)).toBe(false);
+    expect(isGrounded('Breathe 5 µg less.', none)).toBe(false);
   });
 
   it('rejects small invented percentages and masses that pass as clock hours otherwise', () => {

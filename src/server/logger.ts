@@ -1,4 +1,4 @@
-type Level = 'info' | 'warn' | 'error';
+type Level = 'warn' | 'error';
 
 interface LogEntry {
   level: Level;
@@ -21,16 +21,9 @@ function write(level: Level, message: string, extra?: Record<string, unknown>): 
   const line = JSON.stringify(entry);
   if (level === 'error') {
     console.error(line);
-  } else if (level === 'warn') {
-    console.warn(line);
   } else {
-    console.log(line);
+    console.warn(line);
   }
-}
-
-/** Log an informational message. */
-export function info(message: string, extra?: Record<string, unknown>): void {
-  write('info', message, extra);
 }
 
 /** Log a warning message. */

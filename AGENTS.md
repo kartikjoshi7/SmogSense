@@ -27,15 +27,15 @@ Dependencies point one way: `ui → shared, core` · `server → shared, core` �
 
 1. **One place per concept.** Search before you write a helper. Never create a second version of something that exists (one Gemini client, one fetch wrapper, one `Dialog`, one formatter module, one cache).
 2. **No `any`, no `as` on external data, no non-null `!`, no `@ts-ignore`.** Validate every boundary with Zod (request bodies and queries, Open-Meteo responses, Gemini JSON, `localStorage`) and use `z.infer` types. Define each domain type once.
-3. **Name every number.** Domain coefficients and thresholds live in `src/core/constants.ts`, each with a source comment. Runtime settings (timeouts, limits, TTLs, model list) live in `src/server/config.ts`.
+3. **Name every number.** Domain coefficients and thresholds live in `src/core/constants.ts`, each with a source comment. Runtime settings (timeouts, limits, TTLs, model list) live in `src/server/config.ts`, browser-side ones in `src/ui/settings.ts`. Input bounds are defined once in `src/shared` and used by both the schemas and the form controls.
 4. **Small, flat functions:** at most 60 lines, complexity at most 10, nesting at most 3, no nested ternaries. Split code by responsibility. Never squash code onto long lines to meet a limit. Prettier formats everything (`printWidth` 100).
-5. **Explicit errors.** No empty `catch`. Only catch an error to handle it or add context. Services return typed results (`{ ok: true, value } | { ok: false, error }`). All logging goes through `src/server/logger.ts`; no stray `console`.
+5. **Explicit errors.** No empty `catch`. Only catch an error to handle it or add context. Services return the one `Result` type from `src/core/result.ts` (`{ ok: true, value } | { ok: false, error }`). All logging goes through `src/server/logger.ts`; no stray `console`.
 6. **Never present a failure as success.** AI output carries a truthful `source: "ai" | "fallback"`, and the UI shows it. Upstream failures return a proper status code with a safe message.
-7. **No dead code:** no unused exports, files or dependencies (knip enforces this), no commented-out code, no TODOs in committed code.
+7. **No dead code:** no unused exports, files or dependencies, and no export that only tests use (knip enforces both, the second with `knip --production`), no commented-out code, no TODOs in committed code.
 8. **No test-only branches in production code.** Inject dependencies (fetch, clock, AI client) instead.
 9. Named exports only (default exports only where a framework requires them). Function components. `kebab-case` file names. A JSDoc comment on every exported function in `core/` and `server/`.
 10. **Relative imports end in `.js`** (`import { x } from './x.js'`, even when the file is `x.ts`/`x.tsx`). Vercel compiles each `.ts` file to `.js` without rewriting import paths, so `.ts` or missing extensions crash the API at runtime. The server type-check (`NodeNext`) enforces this.
-11. **State lives in one place:** one React context + reducer for profile and plan, persisted through a single storage module.
+11. **State lives in one place:** one React context + reducer for the language, household and location, persisted through a single storage module. Server data (the plan, answers) lives in the hooks that load it.
 
 ## Security rules
 
@@ -55,7 +55,7 @@ Dependencies point one way: `ui → shared, core` · `server → shared, core` �
 ## Testing rules
 
 - Tests sit next to the code they cover (`foo.ts` → `foo.test.ts`). A small module may instead be covered by the test of the module that uses it (`recommendations/*` through `plan.test.ts`, routes through `app.test.ts`), but nothing goes untested: `src/core` needs 100% lines and branches, and the whole project at least 90%. The thresholds are enforced in the Vitest config.
-- End-to-end tests (`e2e/`, Playwright) run the production build with `/api/*` mocked by `src/ui/test/fake-server.ts`, the same fake API the UI unit tests use.
+- End-to-end tests (`e2e/`, Playwright) run the production build with `/api/*` served by `src/ui/test/fake-server.ts`: the real Hono app with only Open-Meteo and Gemini replaced. The UI unit tests use the same harness.
 - Test behaviour, not implementation. Cover the edges: breakpoint boundaries, missing data, invalid input, upstream failure, AI fallback.
 - UI tests query by role and label and include an axe check.
 

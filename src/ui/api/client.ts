@@ -1,8 +1,8 @@
 import type { ZodType } from 'zod';
+import { fail, ok, type Result } from '../../core/result.js';
 import {
   chatResponseSchema,
   communityResponseSchema,
-  errorResponseSchema,
   explainResponseSchema,
   geocodeResponseSchema,
   planResponseSchema,
@@ -12,48 +12,56 @@ import {
   type PlanRequest,
 } from '../../shared/api.js';
 
-/** A typed API outcome. `message` is the server's safe error text when it sent one. */
-export type ApiResult<T> =
-  | { readonly ok: true; readonly data: T }
-  | { readonly ok: false; readonly status: number | null; readonly message: string | null };
+/**
+ * Why a call failed: the HTTP status when the server answered with an error, or null when there
+ * was no usable answer (offline, cancelled, or a reply that broke the contract).
+ */
+export interface ApiError {
+  readonly status: number | null;
+}
+
+const NO_ANSWER: ApiError = { status: null };
 
 async function request<T>(
   path: string,
   schema: ZodType<T>,
   init: RequestInit,
-): Promise<ApiResult<T>> {
+): Promise<Result<T, ApiError>> {
   let response: Response;
   try {
     response = await fetch(path, init);
   } catch {
-    return { ok: false, status: null, message: null };
+    return fail(NO_ANSWER);
+  }
+  if (!response.ok) {
+    return fail({ status: response.status });
   }
   const body: unknown = await response.json().catch(() => null);
-  if (!response.ok) {
-    const error = errorResponseSchema.safeParse(body);
-    return { ok: false, status: response.status, message: error.success ? error.data.error : null };
-  }
   const parsed = schema.safeParse(body);
-  return parsed.success
-    ? { ok: true, data: parsed.data }
-    : { ok: false, status: response.status, message: null };
+  return parsed.success ? ok(parsed.data) : fail(NO_ANSWER);
+}
+
+function withSignal(init: RequestInit, signal: AbortSignal | undefined): RequestInit {
+  return signal === undefined ? init : { ...init, signal };
 }
 
 function post<T>(path: string, body: unknown, schema: ZodType<T>, signal?: AbortSignal) {
-  return request(path, schema, {
+  const init = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-    ...(signal === undefined ? {} : { signal }),
-  });
+  };
+  return request(path, schema, withSignal(init, signal));
 }
 
 /** Every call the UI makes to the SmogSense API, each validated against the shared schemas. */
 export const api = {
   geocode: (q: string, signal?: AbortSignal) =>
-    request(`/api/geocode?${new URLSearchParams({ q }).toString()}`, geocodeResponseSchema, {
-      ...(signal === undefined ? {} : { signal }),
-    }),
+    request(
+      `/api/geocode?${new URLSearchParams({ q }).toString()}`,
+      geocodeResponseSchema,
+      withSignal({}, signal),
+    ),
   plan: (body: PlanRequest, signal?: AbortSignal) =>
     post('/api/plan', body, planResponseSchema, signal),
   explain: (body: ExplainRequest, signal?: AbortSignal) =>

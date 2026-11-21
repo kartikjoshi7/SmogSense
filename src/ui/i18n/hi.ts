@@ -28,6 +28,7 @@ export const hi: Messages = {
       searchButton: 'खोजें',
       searching: 'खोज रहे हैं…',
       noResults: 'कोई जगह नहीं मिली। दूसरी वर्तनी आज़माएँ।',
+      searchFailed: 'शहर की खोज अभी उपलब्ध नहीं है। फिर कोशिश करें या अपनी लोकेशन इस्तेमाल करें।',
       choose: (place) => `${place} चुनें`,
       chosen: (place) => `लोकेशन: ${place}`,
       myLocation: 'मेरी मौजूदा लोकेशन',
@@ -126,7 +127,12 @@ export const hi: Messages = {
     title: (place) => `आज ${place} में`,
     loading: 'आपकी योजना बन रही है…',
     explaining: 'व्याख्या लिखी जा रही है…',
-    error: 'आपकी योजना लोड नहीं हो सकी।',
+    errors: {
+      general: 'आपकी योजना लोड नहीं हो सकी। कनेक्शन जाँचें और फिर कोशिश करें।',
+      upstream: 'हवा की गुणवत्ता का डेटा अभी उपलब्ध नहीं है। थोड़ी देर बाद फिर कोशिश करें।',
+      noData: 'इस जगह के लिए हाल का पर्याप्त डेटा अभी नहीं है।',
+      busy: 'अभी बहुत ज़्यादा अनुरोध आए हैं। एक मिनट रुककर फिर कोशिश करें।',
+    },
     retry: 'फिर कोशिश करें',
     advice: {
       ok: 'बाहर की गतिविधियाँ सभी के लिए ठीक हैं।',
@@ -154,6 +160,7 @@ export const hi: Messages = {
     pm25: 'PM2.5 (µg/m³)',
     cleanest: 'दिन का सबसे साफ़ समय',
     missing: 'डेटा नहीं',
+    missingNote: (count) => `${count} घंटे का पूर्वानुमान नहीं है; उसे डैश वाली रेखा से दिखाया गया है।`,
   },
   inversion: {
     title: 'सुबह हवा ज़्यादा खराब क्यों है',
@@ -189,7 +196,7 @@ export const hi: Messages = {
     label: 'शुरू करने का समय',
     result: (hour, pm25, dose, usualDose) =>
       `${hour} पर: PM2.5 लगभग ${pm25} µg/m³, लगभग ${dose} µg साँस में (आम समय पर: ${usualDose} µg)।`,
-    noData: 'इस समय का पूर्वानुमान नहीं है।',
+    noData: 'इस समय पूरे सत्र का पूर्वानुमान उपलब्ध नहीं है।',
   },
   readAloud: { start: 'पढ़कर सुनाएँ', stop: 'पढ़ना रोकें' },
   actions: { ask: 'SmogSense से पूछें', notice: 'सामुदायिक सूचना', close: 'बंद करें' },
@@ -202,6 +209,7 @@ export const hi: Messages = {
     counter: (used, max) => `${max} में से ${used} अक्षर`,
     you: 'आप',
     assistant: 'SmogSense',
+    conversation: 'बातचीत',
     error: 'सहायक जवाब नहीं दे सका। कृपया फिर कोशिश करें।',
     suggestions: [
       'क्या बच्चे शाम 4 बजे बाहर खेल सकते हैं?',
@@ -219,7 +227,9 @@ export const hi: Messages = {
     generating: 'लिख रहे हैं…',
     copy: 'कॉपी करें',
     copied: 'कॉपी हो गया',
+    copyFailed: 'यहाँ कॉपी नहीं हो सका। सूचना चुनकर खुद कॉपी करें।',
     share: 'साझा करें',
+    shareFailed: 'साझा नहीं हो सका। इसकी जगह सूचना कॉपी करें।',
     error: 'सूचना नहीं बन सकी। कृपया फिर कोशिश करें।',
   },
 };

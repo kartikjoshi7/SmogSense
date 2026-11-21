@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { makeAir } from '../core/fixtures/air.js';
 import { SHARMA_FAMILY } from '../core/fixtures/profiles.js';
+import { z } from 'zod';
 import {
   chatResponseSchema,
   communityResponseSchema,
-  errorResponseSchema,
   explainResponseSchema,
   geocodeResponseSchema,
   planResponseSchema,
@@ -13,9 +13,15 @@ import type { AirService } from './air/air-service.js';
 import { createAiService } from './ai/ai-service.js';
 import { createApp, type AppDeps } from './app.js';
 import { parseConfig } from './config.js';
-import { fail, ok } from './result.js';
+import { fail, ok } from '../core/result.js';
 
 const ORIGIN = 'https://smog-sense-sigma.vercel.app';
+
+/** Every error response: a safe, human-readable message, plus field issues for bad input. */
+const errorResponseSchema = z.strictObject({
+  error: z.string(),
+  issues: z.array(z.strictObject({ path: z.string(), message: z.string() })).optional(),
+});
 const GURUGRAM = { name: 'Gurugram', region: 'Haryana', country: 'India', lat: 28.46, lon: 77.03 };
 
 function fakeAir(overrides: Partial<AirService> = {}): AirService {

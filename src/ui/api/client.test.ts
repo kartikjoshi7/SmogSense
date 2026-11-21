@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
+import { SHARMA_FAMILY } from '../../core/fixtures/profiles.js';
 import { api } from './client.js';
 
 function respond(body: unknown, status = 200) {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(() => Promise.resolve(new Response(JSON.stringify(body), { status }))),
+  const fetchMock = vi.fn((_path: string, _init?: RequestInit) =>
+    Promise.resolve(new Response(JSON.stringify(body), { status })),
   );
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
 }
 
 describe('api client', () => {
@@ -14,24 +16,20 @@ describe('api client', () => {
 
     expect(await api.geocode('Delhi')).toMatchObject({
       ok: true,
-      data: { places: [{ name: 'Delhi' }] },
+      value: { places: [{ name: 'Delhi' }] },
     });
   });
 
-  it('passes on the server’s safe error message', async () => {
+  it('reports the status of an error response', async () => {
     respond({ error: 'Too many requests. Please wait a moment and try again.' }, 429);
 
-    expect(await api.geocode('Delhi')).toEqual({
-      ok: false,
-      status: 429,
-      message: 'Too many requests. Please wait a moment and try again.',
-    });
+    expect(await api.geocode('Delhi')).toEqual({ ok: false, error: { status: 429 } });
   });
 
   it('rejects responses that do not match the contract', async () => {
     respond({ places: 'none' });
 
-    expect(await api.geocode('Delhi')).toEqual({ ok: false, status: 200, message: null });
+    expect(await api.geocode('Delhi')).toEqual({ ok: false, error: { status: null } });
   });
 
   it('reports network failures without a status', async () => {
@@ -40,15 +38,29 @@ describe('api client', () => {
       vi.fn(() => Promise.reject(new TypeError('offline'))),
     );
 
-    expect(await api.geocode('Delhi')).toEqual({ ok: false, status: null, message: null });
+    expect(await api.geocode('Delhi')).toEqual({ ok: false, error: { status: null } });
   });
 
-  it('reports errors without a readable body', async () => {
+  it('reports a success status with an unreadable body as no answer', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(() => Promise.resolve(new Response('<html>', { status: 500 }))),
+      vi.fn(() => Promise.resolve(new Response('<html>', { status: 200 }))),
     );
 
-    expect(await api.geocode('Delhi')).toEqual({ ok: false, status: 500, message: null });
+    expect(await api.geocode('Delhi')).toEqual({ ok: false, error: { status: null } });
+  });
+
+  it('posts JSON and passes the abort signal through', async () => {
+    const fetchMock = respond({ error: 'Busy' }, 503);
+    const controller = new AbortController();
+
+    await api.plan(
+      { profile: SHARMA_FAMILY, location: { lat: 28.6, lon: 77.2 } },
+      controller.signal,
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/plan',
+      expect.objectContaining({ method: 'POST', signal: controller.signal }),
+    );
   });
 });

@@ -8,7 +8,7 @@ import {
   openMeteoFetch,
   requestUrl,
 } from '../test/fake-fetch.js';
-import { fetchAirData, localHourStamp } from './open-meteo.js';
+import { fetchAirData } from './open-meteo.js';
 
 const DELHI = { lat: 28.6, lon: 77.2 };
 
@@ -16,10 +16,20 @@ function deps(fetch: typeof globalThis.fetch, now = FIXTURE_NOW) {
   return { fetch, now: () => now, timeoutMs: 1000, retries: 0 };
 }
 
-describe('localHourStamp', () => {
-  it('formats the current hour in the location’s local time', () => {
-    expect(localHourStamp(FIXTURE_NOW, 19_800)).toBe('2026-11-21T06:00');
-    expect(localHourStamp(FIXTURE_NOW, -18_000)).toBe('2026-11-20T20:00');
+describe('the current hour', () => {
+  it('is found in the location’s local time, east or west of UTC', async () => {
+    const westOfUtc = { ...airQualityFixture(), utc_offset_seconds: -18_000 };
+    const stub = vi.fn<typeof fetch>((input) =>
+      requestUrl(input).host === 'air-quality-api.open-meteo.com'
+        ? Promise.resolve(jsonResponse(westOfUtc))
+        : openMeteoFetch()(input),
+    );
+    const delhi = await fetchAirData(DELHI, deps(openMeteoFetch()));
+    const west = await fetchAirData(DELHI, deps(stub));
+
+    // 01:00 UTC is 06:30 in Delhi (UTC+5:30) and 20:00 the evening before at UTC−5.
+    expect(delhi.ok && delhi.value.hourly[delhi.value.nowIndex]?.time).toBe('2026-11-21T06:00');
+    expect(west.ok && west.value.hourly[west.value.nowIndex]?.time).toBe('2026-11-20T20:00');
   });
 });
 
@@ -34,7 +44,6 @@ describe('fetchAirData', () => {
     expect(air).toMatchObject({
       ...DELHI,
       timezone: 'Asia/Kolkata',
-      countryCode: null,
       nowIndex: 30,
     });
     expect(air.hourly).toHaveLength(72);

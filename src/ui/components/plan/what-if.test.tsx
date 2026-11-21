@@ -1,0 +1,67 @@
+import { fireEvent, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { makeAir } from '../../../core/fixtures/air.js';
+import { HEALTHY_COUPLE } from '../../../core/fixtures/profiles.js';
+import { buildPlan } from '../../../core/plan.js';
+import type { Plan } from '../../../shared/plan.js';
+import type { Profile } from '../../../shared/profile.js';
+import { checkA11y } from '../../test/axe.js';
+import { renderInApp } from '../../test/render.js';
+import { WhatIf } from './what-if.js';
+
+/** A run of 90 minutes, so each session spans two forecast hours. */
+const LONG_RUN: Profile = {
+  ...HEALTHY_COUPLE,
+  exercise: { ...HEALTHY_COUPLE.exercise, durationMin: 90 },
+};
+
+function planOnPoorDay(): Plan {
+  const result = buildPlan(LONG_RUN, makeAir({ scale: 0.8 }));
+  if (!result.ok) {
+    throw new Error(result.error);
+  }
+  return result.value;
+}
+
+function show(plan: Plan) {
+  const view = renderInApp(
+    <WhatIf plan={plan} exercise={LONG_RUN.exercise} members={LONG_RUN.members} />,
+  );
+  const moveTo = (hour: number) => {
+    fireEvent.change(screen.getByRole('slider', { name: /Start time/ }), {
+      target: { value: String(hour) },
+    });
+  };
+  return { view, moveTo };
+}
+
+describe('WhatIf', () => {
+  it('gives the same doses as the plan’s own exercise advice, over the whole session', async () => {
+    const plan = planOnPoorDay();
+    const advice = plan.recommendations.find((rec) => rec.id === 'exercise_window');
+    expect(advice).toBeDefined();
+    const { view, moveTo } = show(plan);
+    moveTo(Number(advice?.facts.bestHour));
+
+    const { doseAfterUg, doseBeforeUg } = advice?.impact ?? {};
+    expect(
+      screen.getByText(
+        `about ${String(doseAfterUg)} µg inhaled (usual time: ${String(doseBeforeUg)} µg)`,
+        {
+          exact: false,
+        },
+      ),
+    ).toBeInTheDocument();
+    expect(await checkA11y(view.container)).toEqual([]);
+  });
+
+  it('says so when the forecast ends before the session would', () => {
+    const plan = planOnPoorDay();
+    const { moveTo } = show(plan);
+    moveTo(plan.forecast.at(-1)?.hour ?? 0);
+
+    expect(
+      screen.getByText('The forecast does not cover a whole session at this time.'),
+    ).toBeInTheDocument();
+  });
+});

@@ -32,7 +32,6 @@ export interface AirFixtureOptions {
   readonly lat?: number;
   readonly lon?: number;
   readonly timezone?: string;
-  readonly countryCode?: string | null;
 }
 
 function dateOf(dayOffset: number): string {
@@ -73,7 +72,6 @@ export function makeAir(options: AirFixtureOptions = {}): AirData {
     lat: options.lat ?? 28.61,
     lon: options.lon ?? 77.21,
     timezone: options.timezone ?? 'Asia/Kolkata',
-    countryCode: options.countryCode === undefined ? 'IN' : options.countryCode,
     hourly,
     daylight,
     nowIndex: 24 + (options.nowHour ?? 6),

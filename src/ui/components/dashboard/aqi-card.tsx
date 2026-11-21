@@ -1,6 +1,7 @@
 import { categoryLabel } from '../../../core/explain/index.js';
 import type { TextSource } from '../../../shared/api.js';
-import type { Plan, Pollutants } from '../../../shared/plan.js';
+import type { Pollutants } from '../../../shared/air.js';
+import type { Plan } from '../../../shared/plan.js';
 import { useAppState, useMessages } from '../../state/app-context.js';
 import { SourceTag } from '../common/source-tag.js';
 

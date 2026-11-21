@@ -1,4 +1,6 @@
 import { useId } from 'react';
+import { clock } from '../../../core/explain/format.js';
+import { CLOCK_HOURS, type Range } from '../../../shared/primitives.js';
 
 /** Options as a value → label table, kept in the order written. */
 type OptionLabels<K extends string> = Readonly<Record<K, string>>;
@@ -44,19 +46,17 @@ export function SelectField<K extends string>({
   );
 }
 
-/** A labelled number input that reports only valid numbers; `error` is announced with it. */
+/** A labelled number input within a range; `error` is linked to it and shown below. */
 export function NumberField({
   label,
   value,
-  min,
-  max,
+  range,
   onChange,
   error,
 }: {
   readonly label: string;
   readonly value: number;
-  readonly min: number;
-  readonly max: number;
+  readonly range: Range;
   readonly onChange: (value: number) => void;
   readonly error?: string | undefined;
 }) {
@@ -70,8 +70,8 @@ export function NumberField({
         type="number"
         inputMode="decimal"
         value={Number.isFinite(value) ? value : ''}
-        min={min}
-        max={max}
+        min={range.min}
+        max={range.max}
         aria-invalid={error === undefined ? undefined : true}
         aria-describedby={error === undefined ? undefined : errorId}
         onChange={(e) => {
@@ -108,9 +108,9 @@ export function HourField({
           onChange(Number(e.target.value));
         }}
       >
-        {Array.from({ length: 24 }, (_, hour) => (
+        {Array.from({ length: CLOCK_HOURS.max + 1 }, (_, hour) => (
           <option key={hour} value={hour}>
-            {`${String(hour).padStart(2, '0')}:00`}
+            {clock(hour)}
           </option>
         ))}
       </select>

@@ -1,12 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { classify, computeIndex, selectScale, subIndex } from './aqi.js';
-import { AQI_SCALES } from './constants.js';
+import { computeIndex } from './aqi.js';
 import { makeAir } from './fixtures/air.js';
 
-const NAQI = AQI_SCALES.naqi.bands;
-const US = AQI_SCALES.us_aqi.bands;
+/** The headline index for a day of constant concentrations, in India or elsewhere. */
+function steadyDay(pm25: number, options: { readonly pm10?: number; readonly us?: boolean } = {}) {
+  const result = computeIndex(
+    makeAir({
+      pm25Day: Array<number>(24).fill(pm25),
+      pm10Day: options.pm10 === undefined ? null : Array<number>(24).fill(options.pm10),
+      timezone: options.us === true ? 'America/New_York' : 'Asia/Kolkata',
+    }),
+  );
+  if (!result.ok) {
+    throw new Error(result.error);
+  }
+  return result.value;
+}
 
-describe('subIndex', () => {
+describe('sub-indexes at the official breakpoints', () => {
   it.each([
     [0, 0],
     [30, 50],
@@ -18,7 +29,7 @@ describe('subIndex', () => {
     [380, 500],
     [450, 500],
   ])('NAQI PM2.5 %d µg/m³ → %d', (concentration, expected) => {
-    expect(subIndex(concentration, 'pm25', NAQI)).toBe(expected);
+    expect(steadyDay(concentration).value).toBe(expected);
   });
 
   it.each([
@@ -30,7 +41,7 @@ describe('subIndex', () => {
     [510, 500],
     [600, 500],
   ])('NAQI PM10 %d µg/m³ → %d', (concentration, expected) => {
-    expect(subIndex(concentration, 'pm10', NAQI)).toBe(expected);
+    expect(steadyDay(0, { pm10: concentration }).value).toBe(expected);
   });
 
   it.each([
@@ -47,7 +58,7 @@ describe('subIndex', () => {
     [225.5, 301],
     [325.4, 500],
   ])('US AQI PM2.5 %d µg/m³ → %d (Feb 2024 breakpoints)', (concentration, expected) => {
-    expect(subIndex(concentration, 'pm25', US)).toBe(expected);
+    expect(steadyDay(concentration, { us: true }).value).toBe(expected);
   });
 
   it.each([
@@ -63,36 +74,38 @@ describe('subIndex', () => {
     [425, 301],
     [604, 500],
   ])('US AQI PM10 %d µg/m³ → %d', (concentration, expected) => {
-    expect(subIndex(concentration, 'pm10', US)).toBe(expected);
-  });
-
-  it('treats zero and negative concentrations as index 0', () => {
-    expect(subIndex(-5, 'pm25', NAQI)).toBe(0);
+    expect(steadyDay(0, { pm10: concentration, us: true }).value).toBe(expected);
   });
 });
 
-describe('classify', () => {
-  it('maps index values to their band and category', () => {
-    expect(classify(0, NAQI)).toEqual({ band: 0, category: 'good' });
-    expect(classify(305, NAQI)).toEqual({ band: 4, category: 'very_poor' });
-    expect(classify(150, US)).toEqual({ band: 2, category: 'unhealthy_sensitive' });
+describe('categories', () => {
+  it('maps index values to their band and category on each scale', () => {
+    expect(steadyDay(0)).toMatchObject({ band: 0, category: 'good' });
+    expect(steadyDay(125)).toMatchObject({ value: 305, band: 4, category: 'very_poor' });
+    expect(steadyDay(55.4, { us: true })).toMatchObject({
+      band: 2,
+      category: 'unhealthy_sensitive',
+    });
   });
 
   it('keeps values beyond the table in the worst band', () => {
-    expect(classify(600, US)).toEqual({ band: 5, category: 'hazardous' });
+    expect(steadyDay(900, { us: true })).toMatchObject({
+      value: 500,
+      band: 5,
+      category: 'hazardous',
+    });
   });
 });
 
-describe('selectScale', () => {
+describe('scale choice', () => {
   it.each([
-    ['IN', 'Asia/Kolkata', 'naqi'],
-    [null, 'Asia/Kolkata', 'naqi'],
-    [null, 'Asia/Calcutta', 'naqi'],
-    [null, 'Europe/London', 'us_aqi'],
-    ['US', 'America/New_York', 'us_aqi'],
-    ['GB', 'Asia/Kolkata', 'us_aqi'],
-  ] as const)('country %s in %s uses %s', (country, timezone, expected) => {
-    expect(selectScale(country, timezone)).toBe(expected);
+    ['Asia/Kolkata', 'naqi'],
+    ['Asia/Calcutta', 'naqi'],
+    ['Europe/London', 'us_aqi'],
+    ['America/New_York', 'us_aqi'],
+    ['Asia/Dhaka', 'us_aqi'],
+  ] as const)('%s uses %s', (timezone, expected) => {
+    expect(computeIndex(makeAir({ timezone }))).toMatchObject({ value: { scale: expected } });
   });
 });
 
@@ -115,7 +128,6 @@ describe('computeIndex', () => {
   it('uses the US AQI outside India', () => {
     const air = makeAir({
       pm25Day: Array<number>(24).fill(12),
-      countryCode: 'GB',
       timezone: 'Europe/London',
     });
 
@@ -127,7 +139,7 @@ describe('computeIndex', () => {
 
   it('truncates US PM2.5 to one decimal before the lookup', () => {
     const pm25Day = Array.from({ length: 24 }, (_, h) => (h % 2 === 0 ? 35.4 : 35.5));
-    const air = makeAir({ pm25Day, countryCode: 'US', timezone: 'America/Denver' });
+    const air = makeAir({ pm25Day, timezone: 'America/Denver' });
 
     expect(computeIndex(air).ok && computeIndex(air)).toMatchObject({ value: { value: 100 } });
   });

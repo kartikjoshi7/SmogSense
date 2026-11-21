@@ -1,8 +1,9 @@
-import type { AirData, HourlyReading } from '../shared/air.js';
-import type { IndexReading, Plan, Pollutants, TimelineEntry } from '../shared/plan.js';
+import type { AirData, HourlyReading, Pollutants } from '../shared/air.js';
+import type { IndexReading, Plan, TimelineEntry } from '../shared/plan.js';
 import type { Profile } from '../shared/profile.js';
 import { computeIndex } from './aqi.js';
 import { PLAN_HORIZON_HOURS } from './constants.js';
+import { ok, type Result } from './result.js';
 import { alternativeCandidates } from './recommendations/alternatives.js';
 import { communityCandidates } from './recommendations/community.js';
 import type { Candidate, PlanContext } from './recommendations/context.js';
@@ -15,12 +16,10 @@ import { severityMode } from './severity.js';
 import { analyzeInversion } from './inversion.js';
 import { bestActivityWindow, ventilationHour } from './windows.js';
 
-export type PlanResult = { ok: true; value: Plan } | { ok: false; error: 'insufficient_data' };
-
 const NO_READING: Pollutants = { pm25: null, pm10: null, no2: null, o3: null, co: null, so2: null };
 
 /** Every pollutant's concentration at one hour of the data, or all null when that hour is missing. */
-export function pollutantsAt(hourly: readonly HourlyReading[], index: number): Pollutants {
+function pollutantsAt(hourly: readonly HourlyReading[], index: number): Pollutants {
   const reading = hourly[index];
   if (reading === undefined) {
     return NO_READING;
@@ -78,7 +77,7 @@ function timeline(
  * The household's plan for the next 24 hours: the local index, how strongly to react, and
  * ranked recommendations across routines, indoor air, alternatives, protection and community.
  */
-export function buildPlan(profile: Profile, air: AirData): PlanResult {
+export function buildPlan(profile: Profile, air: AirData): Result<Plan, 'insufficient_data'> {
   const index = computeIndex(air);
   if (!index.ok) {
     return index;
@@ -92,22 +91,19 @@ export function buildPlan(profile: Profile, air: AirData): PlanResult {
     ...communityCandidates(ctx),
   ];
   const horizon = air.hourly.slice(air.nowIndex, air.nowIndex + PLAN_HORIZON_HOURS);
-  return {
-    ok: true,
-    value: {
-      index: ctx.index,
-      current: pollutantsAt(air.hourly, air.nowIndex),
-      severity: ctx.severity,
-      householdSensitivity: ctx.sensitivity,
-      outdoorAdvice: ctx.advice,
-      inversion: analyzeInversion(air.hourly, air.nowIndex),
-      cleanestHour: ctx.ventilation,
-      forecast: horizon.map(({ time, hour, pm25 }) => ({ time, hour, pm25 })),
-      recommendations: rank(
-        candidates.map((c) => c.recommendation),
-        { band: ctx.index.band, sensitivity: ctx.sensitivity, severity: ctx.severity },
-      ),
-      timeline: timeline(candidates, horizon),
-    },
-  };
+  return ok({
+    index: ctx.index,
+    current: pollutantsAt(air.hourly, air.nowIndex),
+    severity: ctx.severity,
+    householdSensitivity: ctx.sensitivity,
+    outdoorAdvice: ctx.advice,
+    inversion: analyzeInversion(air.hourly, air.nowIndex),
+    cleanestHour: ctx.ventilation,
+    forecast: horizon.map(({ time, hour, pm25 }) => ({ time, hour, pm25 })),
+    recommendations: rank(
+      candidates.map((c) => c.recommendation),
+      { band: ctx.index.band, sensitivity: ctx.sensitivity, severity: ctx.severity },
+    ),
+    timeline: timeline(candidates, horizon),
+  });
 }

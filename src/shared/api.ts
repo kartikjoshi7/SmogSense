@@ -1,21 +1,22 @@
 import { z } from 'zod';
+import { languageSchema } from './languages.js';
 import { planSchema } from './plan.js';
+import { coordinatesSchema } from './primitives.js';
 import { profileSchema } from './profile.js';
 
 /** A point on the map. The server rounds it to 0.1° before using it. */
-const locationSchema = z.object({
-  lat: z.number().min(-90).max(90),
-  lon: z.number().min(-180).max(180),
-});
-export type Location = z.infer<typeof locationSchema>;
+export type Location = z.infer<typeof coordinatesSchema>;
+
+/** Length of a city search, shared by the query schema and the search box. */
+export const PLACE_QUERY_CHARS = { min: 2, max: 60 } as const;
 
 /** City search text: letters (any script), spaces and simple punctuation only. */
 export const geocodeQuerySchema = z.object({
   q: z
     .string()
     .trim()
-    .min(2)
-    .max(60)
+    .min(PLACE_QUERY_CHARS.min)
+    .max(PLACE_QUERY_CHARS.max)
     .regex(/^[\p{L}\p{M} ,.'-]+$/u, 'Use letters, spaces and simple punctuation only'),
 });
 
@@ -32,15 +33,11 @@ export const geocodeResponseSchema = z.object({ places: z.array(placeSchema) });
 
 export const planRequestSchema = z.object({
   profile: profileSchema,
-  location: locationSchema,
+  location: coordinatesSchema,
 });
 export type PlanRequest = z.infer<typeof planRequestSchema>;
 
 export const planResponseSchema = z.object({ plan: planSchema });
-
-/** Languages the assistant can answer in. Standard guidance exists in English and Hindi. */
-const languageSchema = z.enum(['en', 'hi', 'bn', 'mr', 'ta', 'te', 'gu', 'kn', 'ml', 'pa']);
-export type Language = z.infer<typeof languageSchema>;
 
 /** Who a community notice is written for. */
 const audienceSchema = z.enum(['housing_society', 'school', 'workplace']);
@@ -104,9 +101,3 @@ export type CommunityRequest = z.infer<typeof communityRequestSchema>;
 
 export const communityResponseSchema = z.object({ notice: z.string(), source: textSourceSchema });
 export type CommunityResponse = z.infer<typeof communityResponseSchema>;
-
-/** Every error response: a safe, human-readable message (plus field issues for bad input). */
-export const errorResponseSchema = z.object({
-  error: z.string(),
-  issues: z.array(z.object({ path: z.string(), message: z.string() })).optional(),
-});

@@ -1,11 +1,14 @@
 import { z } from 'zod';
+import { uiLanguageSchema } from '../../shared/languages.js';
+import { coordinatesSchema } from '../../shared/primitives.js';
 import { profileSchema } from '../../shared/profile.js';
 
 const STORAGE_KEY = 'smogsense:v1';
 
-const savedLocationSchema = z.object({
-  lat: z.number().min(-90).max(90),
-  lon: z.number().min(-180).max(180),
+/** Longest display name a member can be given (names stay on this device). */
+export const MEMBER_NAME_CHARS = 40;
+
+const savedLocationSchema = coordinatesSchema.extend({
   label: z.string().min(1).max(120),
 });
 export type SavedLocation = z.infer<typeof savedLocationSchema>;
@@ -13,12 +16,12 @@ export type SavedLocation = z.infer<typeof savedLocationSchema>;
 const householdSchema = z.object({
   profile: profileSchema,
   /** Display names by member id. They never leave this device. */
-  names: z.record(z.string(), z.string().max(40)),
+  names: z.record(z.string(), z.string().max(MEMBER_NAME_CHARS)),
 });
 export type Household = z.infer<typeof householdSchema>;
 
 const persistedSchema = z.object({
-  lang: z.enum(['en', 'hi']),
+  lang: uiLanguageSchema,
   household: householdSchema.nullable(),
   location: savedLocationSchema.nullable(),
 });

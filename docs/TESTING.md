@@ -49,8 +49,11 @@ speech API, and both message catalogues (same keys, every template uses its argu
 left untranslated except names and units).
 
 **End to end.** Playwright runs `vite build && vite preview`, which sends the same headers as
-Vercel, and mocks `/api/*` in the page with `src/ui/test/fake-server.ts`, the same fake API the
-Vitest UI tests use. Any console error, uncaught error or CSP violation fails the test. It covers:
+Vercel, and answers `/api/*` in the page with `src/ui/test/fake-server.ts`: the real Hono app from
+`createApp` (validation, routes, engine, AI composition, grounding) with only the outside world
+replaced, Open-Meteo by a Severe day in Delhi and Gemini by fixed replies. The Vitest UI tests use
+the same harness, so no part of the API is re-implemented for tests. Any console error, uncaught
+error or CSP violation fails the test. It covers:
 
 - the full flow: example family → plan → chat answer → community notice → copy, plus reload and
   Hindi;
@@ -63,8 +66,8 @@ Vitest UI tests use. Any console error, uncaught error or CSP violation fails th
 ## Coverage
 
 Thresholds in `vitest.config.ts`: 100% lines, branches, functions and statements for `src/core`,
-and 90% for the whole project. The build fails below them. From the last run of
-`npm run coverage`:
+and 90% for the whole project. `npm run coverage`, and with it `npm run check` and CI, fails
+below them. From the last run:
 
 ```
 Statements   : 98.91% ( 1368/1383 )
@@ -78,6 +81,8 @@ mount the app) are excluded.
 
 ## Test doubles
 
-Production code has no test-only branches. Dependencies are injected instead: `fetch` and the
+Production code has no test-only branches and no test-only exports: tests go through each
+module's public functions, and `knip --production` (part of `npm run check`) fails if an export
+is used only by tests. Dependencies are injected instead: `fetch` and the
 clock for the air service, the SDK call and clock for the Gemini client, the AI client for the AI
 service, and a `KeyValueStore` in place of `localStorage` for the UI.

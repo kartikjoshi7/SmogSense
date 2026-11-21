@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import type { ExplainResponse } from '../../shared/api.js';
 import type { Plan } from '../../shared/plan.js';
 import type { Profile } from '../../shared/profile.js';
-import { api } from '../api/client.js';
-import type { UiLanguage } from '../state/app-state.js';
+import { api, type ApiError } from '../api/client.js';
+import type { UiLanguage } from '../../shared/languages.js';
 import type { SavedLocation } from '../state/storage.js';
 
 type PlanState =
   | { readonly status: 'loading' }
-  | { readonly status: 'error'; readonly message: string | null }
+  | { readonly status: 'error'; readonly error: ApiError }
   | {
       readonly status: 'ready';
       readonly plan: Plan;
@@ -19,7 +19,7 @@ type PlanState =
 
 type Loaded =
   | { readonly status: 'loading' }
-  | { readonly status: 'error'; readonly message: string | null }
+  | { readonly status: 'error'; readonly error: ApiError }
   | { readonly status: 'ready'; readonly plan: Plan };
 
 /** A result tagged with the request it answers, so a stale result is never shown. */
@@ -41,8 +41,8 @@ function usePlanRequest(profile: Profile, location: SavedLocation, attempt: numb
     void api.plan(body, controller.signal).then((result) => {
       if (!controller.signal.aborted) {
         const value: Loaded = result.ok
-          ? { status: 'ready', plan: result.data.plan }
-          : { status: 'error', message: result.message };
+          ? { status: 'ready', plan: result.value.plan }
+          : { status: 'error', error: result.error };
         setLoaded({ key, value });
       }
     });
@@ -72,7 +72,7 @@ function useExplanation(
     const body = { profile, location: { lat: location.lat, lon: location.lon }, lang };
     void api.explain(body, controller.signal).then((result) => {
       if (!controller.signal.aborted) {
-        setExplained({ key, value: result.ok ? result.data : null });
+        setExplained({ key, value: result.ok ? result.value : null });
       }
     });
     return () => {

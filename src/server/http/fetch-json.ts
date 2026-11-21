@@ -1,6 +1,6 @@
 import type { ZodType } from 'zod';
 import * as logger from '../logger.js';
-import { fail, ok, type Result } from '../result.js';
+import { fail, ok, type Result } from '../../core/result.js';
 
 export type FetchFailure = 'timeout' | 'network' | 'http' | 'invalid_response';
 

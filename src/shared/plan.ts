@@ -1,6 +1,6 @@
 import { z } from 'zod';
-
-const hourSchema = z.number().int().min(0).max(23);
+import { pollutantsSchema } from './air.js';
+import { concentrationSchema, hourSchema } from './primitives.js';
 
 const aqiScaleSchema = z.enum(['naqi', 'us_aqi']);
 export type AqiScale = z.infer<typeof aqiScaleSchema>;
@@ -129,7 +129,7 @@ export type TimelineEntry = z.infer<typeof timelineEntrySchema>;
 const forecastPointSchema = z.object({
   time: z.string(),
   hour: hourSchema,
-  pm25: z.number().min(0).nullable(),
+  pm25: concentrationSchema,
 });
 
 /** The daylight hour with the lowest PM2.5 in the next 24 hours. */
@@ -138,22 +138,10 @@ const cleanestHourSchema = z.object({
   pm25: z.number().min(0),
 });
 
-const concentrationSchema = z.number().min(0).nullable();
-
-/** Pollutant concentrations in µg/m³ at the current hour; null where the forecast has none. */
-const pollutantsSchema = z.object({
-  pm25: concentrationSchema,
-  pm10: concentrationSchema,
-  no2: concentrationSchema,
-  o3: concentrationSchema,
-  co: concentrationSchema,
-  so2: concentrationSchema,
-});
-export type Pollutants = z.infer<typeof pollutantsSchema>;
-
 /** The engine's complete output for one household, location and hour. */
 export const planSchema = z.object({
   index: indexReadingSchema,
+  /** Concentrations at the current hour. */
   current: pollutantsSchema,
   severity: severitySchema,
   householdSensitivity: sensitivitySchema,

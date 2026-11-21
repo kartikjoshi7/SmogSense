@@ -27,7 +27,7 @@ function openChat(options: FakeApiOptions = {}) {
     const body = fetchMock.mock.calls[n]?.[1]?.body;
     return chatRequestSchema.parse(typeof body === 'string' ? JSON.parse(body) : null);
   };
-  return { ask, sent, view };
+  return { ask, sent, view, user };
 }
 
 describe('ChatDialog', () => {
@@ -40,6 +40,17 @@ describe('ChatDialog', () => {
     expect(screen.getByText('AI explanation')).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Your question' })).toHaveValue('');
     expect(await checkA11y(view.container)).toEqual([]);
+  });
+
+  it('announces the first answer and keeps focus in the dialog after a suggestion', async () => {
+    const { user } = openChat();
+    const conversation = screen.getByRole('list', { name: 'Conversation' });
+    expect(conversation).toHaveAttribute('aria-live', 'polite');
+    await user.click(screen.getByRole('button', { name: 'Is it safe to open the windows today?' }));
+
+    expect(await screen.findByText('Keep the children indoors today.')).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Conversation' })).toBe(conversation);
+    expect(screen.getByRole('textbox', { name: 'Your question' })).toHaveFocus();
   });
 
   it('sends the earlier turns with a follow-up question', async () => {

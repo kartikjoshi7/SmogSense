@@ -1,7 +1,7 @@
 import { explainRecommendation } from '../../../core/explain/index.js';
 import type { ExplainResponse, TextSource } from '../../../shared/api.js';
 import type { Plan, Recommendation } from '../../../shared/plan.js';
-import type { UiLanguage } from '../../state/app-state.js';
+import type { UiLanguage } from '../../../shared/languages.js';
 
 /** A recommendation with the text to show for it and where that text came from. */
 export interface ShownRecommendation {

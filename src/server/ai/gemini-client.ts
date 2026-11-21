@@ -7,10 +7,14 @@ import {
 import { z, type ZodType } from 'zod';
 import { SETTINGS, type EnvConfig } from '../config.js';
 import * as logger from '../logger.js';
-import { fail, ok, type Result } from '../result.js';
+import { fail, ok, type Result } from '../../core/result.js';
 
-/** No model could answer (no key, budget spent, all failing), or answers broke the schema. */
-type AiFailure = 'unavailable' | 'invalid_output';
+/**
+ * No model gave a usable answer: no key, budget spent, every model rate-limited or failing, or
+ * replies that broke the schema. Callers fall back to standard guidance either way; the reason
+ * for each model is logged.
+ */
+type AiFailure = 'unavailable';
 
 interface AiRequest<T> {
   readonly system: string;
@@ -40,7 +44,11 @@ export interface GeminiOptions {
   readonly now: () => number;
 }
 
-type ModelFailure = 'rate_limited' | 'failed' | 'invalid_output';
+/** Why one model's attempt failed: a 429 (the model cools down) or anything else. */
+type ModelFailure = 'rate_limited' | 'failed';
+
+/** Why a reply was rejected, for the logs. */
+type ReplyProblem = 'empty' | 'not_json' | 'off_schema';
 
 function requestConfig<T>(
   request: AiRequest<T>,
@@ -58,33 +66,35 @@ function requestConfig<T>(
   };
 }
 
-function parseReply<T>(text: string | undefined, schema: ZodType<T>): Result<T, ModelFailure> {
+function parseReply<T>(text: string | undefined, schema: ZodType<T>): Result<T, ReplyProblem> {
   if (text === undefined) {
-    return fail('invalid_output');
+    return fail('empty');
   }
   let json: unknown;
   try {
     json = JSON.parse(text);
   } catch {
-    return fail('invalid_output');
+    return fail('not_json');
   }
   const parsed = schema.safeParse(json);
-  return parsed.success ? ok(parsed.data) : fail('invalid_output');
+  return parsed.success ? ok(parsed.data) : fail('off_schema');
 }
 
+/** One attempt with one model: the validated reply, or why it failed (each failure is logged). */
 async function callModel<T>(
   generate: GenerateContent,
   model: string,
   request: AiRequest<T>,
   thinking: GeminiOptions['thinkingLevel'],
 ): Promise<Result<T, ModelFailure>> {
+  let text: string | undefined;
   try {
     const reply = await generate({
       model,
       contents: request.prompt,
       config: requestConfig(request, thinking),
     });
-    return parseReply(reply.text, request.schema);
+    text = reply.text;
   } catch (error: unknown) {
     const rateLimited = error instanceof ApiError && error.status === 429;
     logger.warn('Gemini call failed', {
@@ -93,6 +103,12 @@ async function callModel<T>(
     });
     return fail(rateLimited ? 'rate_limited' : 'failed');
   }
+  const parsed = parseReply(text, request.schema);
+  if (!parsed.ok) {
+    logger.warn('Gemini reply rejected', { model, reason: parsed.error });
+    return fail('failed');
+  }
+  return parsed;
 }
 
 /** The error's class name for logs — never its message, which could echo the prompt. */
@@ -127,7 +143,6 @@ export function createGeminiClient(options: GeminiOptions): AiClient {
     generate: GenerateContent,
     request: AiRequest<T>,
   ): Promise<Result<T, AiFailure>> {
-    let failure: AiFailure = 'unavailable';
     const ready = options.models.filter((m) => (coolingUntil.get(m) ?? 0) <= options.now());
     for (const model of ready) {
       if (!takeBudget()) {
@@ -140,9 +155,8 @@ export function createGeminiClient(options: GeminiOptions): AiClient {
       if (reply.error === 'rate_limited') {
         coolingUntil.set(model, options.now() + SETTINGS.aiCooldownMs);
       }
-      failure = reply.error === 'invalid_output' ? 'invalid_output' : failure;
     }
-    return fail(failure);
+    return fail('unavailable');
   }
 
   return {

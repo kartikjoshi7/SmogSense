@@ -138,9 +138,21 @@ export default tseslint.config(
   },
 
   {
-    files: ['api/**/*.ts'],
+    // The UI talks to the server over HTTP only; test helpers may run the real app in-process.
+    files: ['src/ui/**/*.{ts,tsx}'],
+    ignores: ['src/ui/test/**', 'src/ui/**/*.test.{ts,tsx}'],
     rules: {
-      '@typescript-eslint/no-deprecated': 'off',
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/server/**'],
+              message: 'ui must not import from server; call it through src/ui/api/client.ts',
+            },
+          ],
+        },
+      ],
     },
   },
 

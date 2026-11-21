@@ -34,7 +34,7 @@ function healthBenefit(rec: Unranked): number {
  * Ranking score: health benefit weighted by how bad the air is and how sensitive the household
  * is, plus CO₂ avoided, minus effort. In an emergency, protective actions jump the queue.
  */
-export function score(rec: Unranked, ctx: RankingContext): number {
+function score(rec: Unranked, ctx: RankingContext): number {
   const healthWeight = (ctx.band + 1) * SENSITIVITY_WEIGHT[ctx.sensitivity];
   const co2 = (rec.impact.co2SavedKgPerWeek ?? 0) * CO2_RANK_WEIGHT;
   const urgent = rec.category === 'protection' || EMERGENCY_FIRST.has(rec.id);

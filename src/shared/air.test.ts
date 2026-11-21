@@ -22,11 +22,10 @@ describe('airDataSchema', () => {
     expect(airDataSchema.safeParse({ ...air, hourly }).success).toBe(false);
   });
 
-  it('rejects negative concentrations and lowercase country codes', () => {
+  it('rejects negative concentrations', () => {
     const air = makeAir();
     const hourly = air.hourly.map((h, i) => (i === 0 ? { ...h, pm25: -1 } : h));
 
     expect(airDataSchema.safeParse({ ...air, hourly }).success).toBe(false);
-    expect(airDataSchema.safeParse({ ...air, countryCode: 'in' }).success).toBe(false);
   });
 });

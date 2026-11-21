@@ -1,3 +1,7 @@
+import type { Exercise, Member } from '../shared/profile.js';
+import { AGE_FACTOR, DECIMALS, EXERCISE_BREATHING_M3H } from './constants.js';
+import { roundTo } from './round.js';
+
 export interface DoseInput {
   /** Ambient PM2.5, µg/m³. */
   readonly concentration: number;
@@ -34,7 +38,25 @@ export function inhaledDoseUg(input: DoseInput): number {
   } = input;
   const dose =
     concentration * exposureMultiplier * breathingM3h * ageFactor * hours * (1 - maskReduction);
-  return Math.round(dose * 10) / 10;
+  return roundTo(dose, DECIMALS.doseUg);
+}
+
+/**
+ * PM2.5 inhaled in one exercise session at a given concentration, by whoever exercises: their
+ * age sets the breathing volume (an adult's when the whole family or nobody in particular goes).
+ */
+export function exerciseDoseUg(
+  exercise: Exercise,
+  members: readonly Member[],
+  concentration: number,
+): number {
+  const member = members.find((m) => m.id === exercise.memberId);
+  return inhaledDoseUg({
+    concentration,
+    hours: exercise.durationMin / 60,
+    breathingM3h: EXERCISE_BREATHING_M3H[exercise.activity],
+    ageFactor: member === undefined ? AGE_FACTOR.adult : AGE_FACTOR[member.ageGroup],
+  });
 }
 
 /** Before, after and the percentage drop between them (0 when there was nothing to reduce). */

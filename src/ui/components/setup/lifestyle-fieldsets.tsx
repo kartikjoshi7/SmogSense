@@ -1,4 +1,11 @@
-import type { Commute, Exercise, Home, MaskType } from '../../../shared/profile.js';
+import type { Range } from '../../../shared/primitives.js';
+import {
+  PROFILE_LIMITS,
+  type Commute,
+  type Exercise,
+  type Home,
+  type MaskType,
+} from '../../../shared/profile.js';
 import { useMessages } from '../../state/app-context.js';
 import {
   CheckboxField,
@@ -14,8 +21,7 @@ export type InvalidFields = ReadonlySet<string>;
 /** A localized range message for a field path, or undefined when the field is valid. */
 function useRangeError(invalid: InvalidFields) {
   const range = useMessages().setup.range;
-  return (path: string, min: number, max: number) =>
-    invalid.has(path) ? range(min, max) : undefined;
+  return (path: string, { min, max }: Range) => (invalid.has(path) ? range(min, max) : undefined);
 }
 
 interface Section<T> {
@@ -40,9 +46,8 @@ function CommuteTrip({ value, invalid, onChange }: Section<Commute>) {
       <NumberField
         label={t.setup.commute.km}
         value={value.oneWayKm}
-        min={0}
-        max={100}
-        error={error('commute.oneWayKm', 0, 100)}
+        range={PROFILE_LIMITS.oneWayKm}
+        error={error('commute.oneWayKm', PROFILE_LIMITS.oneWayKm)}
         onChange={(oneWayKm) => {
           onChange({ oneWayKm });
         }}
@@ -50,9 +55,8 @@ function CommuteTrip({ value, invalid, onChange }: Section<Commute>) {
       <NumberField
         label={t.setup.commute.days}
         value={value.daysPerWeek}
-        min={0}
-        max={7}
-        error={error('commute.daysPerWeek', 0, 7)}
+        range={PROFILE_LIMITS.daysPerWeek}
+        error={error('commute.daysPerWeek', PROFILE_LIMITS.daysPerWeek)}
         onChange={(daysPerWeek) => {
           onChange({ daysPerWeek });
         }}
@@ -132,9 +136,8 @@ export function ExerciseFieldset({
       <NumberField
         label={t.setup.exercise.minutes}
         value={value.durationMin}
-        min={10}
-        max={180}
-        error={error('exercise.durationMin', 10, 180)}
+        range={PROFILE_LIMITS.durationMin}
+        error={error('exercise.durationMin', PROFILE_LIMITS.durationMin)}
         onChange={(durationMin) => {
           onChange({ durationMin });
         }}
@@ -158,9 +161,8 @@ function RoomFields({ value, invalid, onChange }: Section<Home>) {
       <NumberField
         label={t.setup.home.purifiers}
         value={value.purifierCount}
-        min={0}
-        max={5}
-        error={error('home.purifierCount', 0, 5)}
+        range={PROFILE_LIMITS.purifierCount}
+        error={error('home.purifierCount', PROFILE_LIMITS.purifierCount)}
         onChange={(purifierCount) => {
           onChange({ purifierCount });
         }}
@@ -168,9 +170,8 @@ function RoomFields({ value, invalid, onChange }: Section<Home>) {
       <NumberField
         label={t.setup.home.cadr}
         value={value.purifierCadrM3h}
-        min={50}
-        max={1000}
-        error={error('home.purifierCadrM3h', 50, 1000)}
+        range={PROFILE_LIMITS.purifierCadrM3h}
+        error={error('home.purifierCadrM3h', PROFILE_LIMITS.purifierCadrM3h)}
         onChange={(purifierCadrM3h) => {
           onChange({ purifierCadrM3h });
         }}
@@ -178,9 +179,8 @@ function RoomFields({ value, invalid, onChange }: Section<Home>) {
       <NumberField
         label={t.setup.home.area}
         value={value.roomAreaM2}
-        min={5}
-        max={60}
-        error={error('home.roomAreaM2', 5, 60)}
+        range={PROFILE_LIMITS.roomAreaM2}
+        error={error('home.roomAreaM2', PROFILE_LIMITS.roomAreaM2)}
         onChange={(roomAreaM2) => {
           onChange({ roomAreaM2 });
         }}

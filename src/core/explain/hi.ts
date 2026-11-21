@@ -1,15 +1,16 @@
 import type { Audience } from '../../shared/api.js';
-import type { OutdoorAdvice, Plan, Recommendation } from '../../shared/plan.js';
+import type { OutdoorAdvice } from '../../shared/plan.js';
 import {
   clock,
+  daySummary,
   impact,
-  kg,
   lookup,
   num,
   pct,
+  templateKit,
   text,
   type LanguagePack,
-  type Template,
+  type Phrases,
 } from './format.js';
 
 const MASK: Readonly<Record<string, string>> = {
@@ -33,33 +34,18 @@ const AUDIENCE: Readonly<Record<Audience, string>> = {
   workplace: 'प्रिय सहकर्मियों',
 };
 
-function indoor(title: string, lead: string, steps: readonly string[]): Template {
-  return (rec) => ({
-    title,
-    why: `${lead} घर के अंदर PM2.5 लगभग ${impact(rec, 'indoorBeforeUgM3')} से घटकर ${impact(rec, 'indoorAfterUgM3')} µg/m³ हो जाता है (${pct(rec)}% कम)।`,
-    steps,
-  });
-}
+const PHRASES: Phrases = {
+  indoorChange: (before, after, percent) =>
+    `घर के अंदर PM2.5 लगभग ${before} से घटकर ${after} µg/m³ हो जाता है (${percent}% कम)।`,
+  co2Saved: (kg, exposureClause) => `इससे हर हफ़्ते ${kg} kg CO₂ बचता है${exposureClause}।`,
+  exposureDown: (percent) => ` और रास्ते में साँस से जाने वाला PM2.5 ${percent}% घटता है`,
+  exposureUp: (percent) => `; रास्ते में प्रदूषण ${percent}% बढ़ता है, इसलिए N95 पहनें`,
+  reading: (scale, value, category) => `${scale} ${value}: ${category}।`,
+  trappedUntil: (time) => `लगभग ${time} तक प्रदूषण ज़मीन के पास फँसा रहेगा।`,
+  cleanestAt: (time, pm25) => `सबसे साफ़ समय लगभग ${time} है (${pm25} µg/m³)।`,
+};
 
-function exposureClause(rec: Recommendation): string {
-  const change = pct(rec);
-  if (change > 0) {
-    return ` और रास्ते में साँस से जाने वाला PM2.5 ${change}% घटता है`;
-  }
-  return change < 0 ? `; रास्ते में प्रदूषण ${-change}% बढ़ता है, इसलिए N95 पहनें` : '';
-}
-
-function swap(title: string, steps: readonly string[]): Template {
-  return (rec) => ({
-    title,
-    why: `इससे हर हफ़्ते ${kg(rec)} kg CO₂ बचता है${exposureClause(rec)}।`,
-    steps,
-  });
-}
-
-function qualitative(title: string, why: string, steps: readonly string[]): Template {
-  return () => ({ title, why, steps });
-}
+const { indoor, swap, qualitative } = templateKit(PHRASES);
 
 const recommendations: LanguagePack['recommendations'] = {
   exercise_window: (rec) => ({
@@ -216,42 +202,40 @@ const recommendations: LanguagePack['recommendations'] = {
   ),
 };
 
-function summary(plan: Plan): string {
-  const { index, inversion, cleanestHour } = plan;
-  const reading = `${pack.scales[index.scale]} ${index.value}: ${pack.categories[index.category]}।`;
-  if (inversion.trappedNow && inversion.clearsAtHour !== null) {
-    return `${reading} लगभग ${clock(inversion.clearsAtHour)} तक प्रदूषण ज़मीन के पास फँसा रहेगा।`;
-  }
-  return cleanestHour === null
-    ? reading
-    : `${reading} सबसे साफ़ समय लगभग ${clock(cleanestHour.hour)} है (${cleanestHour.pm25} µg/m³)।`;
-}
+const categories: LanguagePack['categories'] = {
+  good: 'अच्छा',
+  satisfactory: 'संतोषजनक',
+  moderate: 'मध्यम',
+  poor: 'खराब',
+  very_poor: 'बहुत खराब',
+  severe: 'गंभीर',
+  unhealthy_sensitive: 'संवेदनशील लोगों के लिए अस्वस्थ',
+  unhealthy: 'अस्वस्थ',
+  very_unhealthy: 'बहुत अस्वस्थ',
+  hazardous: 'खतरनाक',
+};
+
+const scales: LanguagePack['scales'] = { naqi: 'भारत AQI', us_aqi: 'US AQI' };
+
+const headlines: LanguagePack['headlines'] = {
+  normal: 'आज हवा ठीक है',
+  caution: 'हवा मध्यम है: संवेदनशील सदस्य सावधानी रखें',
+  restrict: 'आज हवा अस्वस्थ है: बाहर कम समय बिताएँ',
+  emergency: 'धुंध आपातकाल: घर में रहें और संवेदनशील सदस्यों को बचाएँ',
+};
+
+const summary: LanguagePack['summary'] = (plan) =>
+  daySummary(plan, { scales, categories }, PHRASES);
 
 /** Hindi text for everything the app says without AI. */
 export const pack: LanguagePack = {
   recommendations,
-  categories: {
-    good: 'अच्छा',
-    satisfactory: 'संतोषजनक',
-    moderate: 'मध्यम',
-    poor: 'खराब',
-    very_poor: 'बहुत खराब',
-    severe: 'गंभीर',
-    unhealthy_sensitive: 'संवेदनशील लोगों के लिए अस्वस्थ',
-    unhealthy: 'अस्वस्थ',
-    very_unhealthy: 'बहुत अस्वस्थ',
-    hazardous: 'खतरनाक',
-  },
-  scales: { naqi: 'भारत AQI', us_aqi: 'US AQI' },
-  headlines: {
-    normal: 'आज हवा ठीक है',
-    caution: 'हवा मध्यम है: संवेदनशील सदस्य सावधानी रखें',
-    restrict: 'आज हवा अस्वस्थ है: बाहर कम समय बिताएँ',
-    emergency: 'धुंध आपातकाल: घर में रहें और संवेदनशील सदस्यों को बचाएँ',
-  },
+  categories,
+  scales,
+  headlines,
   summary,
   chatFallback: (plan, topTitles) =>
     `AI सहायक अभी उपलब्ध नहीं है, इसलिए आज की मानक सलाह यह है। ${summary(plan)} सबसे ज़रूरी: ${topTitles.join('; ')}।`,
   communityNotice: (plan, audience) =>
-    `${AUDIENCE[audience]}, ${summary(plan)} ${pack.headlines[plan.severity]}। कृपया सबसे ज़्यादा धुंध के समय बच्चों और बुज़ुर्गों को घर में रखें, बाहर N95 मास्क पहनें और कुछ भी न जलाएँ। — SmogSense से साझा`,
+    `${AUDIENCE[audience]}, ${summary(plan)} ${headlines[plan.severity]}। कृपया सबसे ज़्यादा धुंध के समय बच्चों और बुज़ुर्गों को घर में रखें, बाहर N95 मास्क पहनें और कुछ भी न जलाएँ। — SmogSense से साझा`,
 };

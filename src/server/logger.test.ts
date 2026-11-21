@@ -1,42 +1,36 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as logger from './logger.js';
 
-describe('Logger', () => {
-  it('info writes structured JSON to stdout', () => {
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-    logger.info('test message', { key: 'value' });
+const parseLine = (line: unknown): unknown => JSON.parse(String(line));
 
-    expect(spy).toHaveBeenCalledOnce();
-    const firstCall = spy.mock.calls[0];
-    const parsed = JSON.parse(firstCall ? String(firstCall[0]) : '{}') as Record<string, unknown>;
-    expect(parsed).toMatchObject({
-      level: 'info',
-      message: 'test message',
-      key: 'value',
-    });
-    expect(parsed.timestamp).toBeDefined();
-    spy.mockRestore();
-  });
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
-  it('warn writes to stderr via console.warn', () => {
+describe('logger', () => {
+  it('writes a warning as one JSON line with a timestamp and the extra fields', () => {
     const spy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    logger.warn('warning');
+    logger.warn('Gemini reply rejected', { model: 'lite', reason: 'not_json' });
 
     expect(spy).toHaveBeenCalledOnce();
-    const firstCall = spy.mock.calls[0];
-    const parsed = JSON.parse(firstCall ? String(firstCall[0]) : '{}') as Record<string, unknown>;
-    expect(parsed.level).toBe('warn');
-    spy.mockRestore();
+    const line = String(spy.mock.calls[0]?.[0]);
+    expect(parseLine(line)).toMatchObject({
+      level: 'warn',
+      message: 'Gemini reply rejected',
+      model: 'lite',
+      reason: 'not_json',
+    });
+    expect(line).toMatch(/"timestamp":"\d{4}-\d{2}-\d{2}T/);
   });
 
-  it('error writes to stderr via console.error', () => {
+  it('writes errors to console.error', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     logger.error('failure', { code: 500 });
 
-    expect(spy).toHaveBeenCalledOnce();
-    const firstCall = spy.mock.calls[0];
-    const parsed = JSON.parse(firstCall ? String(firstCall[0]) : '{}') as Record<string, unknown>;
-    expect(parsed).toMatchObject({ level: 'error', message: 'failure', code: 500 });
-    spy.mockRestore();
+    expect(parseLine(spy.mock.calls[0]?.[0])).toMatchObject({
+      level: 'error',
+      message: 'failure',
+      code: 500,
+    });
   });
 });

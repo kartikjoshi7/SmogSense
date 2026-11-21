@@ -1,6 +1,5 @@
+import type { UiLanguage } from '../../shared/languages.js';
 import type { Household, Persisted, SavedLocation } from './storage.js';
-
-export type UiLanguage = Persisted['lang'];
 
 export interface AppState extends Persisted {
   /** True while the household form is open over an existing setup. */

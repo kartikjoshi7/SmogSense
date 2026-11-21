@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { airDataSchema, type AirData, type HourlyReading } from '../../shared/air.js';
 import type { Location } from '../../shared/api.js';
 import { fetchJson, type FetchFailure, type HttpDeps } from '../http/fetch-json.js';
-import { fail, ok, type Result } from '../result.js';
+import { fail, ok, type Result } from '../../core/result.js';
 
 const AIR_QUALITY_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
@@ -78,7 +78,7 @@ function mergeHourly(aq: AirQualityResponse, forecast: ForecastResponse): Hourly
 }
 
 /** `YYYY-MM-DDTHH:00` for the current hour at a UTC offset, in Open-Meteo's local-time format. */
-export function localHourStamp(now: Date, utcOffsetSeconds: number): string {
+function localHourStamp(now: Date, utcOffsetSeconds: number): string {
   return `${new Date(now.getTime() + utcOffsetSeconds * 1000).toISOString().slice(0, 13)}:00`;
 }
 
@@ -104,7 +104,6 @@ function normalizeAirData(
   const parsed = airDataSchema.safeParse({
     ...location,
     timezone: aq.timezone,
-    countryCode: null,
     hourly,
     daylight,
     nowIndex,

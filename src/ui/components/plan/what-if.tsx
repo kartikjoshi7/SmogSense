@@ -1,25 +1,23 @@
 import { useId, useState } from 'react';
-import { AGE_FACTOR, EXERCISE_BREATHING_M3H } from '../../../core/constants.js';
 import { clock } from '../../../core/explain/format.js';
-import { inhaledDoseUg } from '../../../core/exposure.js';
+import { exerciseDoseUg } from '../../../core/exposure.js';
+import { activityMeanPm25 } from '../../../core/windows.js';
 import type { Plan } from '../../../shared/plan.js';
+import { CLOCK_HOURS } from '../../../shared/primitives.js';
 import type { Exercise, Member } from '../../../shared/profile.js';
 import { useMessages } from '../../state/app-context.js';
 
-/** PM2.5 inhaled in one session at a given hour, computed in the browser with the engine. */
-function sessionDose(plan: Plan, exercise: Exercise, members: readonly Member[], hour: number) {
-  const pm25 = plan.forecast.find((p) => p.hour === hour)?.pm25 ?? null;
-  if (pm25 === null) {
-    return null;
-  }
-  const member = members.find((m) => m.id === exercise.memberId);
-  const dose = inhaledDoseUg({
-    concentration: pm25,
-    hours: exercise.durationMin / 60,
-    breathingM3h: EXERCISE_BREATHING_M3H[exercise.activity],
-    ageFactor: member === undefined ? 1 : AGE_FACTOR[member.ageGroup],
-  });
-  return { pm25, dose };
+/**
+ * Mean PM2.5 over a session starting at `hour` and the dose it gives, computed in the browser
+ * with the same engine functions as the plan's exercise advice. Null when the forecast does not
+ * cover the whole session.
+ */
+function sessionAt(plan: Plan, exercise: Exercise, members: readonly Member[], hour: number) {
+  const start = plan.forecast.findIndex((p) => p.hour === hour);
+  const pm25 = start === -1 ? null : activityMeanPm25(plan.forecast, start, exercise.durationMin);
+  return pm25 === null
+    ? null
+    : { pm25: Math.round(pm25), dose: exerciseDoseUg(exercise, members, pm25) };
 }
 
 /** "What if we went at another time?" — move a slider and see the dose change instantly. */
@@ -35,8 +33,8 @@ export function WhatIf({
   const t = useMessages().whatIf;
   const sliderId = useId();
   const [hour, setHour] = useState(exercise.usualHour);
-  const chosen = sessionDose(plan, exercise, members, hour);
-  const usual = sessionDose(plan, exercise, members, exercise.usualHour);
+  const chosen = sessionAt(plan, exercise, members, hour);
+  const usual = sessionAt(plan, exercise, members, exercise.usualHour);
   return (
     <section aria-labelledby="whatif-heading" className="card grid gap-2">
       <h2 id="whatif-heading" className="text-xl font-semibold">
@@ -48,8 +46,8 @@ export function WhatIf({
       <input
         id={sliderId}
         type="range"
-        min={0}
-        max={23}
+        min={CLOCK_HOURS.min}
+        max={CLOCK_HOURS.max}
         step={1}
         value={hour}
         aria-valuetext={clock(hour)}

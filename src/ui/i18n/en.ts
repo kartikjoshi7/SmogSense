@@ -40,6 +40,7 @@ export const en = {
       searchButton: 'Search',
       searching: 'Searching…',
       noResults: 'No places found. Try another spelling.',
+      searchFailed: 'City search is unavailable right now. Try again, or use your location.',
       choose: (place: string) => `Use ${place}`,
       chosen: (place: string) => `Location: ${place}`,
       myLocation: 'My current location',
@@ -152,7 +153,12 @@ export const en = {
     title: (place: string) => `Today in ${place}`,
     loading: 'Building your plan…',
     explaining: 'Writing explanations…',
-    error: 'Your plan could not be loaded.',
+    errors: {
+      general: 'Your plan could not be loaded. Check your connection and try again.',
+      upstream: 'Air-quality data is unavailable right now. Please try again shortly.',
+      noData: 'There is not enough recent air-quality data for this place yet.',
+      busy: 'Too many requests just now. Wait a minute and try again.',
+    },
     retry: 'Try again',
     advice: {
       ok: 'Outdoor activity is fine for everyone.',
@@ -180,6 +186,8 @@ export const en = {
     pm25: 'PM2.5 (µg/m³)',
     cleanest: 'Cleanest daylight hour',
     missing: 'No data',
+    missingNote: (count: number) =>
+      `${count === 1 ? 'One hour has' : `${count} hours have`} no forecast and is drawn as a dashed outline.`,
   },
   inversion: {
     title: 'Why the air is worse in the morning',
@@ -216,7 +224,7 @@ export const en = {
     label: 'Start time',
     result: (hour: string, pm25: number, dose: number, usualDose: number) =>
       `At ${hour}: PM2.5 about ${pm25} µg/m³, about ${dose} µg inhaled (usual time: ${usualDose} µg).`,
-    noData: 'No forecast for this hour.',
+    noData: 'The forecast does not cover a whole session at this time.',
   },
   readAloud: { start: 'Read aloud', stop: 'Stop reading' },
   actions: { ask: 'Ask SmogSense', notice: 'Community notice', close: 'Close' },
@@ -229,6 +237,7 @@ export const en = {
     counter: (used: number, max: number) => `${used} of ${max} characters`,
     you: 'You',
     assistant: 'SmogSense',
+    conversation: 'Conversation',
     error: 'The assistant could not answer. Please try again.',
     suggestions: [
       'Can the children play outside at 4 pm?',
@@ -246,7 +255,9 @@ export const en = {
     generating: 'Writing…',
     copy: 'Copy',
     copied: 'Copied',
+    copyFailed: 'Copying is blocked here. Select the notice and copy it yourself.',
     share: 'Share',
+    shareFailed: 'Sharing did not work. Copy the notice instead.',
     error: 'The notice could not be created. Please try again.',
   },
 };

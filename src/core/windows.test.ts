@@ -1,25 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeAir } from './fixtures/air.js';
-import { bestActivityWindow, hourDistance, isDaylight, ventilationHour } from './windows.js';
-
-const daylight = [{ sunrise: '2026-11-20T06:52', sunset: '2026-11-20T17:28' }];
-
-describe('isDaylight', () => {
-  it('is true between sunrise and sunset only', () => {
-    expect(isDaylight('2026-11-20T06:00', daylight)).toBe(false);
-    expect(isDaylight('2026-11-20T07:00', daylight)).toBe(true);
-    expect(isDaylight('2026-11-20T17:00', daylight)).toBe(true);
-    expect(isDaylight('2026-11-20T18:00', daylight)).toBe(false);
-  });
-});
-
-describe('hourDistance', () => {
-  it('goes the short way round the clock', () => {
-    expect(hourDistance(6, 14)).toBe(8);
-    expect(hourDistance(23, 1)).toBe(2);
-    expect(hourDistance(5, 5)).toBe(0);
-  });
-});
+import { activityMeanPm25, bestActivityWindow, ventilationHour } from './windows.js';
 
 describe('bestActivityWindow', () => {
   it('moves a 6 am walk to the cleanest daylight hour, 14:00, with 56% less PM2.5', () => {
@@ -44,6 +25,34 @@ describe('bestActivityWindow', () => {
     });
 
     expect(result).toMatchObject({ startHour: 14, meanPm25: 60.5 });
+  });
+
+  it('only starts inside daylight, counting an hour that begins before sunset', () => {
+    // Sunrise 06:52 and sunset 17:28: 06:00 and 18:00 are dark however clean they are.
+    const pm25Day = Array.from(
+      { length: 24 },
+      (_, h) => ({ 6: 1, 18: 1, 7: 40, 17: 40 })[h] ?? 100,
+    );
+    const air = makeAir({ pm25Day });
+    const search = { fromIndex: air.nowIndex, daylight: air.daylight, durationMin: 60 };
+
+    expect(bestActivityWindow(air.hourly, { ...search, usualHour: 6 })?.startHour).toBe(7);
+    expect(bestActivityWindow(air.hourly, { ...search, usualHour: 16 })?.startHour).toBe(17);
+  });
+
+  it('measures closeness to the usual hour the short way round the clock', () => {
+    const pm25Day = Array.from({ length: 24 }, (_, h) => (h === 1 || h === 20 ? 10 : 100));
+    const air = makeAir({ pm25Day });
+    const allDay = [{ sunrise: air.hourly[0]?.time ?? '', sunset: air.hourly.at(-1)?.time ?? '' }];
+    const result = bestActivityWindow(air.hourly, {
+      fromIndex: air.nowIndex,
+      daylight: allDay,
+      durationMin: 60,
+      usualHour: 23,
+    });
+
+    // 01:00 is two hours from 23:00 via midnight; 20:00 is three hours back.
+    expect(result?.startHour).toBe(1);
   });
 
   it('breaks ties in favour of the hour closest to the usual time', () => {
@@ -106,5 +115,35 @@ describe('bestActivityWindow', () => {
       }),
     ).toBeNull();
     expect(ventilationHour(air.hourly, air.nowIndex, [])).toBeNull();
+  });
+});
+
+describe('activityMeanPm25', () => {
+  it('gives the same session mean the plan’s best window reports', () => {
+    const air = makeAir();
+    const best = bestActivityWindow(air.hourly, {
+      fromIndex: air.nowIndex,
+      daylight: air.daylight,
+      durationMin: 90,
+      usualHour: 6,
+    });
+    const start = air.hourly.findIndex((h, i) => i >= air.nowIndex && h.hour === best?.startHour);
+
+    expect(activityMeanPm25(air.hourly, start, 90)).toBe(best?.meanPm25);
+  });
+
+  it('is null when the session runs past the readings or over a missing hour', () => {
+    const air = makeAir({ pm25Day: Array.from({ length: 24 }, (_, h) => (h === 9 ? null : 50)) });
+    const last = air.hourly.length - 1;
+
+    expect(activityMeanPm25(air.hourly, last, 30)).toBe(50);
+    expect(activityMeanPm25(air.hourly, last, 90)).toBeNull();
+    expect(
+      activityMeanPm25(
+        air.hourly,
+        air.hourly.findIndex((h) => h.hour === 8),
+        120,
+      ),
+    ).toBeNull();
   });
 });

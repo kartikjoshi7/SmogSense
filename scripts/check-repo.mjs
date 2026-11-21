@@ -28,14 +28,9 @@ if (branches.length > 1) {
 // 2. Check total size of tracked files
 const trackedFiles = execSync('git ls-files', { encoding: 'utf-8' }).split('\n').filter(Boolean);
 
-let totalSize = 0;
-for (const file of trackedFiles) {
-  try {
-    totalSize += statSync(file).size;
-  } catch {
-    // File may have been deleted but still tracked
-  }
-}
+/** Size in bytes; 0 for a tracked file that was deleted from the working tree. */
+const sizeOf = (file) => statSync(file, { throwIfNoEntry: false })?.size ?? 0;
+const totalSize = trackedFiles.reduce((sum, file) => sum + sizeOf(file), 0);
 
 const sizeMB = (totalSize / (1024 * 1024)).toFixed(2);
 if (totalSize > MAX_TRACKED_SIZE_BYTES) {

@@ -4,7 +4,7 @@ import type { Plan } from '../shared/plan.js';
 import type { Profile } from '../shared/profile.js';
 import type { AirService } from './air/air-service.js';
 import type { PlanFailure } from './http/errors.js';
-import type { Result } from './result.js';
+import type { Result } from '../core/result.js';
 
 /** Fetch (cached) air data for the location and run the decision engine on it. */
 export async function loadPlan(

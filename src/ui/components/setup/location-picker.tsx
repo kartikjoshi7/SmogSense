@@ -1,42 +1,15 @@
 import { useId, useState } from 'react';
-import type { Place } from '../../../shared/api.js';
-import { api } from '../../api/client.js';
+import { PLACE_QUERY_CHARS, type Place } from '../../../shared/api.js';
+import {
+  isSearchable,
+  useLocationSearch,
+  type SearchStatus,
+} from '../../hooks/use-location-search.js';
 import { useMessages } from '../../state/app-context.js';
 import type { SavedLocation } from '../../state/storage.js';
 
-type SearchStatus = 'idle' | 'searching' | 'done' | 'failed' | 'locating' | 'denied';
-
 function placeLabel(place: Place): string {
   return [place.name, place.region, place.country].filter((part) => part !== null).join(', ');
-}
-
-/** City search and GPS lookup, with a status for each stage. */
-function useLocationSearch(onChange: (location: SavedLocation) => void, myLocationLabel: string) {
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [status, setStatus] = useState<SearchStatus>('idle');
-
-  const search = async (query: string) => {
-    setStatus('searching');
-    const result = await api.geocode(query.trim());
-    setPlaces(result.ok ? result.data.places : []);
-    setStatus(result.ok ? 'done' : 'failed');
-  };
-
-  const locate = () => {
-    setStatus('locating');
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        onChange({ lat: coords.latitude, lon: coords.longitude, label: myLocationLabel });
-        setStatus('idle');
-      },
-      () => {
-        setStatus('denied');
-      },
-      { timeout: 10_000, maximumAge: 600_000 },
-    );
-  };
-
-  return { places, status, search, locate };
 }
 
 function PlaceResults({
@@ -81,7 +54,7 @@ function statusText(
     searching: t.searching,
     locating: t.locating,
     denied: t.denied,
-    failed: t.noResults,
+    failed: t.searchFailed,
   };
   const noMatches = state.status === 'done' && state.found === 0 ? t.noResults : undefined;
   return progress[state.status] ?? noMatches ?? (state.invalid ? t.required : '');
@@ -117,7 +90,7 @@ export function LocationPicker({
             type="search"
             className="flex-1"
             value={query}
-            maxLength={60}
+            maxLength={PLACE_QUERY_CHARS.max}
             onChange={(e) => {
               setQuery(e.target.value);
             }}
@@ -131,7 +104,7 @@ export function LocationPicker({
           <button
             type="button"
             className="btn-secondary"
-            disabled={query.trim().length < 2}
+            disabled={!isSearchable(query)}
             onClick={() => void search(query)}
           >
             {t.searchButton}

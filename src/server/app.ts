@@ -48,7 +48,7 @@ export function createApp(deps: AppDeps) {
       origin: (origin) => (origins.includes(origin) ? origin : null),
       allowMethods: ['GET', 'POST'],
       allowHeaders: ['Content-Type'],
-      maxAge: 600,
+      maxAge: SETTINGS.corsMaxAgeSeconds,
     }),
   );
   app.use(

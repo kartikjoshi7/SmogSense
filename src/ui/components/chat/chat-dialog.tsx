@@ -1,54 +1,15 @@
-import { useId, useState, type SyntheticEvent } from 'react';
-import {
-  CHAT_LIMITS,
-  type ChatTurn,
-  type PlanRequest,
-  type TextSource,
-} from '../../../shared/api.js';
-import { api } from '../../api/client.js';
+import { useId, useRef, useState, type RefObject, type SyntheticEvent } from 'react';
+import { CHAT_LIMITS, type PlanRequest } from '../../../shared/api.js';
+import { useChat, type ChatMessage, type ChatStatus } from '../../hooks/use-chat.js';
 import { useAppState, useMessages } from '../../state/app-context.js';
 import { Dialog } from '../common/dialog.js';
 import { SourceTag } from '../common/source-tag.js';
 
-interface Message extends ChatTurn {
-  readonly id: number;
-  readonly source?: TextSource;
-}
-
-type ChatStatus = 'idle' | 'sending' | 'error';
-
-/** The conversation so far and a way to ask the next question. */
-function useChat(request: PlanRequest) {
-  const { lang } = useAppState();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [status, setStatus] = useState<ChatStatus>('idle');
-
-  const ask = async (question: string) => {
-    setStatus('sending');
-    const history = messages
-      .slice(-CHAT_LIMITS.historyTurns)
-      .map(({ role, text }) => ({ role, text }));
-    const result = await api.chat({ ...request, lang, question, history });
-    if (!result.ok) {
-      setStatus('error');
-      return false;
-    }
-    setMessages((m) => [
-      ...m,
-      { id: m.length, role: 'user', text: question },
-      { id: m.length + 1, role: 'assistant', text: result.data.answer, source: result.data.source },
-    ]);
-    setStatus('idle');
-    return true;
-  };
-
-  return { messages, status, ask };
-}
-
-function MessageList({ messages }: { readonly messages: readonly Message[] }) {
+/** The conversation. It is a live region from the start, so the first answer is announced too. */
+function MessageList({ messages }: { readonly messages: readonly ChatMessage[] }) {
   const t = useMessages().chat;
   return (
-    <ol aria-live="polite" className="grid gap-3">
+    <ol aria-live="polite" aria-label={t.conversation} className="grid gap-3">
       {messages.map((message) => (
         <li key={message.id} className={message.role === 'user' ? 'text-right' : ''}>
           <p className="text-sm font-semibold">{message.role === 'user' ? t.you : t.assistant}</p>
@@ -84,11 +45,13 @@ function Suggestions({ onPick }: { readonly onPick: (question: string) => void }
 function ChatForm({
   question,
   status,
+  inputRef,
   onChange,
   onSubmit,
 }: {
   readonly question: string;
   readonly status: ChatStatus;
+  readonly inputRef: RefObject<HTMLTextAreaElement | null>;
   readonly onChange: (question: string) => void;
   readonly onSubmit: () => void;
 }) {
@@ -104,6 +67,7 @@ function ChatForm({
       <div className="field">
         <label htmlFor={inputId}>{t.label}</label>
         <textarea
+          ref={inputRef}
           id={inputId}
           rows={3}
           maxLength={CHAT_LIMITS.questionChars}
@@ -141,11 +105,15 @@ export function ChatDialog({
   readonly onClose: () => void;
 }) {
   const t = useMessages();
+  const { lang } = useAppState();
   const [question, setQuestion] = useState('');
-  const { messages, status, ask } = useChat(request);
+  const input = useRef<HTMLTextAreaElement>(null);
+  const { messages, status, ask } = useChat(request, lang);
   const send = async (text: string) => {
     if (text.trim() !== '' && (await ask(text.trim()))) {
       setQuestion('');
+      // The suggestion that was clicked is gone now; keep focus in the dialog, ready for more.
+      input.current?.focus();
     }
   };
   return (
@@ -153,12 +121,12 @@ export function ChatDialog({
       <p className="muted mb-3">{t.chat.intro}</p>
       {messages.length === 0 ? (
         <Suggestions onPick={(suggestion) => void send(suggestion)} />
-      ) : (
-        <MessageList messages={messages} />
-      )}
+      ) : null}
+      <MessageList messages={messages} />
       <ChatForm
         question={question}
         status={status}
+        inputRef={input}
         onChange={setQuestion}
         onSubmit={() => void send(question)}
       />
