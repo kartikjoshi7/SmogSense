@@ -1,12 +1,12 @@
 import { useId } from 'react';
 import { clock } from '../../../core/explain/format.js';
 import { CLOCK_HOURS, type Range } from '../../../shared/limits.js';
+import type { Labels } from '../../i18n/en.js';
 
-/** Options as a value → label table, kept in the order written. */
-type OptionLabels<K extends string> = Readonly<Record<K, string>>;
-
-function entries<K extends string>(labels: OptionLabels<K>): [K, string][] {
-  return (Object.keys(labels) as K[]).map((key) => [key, labels[key]]);
+/** Each option's key and text, in the order the table lists them. */
+function entries<K extends string>(labels: Labels<K>): [K, string][] {
+  const keys = Object.keys(labels).filter((key): key is K => Object.hasOwn(labels, key));
+  return keys.map((key) => [key, labels[key]]);
 }
 
 /**
@@ -22,7 +22,7 @@ export function SelectField<K extends string>({
 }: {
   readonly label: string;
   readonly value: K;
-  readonly options: OptionLabels<K>;
+  readonly options: Labels<K>;
   readonly keysAreLanguages?: boolean;
   readonly onChange: (value: K) => void;
 }) {
@@ -155,7 +155,7 @@ export function CheckboxGroup<K extends string>({
   onChange,
 }: {
   readonly legend: string;
-  readonly options: OptionLabels<K>;
+  readonly options: Labels<K>;
   readonly values: readonly K[];
   readonly onChange: (values: K[]) => void;
 }) {

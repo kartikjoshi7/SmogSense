@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { pollutantsSchema } from './air.js';
+import { localTimeSchema, pollutantsSchema } from './air.js';
 import { INDEX_BANDS, INDEX_VALUES } from './limits.js';
 import { concentrationSchema, hourSchema, rangeSchema } from './primitives.js';
 import { commuteSchema, exerciseSchema, homeSchema, maskTypeSchema } from './profile.js';
@@ -53,7 +53,8 @@ const inversionSchema = z.object({
 });
 export type Inversion = z.infer<typeof inversionSchema>;
 
-const recommendationCategorySchema = z.enum([
+/** The five groups of the plan, in the order the brief lists them. */
+export const recommendationCategorySchema = z.enum([
   'routine',
   'indoor',
   'alternative',
@@ -182,7 +183,7 @@ const timelineEntrySchema = z.object({
 export type TimelineEntry = z.infer<typeof timelineEntrySchema>;
 
 const forecastPointSchema = z.object({
-  time: z.string(),
+  time: localTimeSchema,
   hour: hourSchema,
   pm25: concentrationSchema,
 });

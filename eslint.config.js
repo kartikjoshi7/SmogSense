@@ -18,7 +18,6 @@ export default tseslint.config(
       parserOptions: {
         project: ['./tsconfig.app.json', './tsconfig.server.json', './tsconfig.e2e.json'],
         projectService: false,
-        warnOnUnsupportedTypeScriptVersion: false,
       },
     },
     linterOptions: {
@@ -26,10 +25,14 @@ export default tseslint.config(
     },
   },
 
+  reactPlugin.configs.flat.recommended,
   reactPlugin.configs.flat['jsx-runtime'],
   {
+    settings: { react: { version: 'detect' } },
     rules: {
-      'react/jsx-key': 'error',
+      // TypeScript types the props; AGENTS.md bans dangerouslySetInnerHTML.
+      'react/prop-types': 'off',
+      'react/no-danger': 'error',
       'react/no-array-index-key': 'error',
     },
   },

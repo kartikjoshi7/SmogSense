@@ -19,6 +19,9 @@ export const CLOCK_HOURS = { min: 0, max: HOURS_PER_DAY - 1 } as const satisfies
 export const LATITUDE = { min: -90, max: 90 } as const satisfies Range;
 export const LONGITUDE = { min: -180, max: 180 } as const satisfies Range;
 
+/** Most days of hourly air data accepted from upstream (a week). */
+export const AIR_DATA_MAX_DAYS = 7;
+
 /** Index values: India's NAQI and the US AQI both run from 0 to 500. */
 export const INDEX_VALUES = { min: 0, max: 500 } as const satisfies Range;
 

@@ -22,7 +22,7 @@ const MESSAGES: Readonly<Record<AppState['lang'], Messages>> = { en, hi };
 const StateContext = createContext<AppState | null>(null);
 const DispatchContext = createContext<Dispatch<AppAction> | null>(null);
 
-/** Holds app state, persists it, and keeps the page's `lang` attribute in sync. */
+/** Holds app state, persists it (noting when it cannot), and keeps the page's `lang` in sync. */
 export function AppProvider({
   store,
   children,
@@ -33,7 +33,7 @@ export function AppProvider({
   const [state, dispatch] = useReducer(appReducer, store, (s) => initialState(loadState(s)));
 
   useEffect(() => {
-    saveState(store, toPersisted(state));
+    dispatch({ type: 'save_result', saved: saveState(store, toPersisted(state)) });
   }, [store, state]);
 
   useEffect(() => {

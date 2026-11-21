@@ -1,5 +1,5 @@
 {
-  "$schema": "https://unpkg.com/knip@5/overview/configuration-schema.json",
+  "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": ["api/index.ts!", "index.html!", "*.config.{js,ts,mjs}", "scripts/**/*.{js,mjs}"],
   "project": [
     "src/**/*.{ts,tsx,css}!",

@@ -45,6 +45,7 @@ function Header() {
 
 function Footer() {
   const t = useMessages().app;
+  const { saved } = useAppState();
   return (
     <footer className="muted mx-auto max-w-3xl p-4 text-sm">
       <p>
@@ -60,6 +61,9 @@ function Footer() {
         (CC BY 4.0)
       </p>
       <p className="mt-1">{t.disclaimer}</p>
+      <p role="status" className="mt-1 font-semibold">
+        {saved ? '' : t.notSaved}
+      </p>
     </footer>
   );
 }

@@ -57,7 +57,8 @@ screen reader, by ear and in Hindi.
   standard guidance for a language without its own), and every language picker marks each option,
   written in its own script, with its own `lang`.
 - Every recommendation card has a "Read aloud" button that uses the browser's speech synthesis
-  and asks for an Indian English or Hindi voice; it is hidden where the browser cannot speak.
+  and asks for an Indian English or Hindi voice; it is hidden where the browser cannot speak, and
+  it turns back into "Read aloud" when speech ends, fails or is interrupted by another card.
 - Plain, short sentences in the problem's own words.
 
 **Visual**

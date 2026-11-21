@@ -32,8 +32,7 @@ const placeSchema = z.object({
   name: z.string(),
   region: z.string().nullable(),
   country: z.string().nullable(),
-  lat: z.number(),
-  lon: z.number(),
+  ...coordinatesSchema.shape,
 });
 export type Place = z.infer<typeof placeSchema>;
 

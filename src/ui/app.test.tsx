@@ -72,6 +72,21 @@ describe('the plan', () => {
     ).toBeInTheDocument();
   });
 
+  it('says so when the browser cannot save the household', async () => {
+    fakeApi();
+    const full = {
+      getItem: () => null,
+      setItem: () => {
+        throw new DOMException('Storage is full', 'QuotaExceededError');
+      },
+    };
+    render(<App store={full} />);
+
+    expect(
+      await screen.findByText(/This browser is not saving your household/),
+    ).toBeInTheDocument();
+  });
+
   it('names the family members a recommendation is for', async () => {
     fakeApi();
     const { user } = await startWithExampleFamily();

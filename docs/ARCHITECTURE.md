@@ -83,12 +83,14 @@ status, in the interface language.
 
 - **State:** one `AppProvider` with a reducer (`state/app-state.ts`) holds the language, household
   and location. `state/storage.ts` is the only code that touches `localStorage`, and it validates
-  what it reads with Zod, so corrupt or outdated data is ignored.
+  what it reads with Zod, so corrupt or outdated data is ignored. When the browser refuses to save,
+  the footer says the household will not survive a reload.
 - **Data:** components render; hooks in `hooks/` do the work. `use-plan.ts` loads the plan, then
   its explanation: a new household or place reloads both, a new language asks only for new wording.
   It cancels superseded requests and tags each result with the request it answers, so a slow old
   answer is never shown. `use-location-search.ts`, `use-chat.ts` and `use-community-notice.ts`
-  handle search, chat and notices. `api/client.ts` is the only code that calls `fetch`, and it
+  handle search, chat and notices; `use-speech.ts` and `use-share-notice.ts` wrap the browser's
+  speech synthesis, clipboard and share sheet. `api/client.ts` is the only code that calls `fetch`, and it
   validates every response against the shared schemas. Browser-side timings live in
   `settings.ts`.
 - **Screens:** `SetupForm` and `Dashboard`; `App` moves focus to the new screen's heading when one
@@ -106,7 +108,9 @@ status, in the interface language.
 - What the main bundle holds, measured once by splitting a build by origin (gzip): React and
   React DOM 67.5 kB, Zod with the shared schemas 27.5 kB, the engine 9.6 kB, Hindi text 4.2 kB,
   English text 3.2 kB and the rest of the UI 10.3 kB. Zod stays in the browser because every
-  response and the saved household are validated there. Hindi stays in the main bundle: loading
+  response and the saved household are validated there, with the same schemas the server uses.
+  `zod/mini` would be smaller, but every shared schema would have to be rewritten in its
+  functional style; one schema style for server and browser was the better trade. Hindi stays in the main bundle: loading
   it separately would save about 4 kB but make the first switch to Hindi wait on the network.
 - Vercel serves `dist/` and runs `api/index.ts` in the Mumbai region (`bom1`). `vercel.json`
   rewrites `/api/*` to the function and sets the security headers for every page.

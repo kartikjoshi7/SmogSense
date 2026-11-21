@@ -1,18 +1,10 @@
-import type { RecommendationCategory } from '../../../shared/plan.js';
+import { recommendationCategorySchema } from '../../../shared/plan.js';
 import type { Household } from '../../state/storage.js';
 import { memberName } from '../../members.js';
 import { useMessages } from '../../state/app-context.js';
 import { CategoryTabs } from './category-tabs.js';
 import type { ShownRecommendation } from './explained.js';
 import { RecommendationCard } from './recommendation-card.js';
-
-const CATEGORY_ORDER: readonly RecommendationCategory[] = [
-  'routine',
-  'indoor',
-  'alternative',
-  'protection',
-  'community',
-];
 
 /** The ranked plan, grouped under the problem's own headings, one tab per category. */
 export function PlanSection({
@@ -24,7 +16,7 @@ export function PlanSection({
 }) {
   const t = useMessages();
   const { members } = household.profile;
-  const tabs = CATEGORY_ORDER.map((category) => {
+  const tabs = recommendationCategorySchema.options.map((category) => {
     const inCategory = items.filter((item) => item.rec.category === category);
     return {
       key: category,

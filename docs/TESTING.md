@@ -49,11 +49,12 @@ axe (jsdom cannot measure colour contrast; the end-to-end axe run does). They co
 fields, adding and removing members), every lifestyle field, the plan (tabs with arrow keys, an
 empty category, table view, missing forecast hours, retry after an error, a message for each
 error status), the what-if slider (its doses equal the plan's own exercise advice; a session past
-the forecast says so), language switching, saving and restoring the household, both dialogs
+the forecast says so), language switching, saving and restoring the household (and the notice when the browser cannot
+save it), both dialogs
 (focus trap, Esc, focus return, the first answer announced, focus kept after a suggestion,
 suggestions disabled while an answer is on its way, errors, AI and standard answers, the answer
 language and the `lang` of answers, notices and language options, copy and share failures), read-aloud with a
-stubbed speech API, and both message catalogues (same keys, every template uses its arguments,
+stubbed speech API (including a failed or interrupted utterance), and both message catalogues (same keys, every template uses its arguments,
 nothing left untranslated except names and units).
 
 **End to end.** Playwright runs `vite build && vite preview`, which sends the same headers as

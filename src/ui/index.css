@@ -149,6 +149,9 @@ body {
   .tag-ai {
     border-color: var(--primary);
   }
+  .tag-impact {
+    font-weight: 600;
+  }
   .band-0 {
     background: var(--band-0);
     color: var(--band-fg);
@@ -172,6 +175,25 @@ body {
   .band-5 {
     background: var(--band-5);
     color: var(--band-fg);
+  }
+  /* One symbol per band, beside the category name, so the level never rests on colour alone. */
+  .band-0 .band-icon::before {
+    content: '☺';
+  }
+  .band-1 .band-icon::before {
+    content: '◔';
+  }
+  .band-2 .band-icon::before {
+    content: '◑';
+  }
+  .band-3 .band-icon::before {
+    content: '◕';
+  }
+  .band-4 .band-icon::before {
+    content: '●';
+  }
+  .band-5 .band-icon::before {
+    content: '⚠';
   }
 }
 

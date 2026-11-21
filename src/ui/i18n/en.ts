@@ -9,7 +9,8 @@ import type {
   MaskType,
 } from '../../shared/profile.js';
 
-type Labels<K extends string> = Readonly<Record<K, string>>;
+/** Display text for each key of a union, in the order the options are shown. */
+export type Labels<K extends string> = Readonly<Record<K, string>>;
 
 /** English interface text. Recommendation text itself comes from `src/core/explain`. */
 export const en = {
@@ -22,6 +23,8 @@ export const en = {
     dataCredit: 'Air quality and weather data:',
     disclaimer:
       'Numbers are planning estimates, not medical advice. Seek medical help for breathing problems.',
+    notSaved:
+      'This browser is not saving your household, so you will need to enter it again after a reload.',
   },
   setup: {
     title: 'Set up your household',
@@ -218,6 +221,7 @@ export const en = {
     effort: { low: 'Easy', medium: 'Some effort', high: 'Bigger change' },
     forMembers: (names: string) => `For ${names}`,
     steps: 'How to do it',
+    impact: 'Impact',
     source: { ai: 'AI explanation', fallback: 'Standard guidance' },
     timeline: 'Your day',
   },

@@ -10,6 +10,8 @@ export const hi: Messages = {
     editHousehold: 'परिवार की जानकारी बदलें',
     dataCredit: 'वायु गुणवत्ता और मौसम डेटा:',
     disclaimer: 'आँकड़े योजना के अनुमान हैं, चिकित्सा सलाह नहीं। साँस की तकलीफ़ में डॉक्टर से मिलें।',
+    notSaved:
+      'यह ब्राउज़र आपके परिवार की जानकारी सहेज नहीं पा रहा, इसलिए पेज दोबारा खोलने पर इसे फिर से भरना होगा।',
   },
   setup: {
     title: 'अपना परिवार जोड़ें',
@@ -190,6 +192,7 @@ export const hi: Messages = {
     effort: { low: 'आसान', medium: 'थोड़ी मेहनत', high: 'बड़ा बदलाव' },
     forMembers: (names) => `${names} के लिए`,
     steps: 'कैसे करें',
+    impact: 'असर',
     source: { ai: 'AI व्याख्या', fallback: 'मानक सलाह' },
     timeline: 'आपका दिन',
   },

@@ -11,6 +11,7 @@ function stubSpeech() {
     readonly text: string;
     lang = '';
     onend: (() => void) | null = null;
+    onerror: (() => void) | null = null;
     constructor(text: string) {
       this.text = text;
       utterances.push(this);
@@ -50,6 +51,18 @@ describe('ReadAloudButton', () => {
     await user.click(screen.getByRole('button', { name: 'Read aloud' }));
     act(() => {
       utterances[0]?.onend?.();
+    });
+
+    expect(screen.getByRole('button', { name: 'Read aloud' })).toBeInTheDocument();
+  });
+
+  it('offers to read again when speech fails or another card interrupts it', async () => {
+    const user = userEvent.setup();
+    const { utterances } = stubSpeech();
+    renderInApp(<ReadAloudButton text="Close the windows." />);
+    await user.click(screen.getByRole('button', { name: 'Read aloud' }));
+    act(() => {
+      utterances[0]?.onerror?.();
     });
 
     expect(screen.getByRole('button', { name: 'Read aloud' })).toBeInTheDocument();

@@ -5,9 +5,6 @@ import type { Plan } from '../../../shared/plan.js';
 import { useAppState, useMessages } from '../../state/app-context.js';
 import { SourceTag } from '../common/source-tag.js';
 
-/** One symbol per band so the level is never shown by colour alone. */
-const BAND_ICON = ['☺', '◔', '◑', '◕', '●', '⚠'] as const;
-
 /** Each pollutant with its chemical symbol, which reads the same in every language. */
 const POLLUTANTS: readonly (readonly [keyof Pollutants, string])[] = [
   ['pm25', 'PM2.5'],
@@ -57,9 +54,7 @@ export function AqiCard({
     <section aria-labelledby="aqi-heading" className={`card band-${index.band}`}>
       <p className="text-sm font-semibold">{t.dashboard.severity[severity]}</p>
       <p className="mt-1 flex items-baseline gap-3">
-        <span aria-hidden="true" className="text-3xl">
-          {BAND_ICON[index.band] ?? BAND_ICON[0]}
-        </span>
+        <span aria-hidden="true" className="band-icon text-3xl" />
         <span className="text-5xl font-bold">{index.value}</span>
         <span className="text-lg font-semibold">{categoryLabel(index.category, lang)}</span>
       </p>

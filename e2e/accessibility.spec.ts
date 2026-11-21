@@ -13,6 +13,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
     });
 
     test('the plan, every category and the forecast table', async ({ page }) => {
+      // Six full-page axe scans: allow a slow machine three times the usual timeout.
+      test.slow();
       await startWithExampleFamily(page);
       await expectNoAxeViolations(page);
       for (const name of [
@@ -30,6 +32,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     });
 
     test('the chat and community dialogs with their answers', async ({ page }) => {
+      test.slow();
       await startWithExampleFamily(page);
       await page.getByRole('button', { name: 'Ask SmogSense' }).click();
       const chat = page.getByRole('dialog', { name: 'Ask SmogSense' });

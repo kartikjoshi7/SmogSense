@@ -1,8 +1,9 @@
 import { z } from 'zod';
+import { AIR_DATA_MAX_DAYS, HOURS_PER_DAY } from './limits.js';
 import { concentrationSchema, coordinatesSchema, hourSchema } from './primitives.js';
 
 /** Local time as Open-Meteo returns it with `timezone=auto`: `YYYY-MM-DDTHH:MM`. */
-const localTimeSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+export const localTimeSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
 
 /** Pollutant concentrations in µg/m³ at one hour; null where the data has none. */
 export const pollutantsSchema = z.object({
@@ -38,8 +39,11 @@ export const airDataSchema = z
     ...coordinatesSchema.shape,
     /** IANA time zone; it also decides which AQI scale applies. */
     timezone: z.string().min(1).max(64),
-    hourly: z.array(hourlyReadingSchema).min(1).max(168),
-    daylight: z.array(daylightSchema).max(7),
+    hourly: z
+      .array(hourlyReadingSchema)
+      .min(1)
+      .max(AIR_DATA_MAX_DAYS * HOURS_PER_DAY),
+    daylight: z.array(daylightSchema).max(AIR_DATA_MAX_DAYS),
     /** Index of the current hour within `hourly`. */
     nowIndex: z.number().int().min(0),
   })

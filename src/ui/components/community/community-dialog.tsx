@@ -2,38 +2,17 @@ import { useState } from 'react';
 import type { Audience, PlanRequest } from '../../../shared/api.js';
 import { NATIVE_NAMES, type Language } from '../../../shared/languages.js';
 import { useCommunityNotice } from '../../hooks/use-community-notice.js';
+import { useShareNotice, type ShareStatus } from '../../hooks/use-share-notice.js';
 import { useAppState, useMessages } from '../../state/app-context.js';
 import { Dialog } from '../common/dialog.js';
 import { SelectField } from '../common/fields.js';
 import { SourceTag } from '../common/source-tag.js';
 
-type ActionStatus = 'idle' | 'copied' | 'copy_failed' | 'share_failed';
-
-/** True when the person closed the share sheet themselves, which is not a failure. */
-function isCancelled(error: unknown): boolean {
-  return error instanceof DOMException && error.name === 'AbortError';
-}
-
 /** Copy and share buttons; when the browser refuses either, say so and suggest the other. */
 function NoticeActions({ notice }: { readonly notice: string }) {
   const t = useMessages().community;
-  const [status, setStatus] = useState<ActionStatus>('idle');
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(notice);
-      setStatus('copied');
-    } catch {
-      setStatus('copy_failed');
-    }
-  };
-  const share = async () => {
-    try {
-      await navigator.share({ text: notice });
-    } catch (error: unknown) {
-      setStatus(isCancelled(error) ? 'idle' : 'share_failed');
-    }
-  };
-  const problem: Partial<Record<ActionStatus, string>> = {
+  const { status, copy, share, canShare } = useShareNotice(notice);
+  const problem: Partial<Record<ShareStatus, string>> = {
     copy_failed: t.copyFailed,
     share_failed: t.shareFailed,
   };
@@ -43,7 +22,7 @@ function NoticeActions({ notice }: { readonly notice: string }) {
         <button type="button" className="btn-secondary" onClick={() => void copy()}>
           {status === 'copied' ? t.copied : t.copy}
         </button>
-        {'share' in navigator ? (
+        {canShare ? (
           <button type="button" className="btn-secondary" onClick={() => void share()}>
             {t.share}
           </button>

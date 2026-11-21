@@ -20,6 +20,8 @@ export default defineConfig({
           name: 'ui',
           include: ['src/ui/**/*.test.ts', 'src/ui/**/*.test.tsx'],
           environment: 'jsdom',
+          // Whole-app renders with an axe scan take a few seconds each; allow for slow machines.
+          testTimeout: 20_000,
           setupFiles: ['src/ui/test/setup.ts'],
           unstubGlobals: true,
         },

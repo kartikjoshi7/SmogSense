@@ -41,9 +41,9 @@ export function RecommendationCard({
         </h3>
         <SourceTag source={item.source} />
       </div>
-      <ul className="flex flex-wrap gap-2" aria-label={item.title}>
+      <ul className="flex flex-wrap gap-2" aria-label={t.impact}>
         {impactBadges(item.rec.impact, t).map((badge) => (
-          <li key={badge} className="tag tag-ai font-semibold">
+          <li key={badge} className="tag tag-impact">
             {badge}
           </li>
         ))}

@@ -6,21 +6,18 @@ import { api, type ApiError } from '../api/client.js';
 import type { UiLanguage } from '../../shared/languages.js';
 import type { SavedLocation } from '../state/storage.js';
 
-type PlanState =
-  | { readonly status: 'loading' }
-  | { readonly status: 'error'; readonly error: ApiError }
-  | {
-      readonly status: 'ready';
-      readonly plan: Plan;
-      /** AI wording, once it arrives; standard guidance is shown until then. */
-      readonly explanation: ExplainResponse | null;
-      readonly explaining: boolean;
-    };
-
 type Loaded =
   | { readonly status: 'loading' }
   | { readonly status: 'error'; readonly error: ApiError }
   | { readonly status: 'ready'; readonly plan: Plan };
+
+/** A loaded plan also carries its AI wording, once it arrives; standard guidance shows until then. */
+type PlanState =
+  | Exclude<Loaded, { readonly status: 'ready' }>
+  | (Extract<Loaded, { readonly status: 'ready' }> & {
+      readonly explanation: ExplainResponse | null;
+      readonly explaining: boolean;
+    });
 
 /** A result tagged with the request it answers, so a stale result is never shown. */
 interface Tagged<T> {
