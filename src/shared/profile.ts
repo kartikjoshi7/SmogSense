@@ -48,7 +48,7 @@ export type CommuteMode = z.infer<typeof commuteModeSchema>;
 const commuteAlternativeSchema = z.enum(['metro', 'bus', 'carpool', 'cycle', 'walk', 'wfh']);
 export type CommuteAlternative = z.infer<typeof commuteAlternativeSchema>;
 
-const commuteSchema = z.object({
+export const commuteSchema = z.object({
   mode: commuteModeSchema,
   oneWayKm: rangeSchema(PROFILE_LIMITS.oneWayKm),
   departHour: hourSchema,
@@ -61,7 +61,7 @@ export type Commute = z.infer<typeof commuteSchema>;
 const exerciseActivitySchema = z.enum(['walk', 'run', 'cycle', 'yoga', 'sports', 'none']);
 export type ExerciseActivity = z.infer<typeof exerciseActivitySchema>;
 
-const exerciseSchema = z.object({
+export const exerciseSchema = z.object({
   activity: exerciseActivitySchema,
   /** The member who usually exercises; null when it is the whole family or unknown. */
   memberId: memberIdSchema.nullable(),
@@ -80,7 +80,7 @@ export type CookingFuel = z.infer<typeof cookingFuelSchema>;
 /** How often incense, dhoop or mosquito coils are burned at home. */
 const incenseSchema = z.enum(['never', 'sometimes', 'daily']);
 
-const homeSchema = z.object({
+export const homeSchema = z.object({
   purifierCount: rangeSchema(PROFILE_LIMITS.purifierCount).int(),
   purifierCadrM3h: rangeSchema(PROFILE_LIMITS.purifierCadrM3h),
   /** Floor area of the room the family spends most time in. */
@@ -93,7 +93,7 @@ const homeSchema = z.object({
 });
 export type Home = z.infer<typeof homeSchema>;
 
-const maskTypeSchema = z.enum(['none', 'cloth', 'surgical', 'n95']);
+export const maskTypeSchema = z.enum(['none', 'cloth', 'surgical', 'n95']);
 export type MaskType = z.infer<typeof maskTypeSchema>;
 
 /** Everything the engine needs to know about a household. Contains no names. */

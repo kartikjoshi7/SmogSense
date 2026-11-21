@@ -5,7 +5,7 @@ import {
   MASK_REDUCTION,
   MIN_WORTHWHILE_REDUCTION_PCT,
 } from '../constants.js';
-import { dailyCommuteDoseUg } from '../emissions.js';
+import { commutes, dailyCommuteDoseUg } from '../emissions.js';
 import { exerciseDoseUg, reduction } from '../exposure.js';
 import { currentRoom, indoorPm25 } from '../indoor.js';
 import { candidate, type Candidate, type PlanContext } from './context.js';
@@ -97,8 +97,7 @@ function exercise(ctx: PlanContext): Candidate[] {
 /** On smoggy days, an N95 on the daily commute — with the dose it saves on each round trip. */
 function commuteProtection(ctx: PlanContext): Candidate[] {
   const { commute, mask } = ctx.profile;
-  const commutes = commute.mode !== 'none' && commute.daysPerWeek > 0 && commute.oneWayKm > 0;
-  if (!commutes || mask === 'n95' || ctx.index.band < ACTION_BAND.commuteMask) {
+  if (!commutes(commute) || mask === 'n95' || ctx.index.band < ACTION_BAND.commuteMask) {
     return [];
   }
   const dose = (reductionShare: number): number =>

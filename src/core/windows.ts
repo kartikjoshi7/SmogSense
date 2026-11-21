@@ -1,7 +1,8 @@
 import type { Daylight, HourlyReading } from '../shared/air.js';
+import type { CleanestHour } from '../shared/plan.js';
 import { DECIMALS, PLAN_HORIZON_HOURS } from './constants.js';
 import { reduction } from './exposure.js';
-import { roundTo } from './round.js';
+import { mean, roundTo } from './numbers.js';
 
 export interface WindowSearch {
   /** Index of the current hour; the search covers the next 24 hours from here. */
@@ -52,7 +53,7 @@ function spanMean(
     .slice(start, start + span)
     .map((h) => h.pm25)
     .filter((v): v is number => v !== null);
-  return values.length < span ? null : values.reduce((sum, v) => sum + v, 0) / span;
+  return values.length < span ? null : mean(values);
 }
 
 /**
@@ -124,7 +125,7 @@ export function ventilationHour(
   hourly: readonly HourlyReading[],
   fromIndex: number,
   daylight: readonly Daylight[],
-): { hour: number; pm25: number } | null {
+): CleanestHour | null {
   const best = bestActivityWindow(hourly, {
     fromIndex,
     daylight,

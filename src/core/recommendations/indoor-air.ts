@@ -2,7 +2,12 @@ import type { Level } from '../../shared/plan.js';
 import { PURIFIER_NIGHT_HOUR, SMOKY_FUELS } from '../constants.js';
 import { reduction } from '../exposure.js';
 import { indoorHacks, type IndoorHack, type IndoorHackId } from '../indoor.js';
-import { candidate, type Candidate, type PlanContext } from './context.js';
+import {
+  candidate,
+  type Candidate,
+  type PlanContext,
+  type UnrankedRecommendation,
+} from './context.js';
 
 const HACK_EFFORT: Readonly<Record<IndoorHackId, Level>> = {
   run_purifier: 'low',
@@ -15,26 +20,29 @@ const HACK_EFFORT: Readonly<Record<IndoorHackId, Level>> = {
 function hackCandidate(ctx: PlanContext, hack: IndoorHack): Candidate {
   const { home } = ctx.profile;
   const change = reduction(hack.before, hack.after);
-  const isPurifier = hack.id === 'run_purifier';
-  const buysPurifier = isPurifier && home.purifierCount === 0;
+  const common: Omit<UnrankedRecommendation, 'id' | 'facts'> = {
+    category: 'indoor',
+    effort: HACK_EFFORT[hack.id],
+    memberIds: [],
+    impact: {
+      exposureReductionPct: change.percent,
+      indoorBeforeUgM3: change.before,
+      indoorAfterUgM3: change.after,
+    },
+  };
+  const facts = { outdoorPm25: Math.round(ctx.ambientPm25), roomAreaM2: home.roomAreaM2 };
+  if (hack.id !== 'run_purifier') {
+    return candidate({ ...common, id: hack.id, facts });
+  }
   return candidate(
     {
+      ...common,
       id: hack.id,
-      category: 'indoor',
-      effort: buysPurifier ? 'high' : HACK_EFFORT[hack.id],
-      memberIds: [],
-      impact: {
-        exposureReductionPct: change.percent,
-        indoorBeforeUgM3: change.before,
-        indoorAfterUgM3: change.after,
-      },
-      facts: {
-        outdoorPm25: Math.round(ctx.ambientPm25),
-        roomAreaM2: home.roomAreaM2,
-        ...(isPurifier ? { purifiersOwned: home.purifierCount } : {}),
-      },
+      // Buying a purifier is a bigger step than switching on one the family already has.
+      effort: home.purifierCount === 0 ? 'high' : common.effort,
+      facts: { ...facts, purifiersOwned: home.purifierCount },
     },
-    isPurifier ? [PURIFIER_NIGHT_HOUR] : [],
+    [PURIFIER_NIGHT_HOUR],
   );
 }
 
@@ -52,7 +60,7 @@ function cookingVentilation(ctx: PlanContext): Candidate[] {
       effort: 'low',
       memberIds: [],
       impact: { level: smoky ? 'high' : 'medium' },
-      facts: { cookingFuel, hasExhaust: hasExhaustOrChimney ? 'yes' : 'no' },
+      facts: { cookingFuel, hasExhaust: hasExhaustOrChimney },
     }),
   ];
 }

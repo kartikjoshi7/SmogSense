@@ -11,7 +11,7 @@ import {
   type AqiScaleDefinition,
 } from './constants.js';
 import { fail, ok, type Result } from './result.js';
-import { roundTo } from './round.js';
+import { mean, roundTo } from './numbers.js';
 
 type Pollutant = 'pm25' | 'pm10';
 
@@ -64,10 +64,6 @@ function classify(
 /** India's NAQI for locations in an Indian time zone; US AQI everywhere else. */
 function selectScale(timezone: string): AqiScale {
   return INDIA_TIMEZONES.includes(timezone) ? 'naqi' : 'us_aqi';
-}
-
-function mean(values: readonly number[]): number {
-  return values.reduce((sum, v) => sum + v, 0) / values.length;
 }
 
 /** Valid values of one pollutant over the trailing 24 hours ending at `nowIndex`. */

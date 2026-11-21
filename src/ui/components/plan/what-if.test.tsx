@@ -2,6 +2,7 @@ import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { makeAir } from '../../../core/fixtures/air.js';
 import { HEALTHY_COUPLE } from '../../../core/fixtures/profiles.js';
+import { findRecommendation } from '../../../core/fixtures/recommendations.js';
 import { buildPlan } from '../../../core/plan.js';
 import type { Plan } from '../../../shared/plan.js';
 import type { Profile } from '../../../shared/profile.js';
@@ -38,7 +39,7 @@ function show(plan: Plan) {
 describe('WhatIf', () => {
   it('gives the same doses as the plan’s own exercise advice, over the whole session', async () => {
     const plan = planOnPoorDay();
-    const advice = plan.recommendations.find((rec) => rec.id === 'exercise_window');
+    const advice = findRecommendation(plan, 'exercise_window');
     expect(advice).toBeDefined();
     const { view, moveTo } = show(plan);
     moveTo(Number(advice?.facts.bestHour));

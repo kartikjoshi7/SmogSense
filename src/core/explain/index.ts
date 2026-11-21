@@ -1,6 +1,6 @@
 import type { Audience } from '../../shared/api.js';
 import type { Language, UiLanguage } from '../../shared/languages.js';
-import type { AqiCategory, Plan, Recommendation } from '../../shared/plan.js';
+import type { AqiCategory, Plan, RecommendationId, RecommendationOf } from '../../shared/plan.js';
 import { pack as en } from './en.js';
 import type { Explanation, LanguagePack } from './format.js';
 import { pack as hi } from './hi.js';
@@ -19,7 +19,10 @@ function packFor(lang: Language): LanguagePack {
 }
 
 /** Title, reasoning and steps for one recommendation, using the engine's numbers. */
-export function explainRecommendation(rec: Recommendation, lang: Language): Explanation {
+export function explainRecommendation<Id extends RecommendationId>(
+  rec: RecommendationOf<Id>,
+  lang: Language,
+): Explanation {
   return packFor(lang).recommendations[rec.id](rec);
 }
 

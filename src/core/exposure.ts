@@ -1,6 +1,6 @@
 import type { Exercise, Member } from '../shared/profile.js';
 import { AGE_FACTOR, DECIMALS, EXERCISE_BREATHING_M3H } from './constants.js';
-import { roundTo } from './round.js';
+import { roundTo } from './numbers.js';
 
 export interface DoseInput {
   /** Ambient PM2.5, µg/m³. */

@@ -4,6 +4,7 @@ import { planSchema, type Plan, type RecommendationId } from '../shared/plan.js'
 import type { Profile } from '../shared/profile.js';
 import { makeAir } from './fixtures/air.js';
 import { HEALTHY_COUPLE, HOMEBOUND_SENIOR, SHARMA_FAMILY } from './fixtures/profiles.js';
+import { findRecommendation as find } from './fixtures/recommendations.js';
 import { buildPlan } from './plan.js';
 
 const SEVERE = 2.4;
@@ -21,10 +22,6 @@ function plan(profile: Profile, air: AirData): Plan {
 
 function ids(p: Plan): RecommendationId[] {
   return p.recommendations.map((r) => r.id);
-}
-
-function find(p: Plan, id: RecommendationId): Plan['recommendations'][number] | undefined {
-  return p.recommendations.find((r) => r.id === id);
 }
 
 describe('buildPlan — the Sharma family in Delhi', () => {
@@ -171,9 +168,9 @@ describe('buildPlan — other households and places', () => {
 
     expect(find(plan(noExhaust, makeAir()), 'cooking_ventilation')).toMatchObject({
       impact: { level: 'medium' },
-      facts: { hasExhaust: 'no' },
+      facts: { hasExhaust: false },
     });
-    expect(find(plan(withExhaust, makeAir()), 'cooking_ventilation')?.facts.hasExhaust).toBe('yes');
+    expect(find(plan(withExhaust, makeAir()), 'cooking_ventilation')?.facts.hasExhaust).toBe(true);
   });
 });
 

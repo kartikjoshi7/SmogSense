@@ -8,7 +8,7 @@ import {
   MAX_WALK_KM,
 } from './constants.js';
 import { inhaledDoseUg, reduction } from './exposure.js';
-import { roundTo } from './round.js';
+import { roundTo } from './numbers.js';
 
 /** A realistic change to the commute and what it does to emissions and exposure. */
 export interface CommuteSwap {
@@ -16,6 +16,11 @@ export interface CommuteSwap {
   readonly co2SavedKgPerWeek: number;
   /** Change in weekly commute PM2.5 dose; negative when exposure rises. */
   readonly exposureReductionPct: number;
+}
+
+/** Whether the household commutes at all: a mode, a distance and at least one day a week. */
+export function commutes(commute: Commute): boolean {
+  return commute.mode !== 'none' && commute.daysPerWeek > 0 && commute.oneWayKm > 0;
 }
 
 /** Kilograms at the precision every CO₂ figure is shown at. */
@@ -101,7 +106,7 @@ function evaluateSwap(
  * up to 8 km, walking up to 2 km, carpooling only for cars) and that help emissions or exposure.
  */
 export function commuteSwaps(commute: Commute, ambientPm25: number): CommuteSwap[] {
-  if (commute.mode === 'none' || commute.daysPerWeek === 0 || commute.oneWayKm === 0) {
+  if (!commutes(commute)) {
     return [];
   }
   return commute.alternatives

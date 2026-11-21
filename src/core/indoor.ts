@@ -1,3 +1,4 @@
+import type { RecommendationId } from '../shared/plan.js';
 import type { Home } from '../shared/profile.js';
 import {
   AIR_CHANGES_PER_H,
@@ -20,8 +21,11 @@ export interface RoomConditions {
   readonly sourceUgPerH: number;
 }
 
-export type IndoorHackId =
-  'run_purifier' | 'seal_gaps' | 'keep_windows_shut' | 'stop_incense' | 'no_indoor_smoking';
+/** The recommendations the room model can put a before-and-after number on. */
+export type IndoorHackId = Extract<
+  RecommendationId,
+  'run_purifier' | 'seal_gaps' | 'keep_windows_shut' | 'stop_incense' | 'no_indoor_smoking'
+>;
 
 /** Indoor PM2.5 (µg/m³) before and after one change to the room. */
 export interface IndoorHack {

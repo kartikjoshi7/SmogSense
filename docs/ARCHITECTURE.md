@@ -37,6 +37,10 @@ returns either a plan or `insufficient_data`; it never throws for bad data.
 | `explain/*`                 | Standard guidance (English and Hindi) for every recommendation, headline and fallback                       |
 | `constants.ts`              | Every coefficient, each with its source (listed in the README)                                              |
 
+Each recommendation id carries its own facts, the values its explanations quote. They are
+declared once, as a Zod discriminated union on `id` in `src/shared/plan.ts`, and the English and
+Hindi templates are typed per id, so a misspelt or missing fact fails the type check.
+
 ## Request flow
 
 ```

@@ -1,5 +1,6 @@
 import type { AirData } from '../../shared/air.js';
 import type {
+  CleanestHour,
   IndexReading,
   OutdoorAdvice,
   Recommendation,
@@ -22,18 +23,24 @@ export interface PlanContext {
   readonly ambientPm25: number;
   /** Cleanest daylight window for the household's exercise, if any. */
   readonly exerciseWindow: ActivityWindow | null;
-  readonly ventilation: { readonly hour: number; readonly pm25: number } | null;
+  readonly ventilation: CleanestHour | null;
 }
+
+/** Leaves out the priority of each member of a union separately, so every id keeps its facts. */
+type WithoutPriority<R> = R extends unknown ? Omit<R, 'priority'> : never;
+
+/** A recommendation before ranking has given it a priority. */
+export type UnrankedRecommendation = WithoutPriority<Recommendation>;
 
 /** A recommendation before ranking, plus the clock hours it belongs at on the day's timeline. */
 export interface Candidate {
-  readonly recommendation: Omit<Recommendation, 'priority'>;
+  readonly recommendation: UnrankedRecommendation;
   readonly hours: readonly number[];
 }
 
 /** Wrap a recommendation as a ranking candidate. */
 export function candidate(
-  recommendation: Omit<Recommendation, 'priority'>,
+  recommendation: UnrankedRecommendation,
   hours: readonly number[] = [],
 ): Candidate {
   return { recommendation, hours };

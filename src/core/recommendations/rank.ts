@@ -1,4 +1,4 @@
-import type { Recommendation, RecommendationId, Sensitivity, Severity } from '../../shared/plan.js';
+import type { RecommendationId, Sensitivity, Severity } from '../../shared/plan.js';
 import {
   CO2_RANK_WEIGHT,
   EFFORT_PENALTY,
@@ -6,6 +6,7 @@ import {
   QUALITATIVE_BENEFIT_PCT,
   SENSITIVITY_WEIGHT,
 } from '../constants.js';
+import type { UnrankedRecommendation } from './context.js';
 
 export interface RankingContext {
   readonly band: number;
@@ -13,7 +14,8 @@ export interface RankingContext {
   readonly severity: Severity;
 }
 
-type Unranked = Omit<Recommendation, 'priority'>;
+/** What ranking reads from a recommendation. */
+type Rankable = Pick<UnrankedRecommendation, 'id' | 'category' | 'effort' | 'impact'>;
 
 /** Actions that always come first in a smog emergency, together with every protection action. */
 const EMERGENCY_FIRST: ReadonlySet<RecommendationId> = new Set([
@@ -22,7 +24,7 @@ const EMERGENCY_FIRST: ReadonlySet<RecommendationId> = new Set([
 ]);
 
 /** Health benefit in exposure-percentage points: measured when known, else from the qualitative level. */
-function healthBenefit(rec: Unranked): number {
+function healthBenefit(rec: Rankable): number {
   const { exposureReductionPct, level } = rec.impact;
   if (exposureReductionPct !== undefined) {
     return Math.max(exposureReductionPct, 0);
@@ -34,7 +36,7 @@ function healthBenefit(rec: Unranked): number {
  * Ranking score: health benefit weighted by how bad the air is and how sensitive the household
  * is, plus CO₂ avoided, minus effort. In an emergency, protective actions jump the queue.
  */
-function score(rec: Unranked, ctx: RankingContext): number {
+function score(rec: Rankable, ctx: RankingContext): number {
   const healthWeight = (ctx.band + 1) * SENSITIVITY_WEIGHT[ctx.sensitivity];
   const co2 = (rec.impact.co2SavedKgPerWeek ?? 0) * CO2_RANK_WEIGHT;
   const urgent = rec.category === 'protection' || EMERGENCY_FIRST.has(rec.id);
@@ -43,7 +45,10 @@ function score(rec: Unranked, ctx: RankingContext): number {
 }
 
 /** Sort by score (highest first, ties by id for stable output) and number the priorities from 1. */
-export function rank(recs: readonly Unranked[], ctx: RankingContext): Recommendation[] {
+export function rank<R extends Rankable>(
+  recs: readonly R[],
+  ctx: RankingContext,
+): (R & { priority: number })[] {
   return recs
     .map((rec) => ({ rec, points: score(rec, ctx) }))
     .sort((a, b) => b.points - a.points || a.rec.id.localeCompare(b.rec.id))

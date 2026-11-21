@@ -16,12 +16,13 @@ function memberSensitivity(member: Member): Sensitivity {
   return member.ageGroup === 'child' ? 'elevated' : 'normal';
 }
 
-const SENSITIVITY_ORDER: readonly Sensitivity[] = ['normal', 'elevated', 'high'];
-
 /** A household is as sensitive as its most sensitive member. */
 export function householdSensitivity(members: readonly Member[]): Sensitivity {
-  const highest = Math.max(...members.map((m) => SENSITIVITY_ORDER.indexOf(memberSensitivity(m))));
-  return SENSITIVITY_ORDER[highest] ?? 'normal';
+  const levels = members.map(memberSensitivity);
+  if (levels.includes('high')) {
+    return 'high';
+  }
+  return levels.includes('elevated') ? 'elevated' : 'normal';
 }
 
 /** Ids of members with high sensitivity, who get personal alerts. */

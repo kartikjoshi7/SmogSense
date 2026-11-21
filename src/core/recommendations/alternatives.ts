@@ -4,14 +4,14 @@ import { SMOKY_FUELS } from '../constants.js';
 import { commuteSwaps, type CommuteSwap } from '../emissions.js';
 import { candidate, type Candidate, type PlanContext } from './context.js';
 
-const SWAP_ID: Readonly<Record<CommuteAlternative, RecommendationId>> = {
+const SWAP_ID = {
   metro: 'switch_to_metro',
   bus: 'switch_to_bus',
   carpool: 'carpool',
   cycle: 'switch_to_cycle',
   walk: 'switch_to_walk',
   wfh: 'work_from_home',
-};
+} as const satisfies Readonly<Record<CommuteAlternative, RecommendationId>>;
 
 const SWAP_EFFORT: Readonly<Record<CommuteAlternative, Level>> = {
   metro: 'medium',
@@ -33,7 +33,7 @@ function swapCandidate(ctx: PlanContext, swap: CommuteSwap): Candidate {
       co2SavedKgPerWeek: swap.co2SavedKgPerWeek,
       exposureReductionPct: swap.exposureReductionPct,
     },
-    facts: { fromMode: mode, oneWayKm, daysPerWeek },
+    facts: { mode, oneWayKm, daysPerWeek },
   });
 }
 

@@ -84,7 +84,7 @@ export function allowedNumbers(plan: Plan): ReadonlySet<number> {
     plan.forecast.map((point) => point.pm25),
   );
   for (const rec of plan.recommendations) {
-    addNumbers(allowed, [...Object.values(rec.impact), ...Object.values(rec.facts)]);
+    addNumbers(allowed, [...Object.values(rec.impact), ...Object.values<unknown>(rec.facts)]);
   }
   return allowed;
 }

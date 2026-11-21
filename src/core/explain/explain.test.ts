@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { Language } from '../../shared/languages.js';
-import { planSchema, type Plan, type Recommendation } from '../../shared/plan.js';
+import { recommendationIdSchema, type Plan } from '../../shared/plan.js';
 import { makeAir } from '../fixtures/air.js';
 import { SHARMA_FAMILY } from '../fixtures/profiles.js';
+import {
+  findRecommendation,
+  SAMPLE_RECOMMENDATIONS as SAMPLE,
+} from '../fixtures/recommendations.js';
 import { buildPlan } from '../plan.js';
 import {
   categoryLabel,
@@ -13,21 +17,6 @@ import {
   planSummary,
 } from './index.js';
 
-const ALL_IDS = planSchema.shape.recommendations.element.shape.id.options;
-
-function rec(id: Recommendation['id'], overrides: Partial<Recommendation> = {}): Recommendation {
-  return {
-    id,
-    category: 'routine',
-    priority: 1,
-    effort: 'low',
-    memberIds: [],
-    impact: {},
-    facts: {},
-    ...overrides,
-  };
-}
-
 function severePlan(): Plan {
   const result = buildPlan(SHARMA_FAMILY, makeAir({ scale: 2.4 }));
   if (!result.ok) {
@@ -36,18 +25,11 @@ function severePlan(): Plan {
   return result.value;
 }
 
-function find(plan: Plan, id: Recommendation['id']): Recommendation {
-  const found = plan.recommendations.find((r) => r.id === id);
-  if (found === undefined) {
-    throw new Error(`missing ${id}`);
-  }
-  return found;
-}
-
 describe.each(['en', 'hi'] as const)('standard guidance in %s', (lang) => {
-  it('explains every recommendation id, even with no facts, without blanks', () => {
-    for (const id of ALL_IDS) {
-      const explanation = explainRecommendation(rec(id), lang);
+  it('explains every recommendation id, even with no measured impact, without blanks', () => {
+    expect(Object.keys(SAMPLE)).toEqual(recommendationIdSchema.options);
+    for (const [id, sample] of Object.entries(SAMPLE)) {
+      const explanation = explainRecommendation(sample, lang);
 
       expect(explanation.title.length, id).toBeGreaterThan(3);
       expect(explanation.why.length, id).toBeGreaterThan(10);
@@ -58,24 +40,24 @@ describe.each(['en', 'hi'] as const)('standard guidance in %s', (lang) => {
 
   it("quotes the engine's numbers", () => {
     const plan = severePlan();
-    const purifier = explainRecommendation(find(plan, 'run_purifier'), lang);
-    const commute = explainRecommendation(find(plan, 'commute_protection'), lang);
+    const purifier = findRecommendation(plan, 'run_purifier');
+    const commute = findRecommendation(plan, 'commute_protection');
 
-    expect(purifier.why).toMatch(/201.*28.*86%/);
-    expect(commute.steps[0]).toMatch(/08:00.*18:00/);
+    expect(purifier && explainRecommendation(purifier, lang).why).toMatch(/201.*28.*86%/);
+    expect(commute && explainRecommendation(commute, lang).steps[0]).toMatch(/08:00.*18:00/);
   });
 
   it('describes exposure gains, losses and neutral swaps differently', () => {
     const better = explainRecommendation(
-      rec('switch_to_metro', { impact: { co2SavedKgPerWeek: 27, exposureReductionPct: 14 } }),
+      { ...SAMPLE.switch_to_metro, impact: { co2SavedKgPerWeek: 27, exposureReductionPct: 14 } },
       lang,
     );
     const worse = explainRecommendation(
-      rec('switch_to_bus', { impact: { co2SavedKgPerWeek: 20, exposureReductionPct: -30 } }),
+      { ...SAMPLE.switch_to_bus, impact: { co2SavedKgPerWeek: 20, exposureReductionPct: -30 } },
       lang,
     );
     const neutral = explainRecommendation(
-      rec('carpool', { impact: { co2SavedKgPerWeek: 20.4, exposureReductionPct: 0 } }),
+      { ...SAMPLE.carpool, impact: { co2SavedKgPerWeek: 20.4, exposureReductionPct: 0 } },
       lang,
     );
 
@@ -86,17 +68,21 @@ describe.each(['en', 'hi'] as const)('standard guidance in %s', (lang) => {
   });
 
   it('adapts to what the household already has', () => {
+    const purifier = SAMPLE.run_purifier;
     const owned = explainRecommendation(
-      rec('run_purifier', { facts: { purifiersOwned: 1 } }),
+      { ...purifier, facts: { ...purifier.facts, purifiersOwned: 1 } },
       lang,
     );
-    const none = explainRecommendation(rec('run_purifier', { facts: { purifiersOwned: 0 } }), lang);
+    const none = explainRecommendation(
+      { ...purifier, facts: { ...purifier.facts, purifiersOwned: 0 } },
+      lang,
+    );
     const smoky = explainRecommendation(
-      rec('cooking_ventilation', { facts: { cookingFuel: 'biomass', hasExhaust: 'yes' } }),
+      { ...SAMPLE.cooking_ventilation, facts: { cookingFuel: 'biomass', hasExhaust: true } },
       lang,
     );
     const noFan = explainRecommendation(
-      rec('cooking_ventilation', { facts: { cookingFuel: 'lpg', hasExhaust: 'no' } }),
+      { ...SAMPLE.cooking_ventilation, facts: { cookingFuel: 'lpg', hasExhaust: false } },
       lang,
     );
 
@@ -127,7 +113,7 @@ describe.each(['en', 'hi'] as const)('standard guidance in %s', (lang) => {
   it('builds fallback chat answers and community notices from the plan', () => {
     const plan = severePlan();
     const topTitle = explainRecommendation(
-      plan.recommendations[0] ?? rec('share_notice'),
+      plan.recommendations[0] ?? SAMPLE.share_notice,
       lang,
     ).title;
 

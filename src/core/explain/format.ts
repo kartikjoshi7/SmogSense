@@ -2,9 +2,10 @@ import type { Audience } from '../../shared/api.js';
 import type {
   AqiCategory,
   AqiScale,
+  Impact,
   Plan,
-  Recommendation,
   RecommendationId,
+  RecommendationOf,
   Severity,
 } from '../../shared/plan.js';
 
@@ -15,11 +16,15 @@ export interface Explanation {
   readonly steps: readonly string[];
 }
 
-export type Template = (rec: Recommendation) => Explanation;
+/** The text for one kind of recommendation, written from that id's own facts and impact. */
+type Template<Id extends RecommendationId> = (rec: RecommendationOf<Id>) => Explanation;
+
+/** A template that needs only a recommendation's impact, so it fits any id. */
+type ImpactTemplate = (rec: { readonly impact: Impact }) => Explanation;
 
 /** Everything the app says without AI, in one language. */
 export interface LanguagePack {
-  readonly recommendations: Readonly<Record<RecommendationId, Template>>;
+  readonly recommendations: { readonly [Id in RecommendationId]: Template<Id> };
   readonly categories: Readonly<Record<AqiCategory, string>>;
   readonly scales: Readonly<Record<AqiScale, string>>;
   readonly headlines: Readonly<Record<Severity, string>>;
@@ -33,42 +38,16 @@ export function clock(hour: number): string {
   return `${String(hour).padStart(2, '0')}:00`;
 }
 
-/** A numeric fact, or 0 when the engine did not provide it. */
-export function num(rec: Recommendation, key: string): number {
-  const value = rec.facts[key];
-  return typeof value === 'number' ? value : 0;
-}
-
-/** A text fact, or an empty string when the engine did not provide it. */
-export function text(rec: Recommendation, key: string): string {
-  const value = rec.facts[key];
-  return typeof value === 'string' ? value : '';
-}
-
-type NumericImpact = Exclude<keyof Recommendation['impact'], 'level'>;
+type NumericImpact = Exclude<keyof Impact, 'level'>;
 
 /** A numeric impact value, or 0 when it does not apply. */
-export function impact(rec: Recommendation, field: NumericImpact): number {
+export function impact(rec: { readonly impact: Impact }, field: NumericImpact): number {
   return rec.impact[field] ?? 0;
 }
 
-/** A label for a key, or the fallback for keys the table does not know. */
-export function lookup(
-  table: Readonly<Record<string, string>>,
-  key: string,
-  fallback: string,
-): string {
-  return table[key] ?? fallback;
-}
-
 /** The measured exposure cut in percent (0 when not measured). */
-export function pct(rec: Recommendation): number {
-  return rec.impact.exposureReductionPct ?? 0;
-}
-
-/** CO₂ saved per week in kg (0 when not applicable). */
-function kg(rec: Recommendation): number {
-  return rec.impact.co2SavedKgPerWeek ?? 0;
+export function pct(rec: { readonly impact: Impact }): number {
+  return impact(rec, 'exposureReductionPct');
 }
 
 /** The sentences each language supplies for the template shapes every pack shares. */
@@ -91,7 +70,7 @@ export interface Phrases {
 
 /** Template builders for the shapes every language shares, worded with that language's phrases. */
 export function templateKit(phrases: Phrases) {
-  const exposureClause = (rec: Recommendation): string => {
+  const exposureClause = (rec: { readonly impact: Impact }): string => {
     const change = pct(rec);
     if (change > 0) {
       return phrases.exposureDown(change);
@@ -101,7 +80,7 @@ export function templateKit(phrases: Phrases) {
   return {
     /** An indoor hack: a lead sentence, then the modelled before and after. */
     indoor:
-      (title: string, lead: string, steps: readonly string[]): Template =>
+      (title: string, lead: string, steps: readonly string[]): ImpactTemplate =>
       (rec) => {
         const before = impact(rec, 'indoorBeforeUgM3');
         const after = impact(rec, 'indoorAfterUgM3');
@@ -109,11 +88,15 @@ export function templateKit(phrases: Phrases) {
       },
     /** A commute swap: CO₂ saved, plus what happens to exposure on the way. */
     swap:
-      (title: string, steps: readonly string[]): Template =>
-      (rec) => ({ title, why: phrases.co2Saved(kg(rec), exposureClause(rec)), steps }),
+      (title: string, steps: readonly string[]): ImpactTemplate =>
+      (rec) => ({
+        title,
+        why: phrases.co2Saved(impact(rec, 'co2SavedKgPerWeek'), exposureClause(rec)),
+        steps,
+      }),
     /** Advice whose benefit is described, not measured. */
     qualitative:
-      (title: string, why: string, steps: readonly string[]): Template =>
+      (title: string, why: string, steps: readonly string[]): ImpactTemplate =>
       () => ({ title, why, steps }),
   };
 }

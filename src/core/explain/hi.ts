@@ -1,25 +1,30 @@
 import type { Audience } from '../../shared/api.js';
 import type { OutdoorAdvice } from '../../shared/plan.js';
+import type { CookingFuel, MaskType } from '../../shared/profile.js';
 import {
   clock,
   daySummary,
   impact,
-  lookup,
-  num,
   pct,
   templateKit,
-  text,
   type LanguagePack,
   type Phrases,
 } from './format.js';
 
-const MASK: Readonly<Record<string, string>> = {
+const MASK: Readonly<Record<MaskType, string>> = {
   none: 'बिना मास्क',
   cloth: 'कपड़े के मास्क',
   surgical: 'सर्जिकल मास्क',
+  n95: 'N95 मास्क',
 };
 
-const FUEL: Readonly<Record<string, string>> = { biomass: 'लकड़ी या उपले', kerosene: 'केरोसिन' };
+const FUEL: Readonly<Record<CookingFuel, string>> = {
+  lpg: 'LPG',
+  png: 'पाइप वाली गैस',
+  induction: 'इंडक्शन',
+  biomass: 'लकड़ी या उपले',
+  kerosene: 'केरोसिन',
+};
 
 const SENSITIVE_ADVICE: Readonly<Record<OutdoorAdvice, string>> = {
   ok: 'बाहर उन पर नज़र रखें',
@@ -49,8 +54,8 @@ const { indoor, swap, qualitative } = templateKit(PHRASES);
 
 const recommendations: LanguagePack['recommendations'] = {
   exercise_window: (rec) => ({
-    title: `${clock(num(rec, 'usualHour'))} की जगह ${clock(num(rec, 'bestHour'))} पर व्यायाम करें`,
-    why: `${clock(num(rec, 'bestHour'))} पर PM2.5 लगभग ${num(rec, 'bestPm25')} µg/m³ रहने का अनुमान है, जबकि ${clock(num(rec, 'usualHour'))} पर ${num(rec, 'usualPm25')}; इससे आप ${pct(rec)}% कम प्रदूषण साँस में लेते हैं (${impact(rec, 'doseBeforeUg')} → ${impact(rec, 'doseAfterUg')} µg)।`,
+    title: `${clock(rec.facts.usualHour)} की जगह ${clock(rec.facts.bestHour)} पर व्यायाम करें`,
+    why: `${clock(rec.facts.bestHour)} पर PM2.5 लगभग ${rec.facts.bestPm25} µg/m³ रहने का अनुमान है, जबकि ${clock(rec.facts.usualHour)} पर ${rec.facts.usualPm25}; इससे आप ${pct(rec)}% कम प्रदूषण साँस में लेते हैं (${impact(rec, 'doseBeforeUg')} → ${impact(rec, 'doseAfterUg')} µg)।`,
     steps: [
       'साफ़ समय पर शुरू करें और उसी समय में पूरा करें।',
       'रफ़्तार हल्की रखें; खाँसी या साँस फूले तो रुक जाएँ।',
@@ -59,7 +64,7 @@ const recommendations: LanguagePack['recommendations'] = {
   }),
   exercise_indoors: (rec) => ({
     title: 'आज घर के अंदर व्यायाम करें',
-    why: `${clock(num(rec, 'usualHour'))} पर बाहर की हवा लगभग ${num(rec, 'outdoorPm25')} µg/m³ है और आपके कमरे में लगभग ${num(rec, 'indoorPm25')}। अंदर व्यायाम करने से साँस में जाने वाला PM2.5 ${pct(rec)}% घटता है।`,
+    why: `${clock(rec.facts.usualHour)} पर बाहर की हवा लगभग ${rec.facts.outdoorPm25} µg/m³ है और आपके कमरे में लगभग ${rec.facts.indoorPm25}। अंदर व्यायाम करने से साँस में जाने वाला PM2.5 ${pct(rec)}% घटता है।`,
     steps: [
       'बाहर की जगह घर पर योग, स्ट्रेचिंग या सीढ़ियाँ चढ़ें।',
       'व्यायाम के समय खिड़कियाँ बंद रखें और प्यूरीफ़ायर चालू रखें।',
@@ -68,16 +73,16 @@ const recommendations: LanguagePack['recommendations'] = {
   }),
   commute_protection: (rec) => ({
     title: 'आने-जाने में N95 पहनें',
-    why: `${lookup(MASK, text(rec, 'currentMask'), 'आपके मास्क')} की जगह ठीक से फ़िट N95 पहनने से रोज़ का PM2.5 ${impact(rec, 'doseBeforeUg')} से ${impact(rec, 'doseAfterUg')} µg रह जाता है (${pct(rec)}% कम)।`,
+    why: `${MASK[rec.facts.currentMask]} की जगह ठीक से फ़िट N95 पहनने से रोज़ का PM2.5 ${impact(rec, 'doseBeforeUg')} से ${impact(rec, 'doseAfterUg')} µg रह जाता है (${pct(rec)}% कम)।`,
     steps: [
-      `दोनों सफ़र में पहनें, ${clock(num(rec, 'departHour'))} और ${clock(num(rec, 'returnHour'))} पर।`,
+      `दोनों सफ़र में पहनें, ${clock(rec.facts.departHour)} और ${clock(rec.facts.returnHour)} पर।`,
       'निकलने से पहले नाक की क्लिप दबाएँ और फ़िटिंग जाँचें।',
       'कार में शीशे बंद रखें और एयर रीसर्कुलेशन चालू रखें।',
     ],
   }),
   ventilate_briefly: (rec) => ({
-    title: `${clock(num(rec, 'hour'))} पर घर में हवा आने दें`,
-    why: `${clock(num(rec, 'hour'))} दिन का सबसे साफ़ समय है (लगभग ${num(rec, 'pm25')} µg/m³)। तब थोड़ी देर हवा आने देने से धुआँ और बासी हवा निकल जाती है।`,
+    title: `${clock(rec.facts.hour)} पर घर में हवा आने दें`,
+    why: `${clock(rec.facts.hour)} दिन का सबसे साफ़ समय है (लगभग ${rec.facts.pm25} µg/m³)। तब थोड़ी देर हवा आने देने से धुआँ और बासी हवा निकल जाती है।`,
     steps: ['खिड़कियाँ सिर्फ़ 10 से 15 मिनट खोलें।', 'शाम का धुंध बढ़ने से पहले बंद कर दें।'],
   }),
   engine_off_at_signals: qualitative(
@@ -91,8 +96,8 @@ const recommendations: LanguagePack['recommendations'] = {
     ['हफ़्ते के काम एक ही रास्ते पर रखें।', 'हवा ठीक हो तो छोटे कामों के लिए पैदल जाएँ।'],
   ),
   run_purifier: (rec) => ({
-    title: num(rec, 'purifiersOwned') > 0 ? 'प्यूरीफ़ायर तेज़ चलाएँ' : 'एयर प्यूरीफ़ायर लगाएँ',
-    why: `आपके ${num(rec, 'roomAreaM2')} m² के कमरे में प्यूरीफ़ायर से PM2.5 लगभग ${impact(rec, 'indoorBeforeUgM3')} से ${impact(rec, 'indoorAfterUgM3')} µg/m³ हो जाता है (${pct(rec)}% कम)।`,
+    title: rec.facts.purifiersOwned > 0 ? 'प्यूरीफ़ायर तेज़ चलाएँ' : 'एयर प्यूरीफ़ायर लगाएँ',
+    why: `आपके ${rec.facts.roomAreaM2} m² के कमरे में प्यूरीफ़ायर से PM2.5 लगभग ${impact(rec, 'indoorBeforeUgM3')} से ${impact(rec, 'indoorAfterUgM3')} µg/m³ हो जाता है (${pct(rec)}% कम)।`,
     steps: [
       'इसे उस कमरे में रखें जहाँ परिवार सोता है, दरवाज़ा बंद रखें।',
       'रात भर और सबसे ज़्यादा धुंध के समय तेज़ चलाएँ।',
@@ -118,10 +123,9 @@ const recommendations: LanguagePack['recommendations'] = {
   ]),
   cooking_ventilation: (rec) => ({
     title: 'खाना बनाते समय धुआँ बाहर निकालें',
-    why:
-      text(rec, 'hasExhaust') === 'yes'
-        ? `${lookup(FUEL, text(rec, 'cookingFuel'), 'इस ईंधन')} पर खाना बनाने से घर में बारीक धुआँ भर जाता है।`
-        : 'एग्ज़ॉस्ट फ़ैन या चिमनी के बिना तड़के और तलने का धुआँ घर में ही रहता है।',
+    why: rec.facts.hasExhaust
+      ? `${FUEL[rec.facts.cookingFuel]} पर खाना बनाने से घर में बारीक धुआँ भर जाता है।`
+      : 'एग्ज़ॉस्ट फ़ैन या चिमनी के बिना तड़के और तलने का धुआँ घर में ही रहता है।',
     steps: [
       'खाना बनाते समय और बाद में कुछ देर एग्ज़ॉस्ट या चिमनी चलाएँ।',
       'ढक्कन लगाएँ और आँच धीमी रखें।',
@@ -156,7 +160,7 @@ const recommendations: LanguagePack['recommendations'] = {
   ]),
   clean_cooking_fuel: (rec) => ({
     title: 'LPG, PNG या इंडक्शन अपनाएँ',
-    why: `${lookup(FUEL, text(rec, 'cookingFuel'), 'इस ईंधन')} पर खाना बनाना घरेलू वायु प्रदूषण का बड़ा कारण है; साफ़ ईंधन से ज़्यादातर धुआँ खत्म होता है।`,
+    why: `${FUEL[rec.facts.cookingFuel]} पर खाना बनाना घरेलू वायु प्रदूषण का बड़ा कारण है; साफ़ ईंधन से ज़्यादातर धुआँ खत्म होता है।`,
     steps: [
       'अपने इलाके की LPG कनेक्शन योजनाओं के बारे में पूछें।',
       'जल्दी गर्म करने और उबालने के लिए इंडक्शन इस्तेमाल करें।',
@@ -164,7 +168,7 @@ const recommendations: LanguagePack['recommendations'] = {
   }),
   n95_outdoors: (rec) => ({
     title: 'बाहर ठीक से फ़िट N95 पहनें',
-    why: `${lookup(MASK, text(rec, 'currentMask'), 'आपके मास्क')} के साथ लगभग ${num(rec, 'inhaledShareNowPct')}% बारीक कण अंदर जाते हैं; ठीक से फ़िट N95 से लगभग ${num(rec, 'inhaledShareN95Pct')}%, यानी ${pct(rec)}% कम।`,
+    why: `${MASK[rec.facts.currentMask]} के साथ लगभग ${rec.facts.inhaledShareNowPct}% बारीक कण अंदर जाते हैं; ठीक से फ़िट N95 से लगभग ${rec.facts.inhaledShareN95Pct}%, यानी ${pct(rec)}% कम।`,
     steps: [
       'चेहरे पर अच्छी तरह फ़िट होने वाला प्रमाणित N95 या FFP2 चुनें।',
       'बच्चों के लिए बच्चों के साइज़ का मास्क लें।',
@@ -173,7 +177,7 @@ const recommendations: LanguagePack['recommendations'] = {
   }),
   sensitive_members: (rec) => ({
     title: 'संवेदनशील सदस्यों का खास ध्यान रखें',
-    why: `आज की हवा बच्चों, बुज़ुर्गों, गर्भवती महिलाओं और अस्थमा, COPD या दिल की बीमारी वालों के लिए खास तौर पर खतरनाक है: ${lookup(SENSITIVE_ADVICE, text(rec, 'outdoorAdvice'), SENSITIVE_ADVICE.ok)}।`,
+    why: `आज की हवा बच्चों, बुज़ुर्गों, गर्भवती महिलाओं और अस्थमा, COPD या दिल की बीमारी वालों के लिए खास तौर पर खतरनाक है: ${SENSITIVE_ADVICE[rec.facts.outdoorAdvice]}।`,
     steps: [
       'इनहेलर और दवाइयाँ पास रखें।',
       'साँस फूलना, सीने में जकड़न या घरघराहट दिखे तो डॉक्टर से मिलें।',

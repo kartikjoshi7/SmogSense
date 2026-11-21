@@ -1,25 +1,30 @@
 import type { Audience } from '../../shared/api.js';
 import type { OutdoorAdvice } from '../../shared/plan.js';
+import type { CookingFuel, MaskType } from '../../shared/profile.js';
 import {
   clock,
   daySummary,
   impact,
-  lookup,
-  num,
   pct,
   templateKit,
-  text,
   type LanguagePack,
   type Phrases,
 } from './format.js';
 
-const MASK: Readonly<Record<string, string>> = {
+const MASK: Readonly<Record<MaskType, string>> = {
   none: 'no mask',
   cloth: 'a cloth mask',
   surgical: 'a surgical mask',
+  n95: 'an N95',
 };
 
-const FUEL: Readonly<Record<string, string>> = { biomass: 'wood or dung', kerosene: 'kerosene' };
+const FUEL: Readonly<Record<CookingFuel, string>> = {
+  lpg: 'LPG',
+  png: 'piped gas',
+  induction: 'induction',
+  biomass: 'wood or dung',
+  kerosene: 'kerosene',
+};
 
 const SENSITIVE_ADVICE: Readonly<Record<OutdoorAdvice, string>> = {
   ok: 'keep an eye on them outdoors',
@@ -49,8 +54,8 @@ const { indoor, swap, qualitative } = templateKit(PHRASES);
 
 const recommendations: LanguagePack['recommendations'] = {
   exercise_window: (rec) => ({
-    title: `Exercise at ${clock(num(rec, 'bestHour'))} instead of ${clock(num(rec, 'usualHour'))}`,
-    why: `PM2.5 is forecast at ${num(rec, 'bestPm25')} µg/m³ at ${clock(num(rec, 'bestHour'))} versus ${num(rec, 'usualPm25')} at ${clock(num(rec, 'usualHour'))}, so you breathe in ${pct(rec)}% less (${impact(rec, 'doseBeforeUg')} → ${impact(rec, 'doseAfterUg')} µg).`,
+    title: `Exercise at ${clock(rec.facts.bestHour)} instead of ${clock(rec.facts.usualHour)}`,
+    why: `PM2.5 is forecast at ${rec.facts.bestPm25} µg/m³ at ${clock(rec.facts.bestHour)} versus ${rec.facts.usualPm25} at ${clock(rec.facts.usualHour)}, so you breathe in ${pct(rec)}% less (${impact(rec, 'doseBeforeUg')} → ${impact(rec, 'doseAfterUg')} µg).`,
     steps: [
       'Start at the cleaner time and finish inside the clean window.',
       'Keep the pace easy and stop if you cough or wheeze.',
@@ -59,7 +64,7 @@ const recommendations: LanguagePack['recommendations'] = {
   }),
   exercise_indoors: (rec) => ({
     title: 'Exercise indoors today',
-    why: `Outdoor air at ${clock(num(rec, 'usualHour'))} is about ${num(rec, 'outdoorPm25')} µg/m³ and your room about ${num(rec, 'indoorPm25')}. Exercising inside cuts the PM2.5 you breathe by ${pct(rec)}%.`,
+    why: `Outdoor air at ${clock(rec.facts.usualHour)} is about ${rec.facts.outdoorPm25} µg/m³ and your room about ${rec.facts.indoorPm25}. Exercising inside cuts the PM2.5 you breathe by ${pct(rec)}%.`,
     steps: [
       'Swap the outdoor session for yoga, stretching or stair climbing at home.',
       'Keep windows shut and the purifier on while you exercise.',
@@ -68,16 +73,16 @@ const recommendations: LanguagePack['recommendations'] = {
   }),
   commute_protection: (rec) => ({
     title: 'Wear an N95 on the commute',
-    why: `A fitted N95 instead of ${lookup(MASK, text(rec, 'currentMask'), 'your mask')} cuts commute PM2.5 from ${impact(rec, 'doseBeforeUg')} to ${impact(rec, 'doseAfterUg')} µg a day (${pct(rec)}% less).`,
+    why: `A fitted N95 instead of ${MASK[rec.facts.currentMask]} cuts commute PM2.5 from ${impact(rec, 'doseBeforeUg')} to ${impact(rec, 'doseAfterUg')} µg a day (${pct(rec)}% less).`,
     steps: [
-      `Wear it on both trips, at ${clock(num(rec, 'departHour'))} and ${clock(num(rec, 'returnHour'))}.`,
+      `Wear it on both trips, at ${clock(rec.facts.departHour)} and ${clock(rec.facts.returnHour)}.`,
       'Pinch the nose clip and check the seal before you set off.',
       'In a car, keep windows up with air recirculation on.',
     ],
   }),
   ventilate_briefly: (rec) => ({
-    title: `Air the home at ${clock(num(rec, 'hour'))}`,
-    why: `${clock(num(rec, 'hour'))} is the cleanest daylight hour (about ${num(rec, 'pm25')} µg/m³). A short airing then clears cooking fumes and stale air without letting in the worst smog.`,
+    title: `Air the home at ${clock(rec.facts.hour)}`,
+    why: `${clock(rec.facts.hour)} is the cleanest daylight hour (about ${rec.facts.pm25} µg/m³). A short airing then clears cooking fumes and stale air without letting in the worst smog.`,
     steps: [
       'Open windows for 10 to 15 minutes only.',
       'Close them again before the evening build-up.',
@@ -97,8 +102,8 @@ const recommendations: LanguagePack['recommendations'] = {
     ],
   ),
   run_purifier: (rec) => ({
-    title: num(rec, 'purifiersOwned') > 0 ? 'Run your purifier on high' : 'Use an air purifier',
-    why: `In your ${num(rec, 'roomAreaM2')} m² room, PM2.5 drops from about ${impact(rec, 'indoorBeforeUgM3')} to ${impact(rec, 'indoorAfterUgM3')} µg/m³ (${pct(rec)}% less) with a purifier running.`,
+    title: rec.facts.purifiersOwned > 0 ? 'Run your purifier on high' : 'Use an air purifier',
+    why: `In your ${rec.facts.roomAreaM2} m² room, PM2.5 drops from about ${impact(rec, 'indoorBeforeUgM3')} to ${impact(rec, 'indoorAfterUgM3')} µg/m³ (${pct(rec)}% less) with a purifier running.`,
     steps: [
       'Keep it in the room where the family sleeps, with the door closed.',
       'Run it on high overnight and during the smoggiest hours.',
@@ -133,10 +138,9 @@ const recommendations: LanguagePack['recommendations'] = {
   ),
   cooking_ventilation: (rec) => ({
     title: 'Vent cooking smoke',
-    why:
-      text(rec, 'hasExhaust') === 'yes'
-        ? `Cooking on ${lookup(FUEL, text(rec, 'cookingFuel'), 'this fuel')} fills the home with fine smoke, one of the biggest indoor sources.`
-        : 'Without an exhaust fan or chimney, smoke from frying and tempering stays indoors.',
+    why: rec.facts.hasExhaust
+      ? `Cooking on ${FUEL[rec.facts.cookingFuel]} fills the home with fine smoke, one of the biggest indoor sources.`
+      : 'Without an exhaust fan or chimney, smoke from frying and tempering stays indoors.',
     steps: [
       'Run an exhaust fan or chimney while cooking and for a while after.',
       'Use lids and lower heat to cut smoke.',
@@ -174,7 +178,7 @@ const recommendations: LanguagePack['recommendations'] = {
   ]),
   clean_cooking_fuel: (rec) => ({
     title: 'Switch to LPG, PNG or induction',
-    why: `Cooking on ${lookup(FUEL, text(rec, 'cookingFuel'), 'this fuel')} is a leading cause of household air pollution; clean fuels remove most of that smoke.`,
+    why: `Cooking on ${FUEL[rec.facts.cookingFuel]} is a leading cause of household air pollution; clean fuels remove most of that smoke.`,
     steps: [
       'Ask about LPG connection schemes in your area.',
       'Use induction for quick heating and boiling.',
@@ -182,7 +186,7 @@ const recommendations: LanguagePack['recommendations'] = {
   }),
   n95_outdoors: (rec) => ({
     title: 'Wear a fitted N95 outdoors',
-    why: `With ${lookup(MASK, text(rec, 'currentMask'), 'your mask')} about ${num(rec, 'inhaledShareNowPct')}% of fine particles get through; a well-fitted N95 lets through about ${num(rec, 'inhaledShareN95Pct')}%, ${pct(rec)}% less.`,
+    why: `With ${MASK[rec.facts.currentMask]} about ${rec.facts.inhaledShareNowPct}% of fine particles get through; a well-fitted N95 lets through about ${rec.facts.inhaledShareN95Pct}%, ${pct(rec)}% less.`,
     steps: [
       'Choose a certified N95 or FFP2 that fits the face closely.',
       'Use child-size masks for children.',
@@ -191,7 +195,7 @@ const recommendations: LanguagePack['recommendations'] = {
   }),
   sensitive_members: (rec) => ({
     title: 'Extra care for sensitive family members',
-    why: `Today's air is especially risky for children, older people, pregnancy and anyone with asthma, COPD or heart disease: ${lookup(SENSITIVE_ADVICE, text(rec, 'outdoorAdvice'), SENSITIVE_ADVICE.ok)}.`,
+    why: `Today's air is especially risky for children, older people, pregnancy and anyone with asthma, COPD or heart disease: ${SENSITIVE_ADVICE[rec.facts.outdoorAdvice]}.`,
     steps: [
       'Keep inhalers and medicines at hand.',
       'Watch for breathlessness, chest tightness or wheezing, and get medical help if they appear.',

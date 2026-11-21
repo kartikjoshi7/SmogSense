@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { languageSchema } from './languages.js';
-import { planSchema } from './plan.js';
+import { planSchema, recommendationIdSchema } from './plan.js';
 import { coordinatesSchema } from './primitives.js';
 import { profileSchema } from './profile.js';
 
@@ -57,7 +57,7 @@ export const explainRequestSchema = planRequestSchema.extend({ lang: languageSch
 export type ExplainRequest = z.infer<typeof explainRequestSchema>;
 
 const explainedItemSchema = z.object({
-  id: planSchema.shape.recommendations.element.shape.id,
+  id: recommendationIdSchema,
   title: z.string(),
   why: z.string(),
   steps: z.array(z.string()),
