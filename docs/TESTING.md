@@ -39,7 +39,8 @@ no retry on 4xx or timeouts, and malformed bodies. The Gemini client is tested w
 call: a valid reply, the request settings (schema, system rules, thinking level), the 10-minute
 skip after a 429, falling through to the next model, no key, the daily budget, and a log line for
 each rejected reply. The grounding check is tested with invented numbers, rounding, clock times,
-units and Devanagari digits, and the AI service logs the text it drops. The explanation cache is
+units, the digits of every Indian script the ten languages use, and the word for "percent" in each
+of them; the AI service logs the text it drops. The explanation cache is
 tested to tell plans apart that differ only below the items the model sees.
 
 **UI.** Tests query by role and label, and the main screens and both dialogs are also checked with

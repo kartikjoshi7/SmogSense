@@ -27,6 +27,41 @@ describe('reading numbers', () => {
     expect(isGrounded('PM2.5 २०१ से घटकर २८ µg/m³', allowed)).toBe(true);
     expect(isGrounded('PM2.5 ९९९ µg/m³', allowed)).toBe(false);
   });
+
+  it.each([
+    ['Bengali', '২০১ থেকে ২৮', 'এক্সপোজার ৯৯৯% কমবে'],
+    ['Gujarati', '૨૦૧ થી ૨૮', '૯૯૯% ઘટશે'],
+    ['Gurmukhi', '੨੦੧ ਤੋਂ ੨੮', '੯੯੯% ਘੱਟ'],
+    ['Tamil', '௨௦௧ இலிருந்து ௨௮', '௯௯௯% குறையும்'],
+    ['Telugu', '౨౦౧ నుండి ౨౮', '౯౯౯% తగ్గుతుంది'],
+    ['Kannada', '೨೦೧ ರಿಂದ ೨೮', '೯೯೯% ಕಡಿಮೆ'],
+    ['Malayalam', '൨൦൧ ൽ നിന്ന് ൨൮', '൯൯൯% കുറയും'],
+  ])('reads %s digits', (_script, supported, invented) => {
+    const allowed = new Set([201, 28]);
+
+    expect(isGrounded(supported, allowed)).toBe(true);
+    expect(isGrounded(invented, allowed)).toBe(false);
+  });
+
+  it('reads digits from scripts outside the Basic Multilingual Plane', () => {
+    expect(isGrounded('𝟗𝟗𝟗 µg/m³', new Set([999]))).toBe(true);
+    expect(isGrounded('𝟗𝟗𝟗 µg/m³', new Set([28]))).toBe(false);
+  });
+
+  it.each([
+    ['Hindi', '१७ प्रतिशत कम'],
+    ['Marathi', '१७ टक्के कमी'],
+    ['Bengali', '১৭ শতাংশ কম'],
+    ['Gujarati', '૧૭ ટકા ઓછું'],
+    ['Tamil', '17 சதவீதம் குறைவு'],
+    ['Telugu', '17 శాతం తక్కువ'],
+    ['Malayalam', '17 ശതമാനം കുറവ്'],
+    ['Punjabi', '17 ਪ੍ਰਤੀਸ਼ਤ ਘੱਟ'],
+    ['Kannada, word first', 'ಶೇ 17 ಕಡಿಮೆ'],
+    ['Bengali, word first', 'শতকরা ১৭ ভাগ কম'],
+  ])('treats a small number with the %s word for "percent" as a measurement', (_lang, text) => {
+    expect(isGrounded(text, new Set())).toBe(false);
+  });
 });
 
 describe('isGrounded', () => {

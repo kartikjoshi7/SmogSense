@@ -1,18 +1,28 @@
 import type { Plan } from '../../shared/plan.js';
 
-const DEVANAGARI_ZERO = '०'.charCodeAt(0);
-
 /** Numbers inside common terms ("PM2.5", "N95"); "PM10" is covered by the small-number rule. */
 const ALWAYS_ALLOWED = new Set([2.5, 95]);
 
 /** Whole numbers up to this are clock hours or counts ("at 14", "3 steps") unless given a unit. */
 const MAX_PLAIN_INTEGER = 24;
 
-/** A percentage, mass or concentration right after a number makes it an impact claim. */
-const MEASURE_AFTER = /^\s*(?:%|percent|per cent|प्रतिशत|kg|mg|µg|μg|ug)/iu;
+/**
+ * A percent sign, a unit of mass, or the word for "percent" in one of the app's languages right
+ * after a number makes it an impact claim.
+ */
+const MEASURE_AFTER =
+  /^\s*(?:%|percent|per cent|kg|mg|µg|μg|ug|प्रतिशत|फ़ीसदी|फीसदी|टक्के|শতাংশ|ਪ੍ਰਤੀਸ਼ਤ|ਫ਼ੀਸਦੀ|ટકા|சதவீதம்|శాతం|ಶೇಕಡಾ|ശതമാനം)/iu;
+
+/** Kannada and Bengali can write "percent" before the number ("ಶೇ 20", "শতকরা ২০"). */
+const MEASURE_BEFORE = /(?:ಶೇಕಡಾ|ಶೇಕಡ|ಶೇ|শতকরা)\.?\s*$/u;
+
 const NUMBER = /\d[\d,]*(?:\.\d+)?/g;
 
-/** A number in the text and the characters that follow it. */
+/** A decimal digit in any script: ASCII, Devanagari, Bengali, Gurmukhi, Tamil and the rest. */
+const ANY_DIGIT = /\p{Nd}/u;
+const ANY_DIGITS = /\p{Nd}/gu;
+
+/** A number in the text and whether a unit or percent sign marks it as a measurement. */
 interface Quantity {
   readonly value: number;
   readonly measured: boolean;
@@ -21,20 +31,36 @@ interface Quantity {
 /** How far a quoted number may be from a fact and still count as that fact rounded. */
 const ROUNDING_TOLERANCE = 0.5;
 
-/** Replace Devanagari digits (०–९) with ASCII so Hindi answers are checked too. */
+/**
+ * The value of a decimal digit in any script. Unicode encodes every script's digits as runs of
+ * ten consecutive characters from 0 to 9, so the value is the digit's distance from the start of
+ * its run of digits, modulo 10.
+ */
+function digitValue(digit: string): number {
+  const code = digit.codePointAt(0) ?? 0;
+  let start = code;
+  while (ANY_DIGIT.test(String.fromCodePoint(start - 1))) {
+    start -= 1;
+  }
+  return (code - start) % 10;
+}
+
+/** Write every decimal digit as ASCII, so numbers are checked whatever script the reply uses. */
 function toAsciiDigits(text: string): string {
-  return text.replace(/[०-९]/g, (digit) => String(digit.charCodeAt(0) - DEVANAGARI_ZERO));
+  return text.replace(ANY_DIGITS, (digit) => String(digitValue(digit)));
 }
 
 /**
  * Every number written in the text, reading "1,234" and "12.5" as single numbers, and whether it
- * is a measurement (followed by %, kg, µg and the like).
+ * is a measurement (a %, kg, µg or the word for "percent" next to it).
  */
 function extractQuantities(text: string): Quantity[] {
   const ascii = toAsciiDigits(text);
   return Array.from(ascii.matchAll(NUMBER), (match) => ({
     value: Number(match[0].replace(/,/g, '')),
-    measured: MEASURE_AFTER.test(ascii.slice(match.index + match[0].length)),
+    measured:
+      MEASURE_AFTER.test(ascii.slice(match.index + match[0].length)) ||
+      MEASURE_BEFORE.test(ascii.slice(0, match.index)),
   }));
 }
 

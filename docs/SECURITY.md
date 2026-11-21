@@ -53,12 +53,14 @@ implements it and the test that checks it.
 - The system instruction is sent separately from user content. The user's question goes inside
   `<user_question>` delimiters with `<` and `>` removed, and the instruction says it can never change
   the rules (`ai/prompts.ts`, `prompts.test.ts`).
-- The model may only use the plan's numbers. `ai/grounding.ts` extracts every number from the
-  reply (Devanagari digits included) and rejects any that is not one of the plan's numbers within
-  rounding; a rejected reply is replaced by standard guidance (`grounding.test.ts`,
-  `ai-service.test.ts`). Two limits: whole numbers up to 24 pass as clock hours or counts unless a
-  percent sign or a unit of mass follows them, and a number may come from anywhere in the plan, not
-  only from the item being explained.
+- The model may only use the plan's numbers, and is told to write them with the digits 0–9 in
+  every language. `ai/grounding.ts` reads every number in the reply, whatever script its digits
+  are in (Devanagari, Bengali, Tamil and the rest are converted first), and rejects any that is
+  not one of the plan's numbers within rounding; a rejected reply is replaced by standard guidance
+  (`grounding.test.ts`, `ai-service.test.ts`). Its limits: whole numbers up to 24 pass as clock
+  hours or counts unless a percent sign, a unit of mass or the word for "percent" in one of the ten
+  languages is next to them; numbers spelled out in words are not read; and a number may come from
+  anywhere in the plan, not only from the item being explained.
 - Every response says truthfully whether it is `ai` or `fallback` text (the headline and summary
   have their own label), and the UI shows it.
 - AI output is rendered as plain React text; the codebase has no `dangerouslySetInnerHTML`.

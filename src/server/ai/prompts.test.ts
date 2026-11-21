@@ -15,6 +15,7 @@ function severePlan() {
 describe('prompts', () => {
   it('sets non-negotiable rules in the system instruction', () => {
     expect(SYSTEM_INSTRUCTION).toMatch(/only the numbers given in FACTS/);
+    expect(SYSTEM_INSTRUCTION).toMatch(/digits 0-9 and percentages with a % sign/);
     expect(SYSTEM_INSTRUCTION).toMatch(/<user_question>/);
     expect(SYSTEM_INSTRUCTION).toMatch(/doctor/);
   });
