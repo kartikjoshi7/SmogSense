@@ -21,10 +21,12 @@ export interface AppDeps {
   readonly now: () => number;
 }
 
-/** Origins allowed to call the API from a browser on another origin. */
+/**
+ * Origins allowed to call the API from a browser on another origin. The app itself never needs
+ * one: in production and under `npm run dev` the UI and the API share an origin.
+ */
 function allowedOrigins(config: EnvConfig): string[] {
-  const origins = config.ALLOWED_ORIGIN === undefined ? [] : [config.ALLOWED_ORIGIN];
-  return config.NODE_ENV === 'development' ? [...origins, SETTINGS.devOrigin] : origins;
+  return config.ALLOWED_ORIGIN === undefined ? [] : [config.ALLOWED_ORIGIN];
 }
 
 function limiter(limit: number, windowMs: number, now: () => number) {

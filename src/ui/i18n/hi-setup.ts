@@ -65,6 +65,7 @@ export const setup: Messages['setup'] = {
     exhaust: 'रसोई में एग्ज़ॉस्ट फ़ैन या चिमनी है',
     incense: 'अगरबत्ती, धूप या मच्छर कॉइल',
     smoking: 'कोई घर के अंदर धूम्रपान करता है',
+    heating: 'सर्दियों में मुख्य कमरा कैसे गरम करते हैं',
     mask: 'आप आमतौर पर कौन सा मास्क पहनते हैं',
   },
 };
@@ -117,5 +118,12 @@ export const options: Messages['options'] = {
     kerosene: 'केरोसिन',
   },
   incense: { never: 'कभी नहीं', sometimes: 'कभी-कभी', daily: 'रोज़' },
+  heating: {
+    none: 'हीटिंग नहीं',
+    electric: 'बिजली का हीटर',
+    gas: 'गैस हीटर',
+    kerosene: 'केरोसिन हीटर',
+    coal_wood: 'कोयले या लकड़ी की अंगीठी',
+  },
   mask: { none: 'मास्क नहीं', cloth: 'कपड़े का मास्क', surgical: 'सर्जिकल मास्क', n95: 'N95 / FFP2' },
 };

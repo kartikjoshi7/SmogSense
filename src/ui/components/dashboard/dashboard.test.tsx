@@ -116,6 +116,8 @@ describe('Dashboard requests', () => {
 
     expect(screen.queryByText(String(delhi.index.value), shown)).not.toBeInTheDocument();
     expect(screen.getByText(String(mumbai.index.value), shown)).toBeInTheDocument();
+    // The number is never shown without the scale it is on.
+    expect(screen.getByText('India AQI')).toBeInTheDocument();
     expect(await checkA11y(view.container)).toEqual([]);
   });
 });

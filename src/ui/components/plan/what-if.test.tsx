@@ -29,7 +29,7 @@ function show(plan: Plan) {
     <WhatIf plan={plan} exercise={LONG_RUN.exercise} members={LONG_RUN.members} />,
   );
   const moveTo = (hour: number) => {
-    fireEvent.change(screen.getByRole('slider', { name: /Start time/ }), {
+    fireEvent.change(screen.getByRole('slider', { name: 'Start time' }), {
       target: { value: String(hour) },
     });
   };

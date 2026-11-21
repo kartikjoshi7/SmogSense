@@ -26,8 +26,7 @@ function devApi(env: Record<string, string>): Plugin {
     if (!isServerModule(mod)) {
       throw new Error('src/server/main.ts does not export createServerApp');
     }
-    const app =
-      apps.get(mod) ?? mod.createServerApp({ ...process.env, ...env, NODE_ENV: 'development' });
+    const app = apps.get(mod) ?? mod.createServerApp({ ...process.env, ...env });
     apps.set(mod, app);
     // Connect strips the mount path; the Hono app expects the full /api/... URL.
     req.url = `/api${req.url ?? ''}`;

@@ -11,13 +11,13 @@ afterEach(() => {
 
 describe('createServerApp', () => {
   it('builds a working app from environment variables', async () => {
-    const app = createServerApp({ NODE_ENV: 'test' });
+    const app = createServerApp({});
 
     expect((await app.request('/api/health')).status).toBe(200);
   });
 
   it('starts with a Gemini key configured, without calling the API at start-up', async () => {
-    const app = createServerApp({ NODE_ENV: 'test', GEMINI_API_KEY: 'test-key' });
+    const app = createServerApp({ GEMINI_API_KEY: 'test-key' });
 
     expect((await app.request('/api/health')).status).toBe(200);
   });
@@ -27,7 +27,7 @@ describe('createServerApp', () => {
     const fetch = openMeteoFetch();
     vi.stubGlobal('fetch', fetch);
 
-    const res = await createServerApp({ NODE_ENV: 'test' }).request('/api/plan', {
+    const res = await createServerApp({}).request('/api/plan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ profile: SHARMA_FAMILY, location: { lat: 28.6139, lon: 77.209 } }),

@@ -66,7 +66,7 @@ Measured on the source (tests, fixtures and test helpers excluded) in the commit
 | Type assertions (other than `as const`)            | 0       |
 | Non-null assertions (`!`)                          | 0       |
 | `@ts-ignore`, `@ts-expect-error`, `eslint-disable` | 0       |
-| Source files / test files                          | 93 / 50 |
+| Source files / test files                          | 93 / 51 |
 
 ## Check it yourself
 

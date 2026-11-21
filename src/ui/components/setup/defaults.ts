@@ -29,6 +29,7 @@ export const EMPTY_PROFILE: Profile = {
     hasExhaustOrChimney: true,
     incense: 'never',
     indoorSmoking: false,
+    heating: 'none',
   },
   mask: 'none',
 };

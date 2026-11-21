@@ -45,7 +45,6 @@ function MissingBar({ x, width, height }: { x: number; width: number; height: nu
       fill="none"
       stroke="var(--muted)"
       strokeDasharray="3 3"
-      data-missing="true"
     />
   );
 }

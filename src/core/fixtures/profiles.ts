@@ -34,6 +34,7 @@ export const SHARMA_FAMILY: Profile = {
     hasExhaustOrChimney: true,
     incense: 'sometimes',
     indoorSmoking: false,
+    heating: 'none',
   },
   mask: 'cloth',
 };
@@ -68,6 +69,7 @@ export const HEALTHY_COUPLE: Profile = {
     hasExhaustOrChimney: false,
     incense: 'never',
     indoorSmoking: true,
+    heating: 'none',
   },
   mask: 'none',
 };
@@ -99,6 +101,7 @@ export const HOMEBOUND_SENIOR: Profile = {
     hasExhaustOrChimney: true,
     incense: 'never',
     indoorSmoking: false,
+    heating: 'none',
   },
   mask: 'n95',
 };

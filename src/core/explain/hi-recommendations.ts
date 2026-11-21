@@ -1,5 +1,5 @@
 import type { OutdoorAdvice } from '../../shared/plan.js';
-import type { CookingFuel, MaskType } from '../../shared/profile.js';
+import type { CookingFuel, MaskType, SmokyHeating } from '../../shared/profile.js';
 import { clock, templateKit, type ImpactPhrases, type LanguagePack } from './format.js';
 
 const MASK: Readonly<Record<MaskType, string>> = {
@@ -15,6 +15,11 @@ const FUEL: Readonly<Record<CookingFuel, string>> = {
   induction: 'इंडक्शन',
   biomass: 'लकड़ी या उपले',
   kerosene: 'केरोसिन',
+};
+
+const HEATER: Readonly<Record<SmokyHeating, string>> = {
+  kerosene: 'केरोसिन हीटर',
+  coal_wood: 'कोयले या लकड़ी की अंगीठी',
 };
 
 const SENSITIVE_ADVICE: Readonly<Record<OutdoorAdvice, string>> = {
@@ -126,6 +131,15 @@ export const recommendations: LanguagePack['recommendations'] = {
     'सूखी झाड़ू से जमी धूल और कालिख फिर हवा में उड़ती है।',
     ['फ़र्श पर पोछा और सतहों पर गीला कपड़ा लगाएँ।', 'धुंध के मौसम में रोज़ करें।'],
   ),
+  safer_heating: (rec) => ({
+    title: 'बिना धुएँ के कमरा गरम करें',
+    why: `${HEATER[rec.facts.heating]} में ईंधन कमरे के अंदर ही जलता है। इसके बिना घर के अंदर PM2.5 लगभग ${rec.impact.indoorBeforeUgM3} से घटकर ${rec.impact.indoorAfterUgM3} µg/m³ हो जाता है (${rec.impact.exposureReductionPct}% कम)।`,
+    steps: [
+      'इसकी जगह बिजली का हीटर, गरम कपड़े और कंबल इस्तेमाल करें।',
+      'बंद कमरे में सोते समय आग या हीटर कभी जलता न छोड़ें: इसकी कार्बन मोनोऑक्साइड जान ले सकती है।',
+      'अगर इस्तेमाल करना ही पड़े, तो खिड़की थोड़ी खुली रखें और सोने से पहले बुझा दें।',
+    ],
+  }),
   switch_to_metro: swap('काम पर मेट्रो से जाएँ', [
     'स्टेशन तक आने-जाने का रास्ता देख लें।',
     'हफ़्ते में दो दिन से शुरुआत करें।',

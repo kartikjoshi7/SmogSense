@@ -20,11 +20,6 @@ const envSchema = z.object({
     z.enum(['OFF', 'MINIMAL', 'LOW']).default('MINIMAL'),
   ),
   ALLOWED_ORIGIN: z.preprocess(emptyToUndefined, z.url().optional()),
-  /** Production unless the platform says otherwise, so a missing value never loosens CORS. */
-  NODE_ENV: z.preprocess(
-    emptyToUndefined,
-    z.enum(['development', 'production', 'test']).default('production'),
-  ),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
@@ -69,8 +64,6 @@ export const SETTINGS = {
   aiDailyWindowMs: DAY_SECONDS * SECOND_MS,
   /** Distinct clients tracked by the rate limiter before the oldest are forgotten. */
   rateLimitMaxClients: 10_000,
-  /** Origin allowed during local development. */
-  devOrigin: 'http://localhost:5173',
   /** How long a browser may reuse a CORS preflight answer. */
   corsMaxAgeSeconds: 600,
   /** Per-model timeout for one Gemini call. */

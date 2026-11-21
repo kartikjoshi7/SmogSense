@@ -1,7 +1,7 @@
 import type { Audience } from '../../shared/api.js';
 import type { Severity } from '../../shared/plan.js';
 import { recommendations } from './en-recommendations.js';
-import { daySummary, type DayPhrases, type LanguagePack } from './format.js';
+import { languagePack, type DayPhrases, type LanguagePack } from './format.js';
 
 const AUDIENCE: Readonly<Record<Audience, string>> = {
   housing_society: 'Dear residents',
@@ -49,18 +49,18 @@ const NOTICE_ADVICE: Readonly<Record<Severity, string>> = {
     'Please stay indoors where you can, wear N95 masks outside and avoid burning anything.',
 };
 
-const summary: LanguagePack['summary'] = (plan) =>
-  daySummary(plan, { scales, categories }, PHRASES);
-
 /** English text for everything the app says without AI. */
-export const pack: LanguagePack = {
+export const pack = languagePack({
   recommendations,
   categories,
   scales,
   headlines,
-  summary,
-  chatFallback: (plan, topTitles) =>
-    `The AI assistant could not give a checked answer right now, so here is today's standard guidance. ${summary(plan)} Most important: ${topTitles.join('; ')}.`,
-  communityNotice: (plan, audience) =>
-    `${AUDIENCE[audience]}, ${summary(plan)} ${headlines[plan.severity]}. ${NOTICE_ADVICE[plan.severity]} — Shared via SmogSense`,
-};
+  dayPhrases: PHRASES,
+  greetings: AUDIENCE,
+  noticeAdvice: NOTICE_ADVICE,
+  chatIntro:
+    "The AI assistant could not give a checked answer right now, so here is today's standard guidance.",
+  mostImportant: 'Most important:',
+  sharedVia: 'Shared via SmogSense',
+  fullStop: '.',
+});

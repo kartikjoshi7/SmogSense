@@ -1,5 +1,5 @@
 import type { OutdoorAdvice } from '../../shared/plan.js';
-import type { CookingFuel, MaskType } from '../../shared/profile.js';
+import type { CookingFuel, MaskType, SmokyHeating } from '../../shared/profile.js';
 import { clock, templateKit, type ImpactPhrases, type LanguagePack } from './format.js';
 
 const MASK: Readonly<Record<MaskType, string>> = {
@@ -15,6 +15,11 @@ const FUEL: Readonly<Record<CookingFuel, string>> = {
   induction: 'induction',
   biomass: 'wood or dung',
   kerosene: 'kerosene',
+};
+
+const HEATER: Readonly<Record<SmokyHeating, string>> = {
+  kerosene: 'A kerosene heater',
+  coal_wood: 'A coal or wood fire (angithi)',
 };
 
 const SENSITIVE_ADVICE: Readonly<Record<OutdoorAdvice, string>> = {
@@ -123,6 +128,15 @@ export const recommendations: LanguagePack['recommendations'] = {
       'Ask a doctor about support to quit.',
     ],
   ),
+  safer_heating: (rec) => ({
+    title: 'Heat the room without smoke',
+    why: `${HEATER[rec.facts.heating]} burns its fuel inside the room. Without it, indoor PM2.5 drops from about ${rec.impact.indoorBeforeUgM3} to ${rec.impact.indoorAfterUgM3} µg/m³ (${rec.impact.exposureReductionPct}% less).`,
+    steps: [
+      'Use an electric heater, warm layers and blankets instead.',
+      'Never leave a fire or heater burning in a closed room while people sleep: its carbon monoxide can kill.',
+      'If you must use it, keep a window slightly open and put it out before bed.',
+    ],
+  }),
   cooking_ventilation: (rec) => ({
     title: 'Vent cooking smoke',
     why: rec.facts.hasExhaust

@@ -1,5 +1,5 @@
 import type { RecommendationId } from '../shared/plan.js';
-import type { Home } from '../shared/profile.js';
+import type { Home, SmokyHeating } from '../shared/profile.js';
 import {
   AIR_CHANGES_PER_H,
   CEILING_HEIGHT_M,
@@ -24,15 +24,25 @@ export interface RoomConditions {
 /** The recommendations the room model can put a before-and-after number on. */
 export type IndoorHackId = Extract<
   RecommendationId,
-  'run_purifier' | 'seal_gaps' | 'keep_windows_shut' | 'stop_incense' | 'no_indoor_smoking'
+  | 'run_purifier'
+  | 'seal_gaps'
+  | 'keep_windows_shut'
+  | 'stop_incense'
+  | 'no_indoor_smoking'
+  | 'safer_heating'
 >;
 
 /** Indoor PM2.5 (µg/m³) before and after one change to the room. */
-export interface IndoorHack {
-  readonly id: IndoorHackId;
+interface RoomChange<Id extends IndoorHackId> {
+  readonly id: Id;
   readonly before: number;
   readonly after: number;
 }
+
+/** One change to the room; heating also says which heater the household would stop using. */
+export type IndoorHack =
+  | RoomChange<Exclude<IndoorHackId, 'safer_heating'>>
+  | (RoomChange<'safer_heating'> & { readonly heating: SmokyHeating });
 
 /**
  * Steady-state indoor PM2.5 in µg/m³ from a single-room mass balance:
@@ -57,19 +67,23 @@ export function currentRoom(home: Home, outdoorPm25: number): RoomConditions {
   };
 }
 
-function hack(id: IndoorHackId, before: RoomConditions, after: RoomConditions): IndoorHack {
+function hack<Id extends IndoorHackId>(
+  id: Id,
+  before: RoomConditions,
+  after: RoomConditions,
+): RoomChange<Id> {
   return { id, before: indoorPm25(before), after: indoorPm25(after) };
 }
 
 /**
  * Indoor changes that apply to this home, each with its estimated effect on the room's PM2.5:
  * running a purifier (a typical 250 m³/h unit if the family has none), sealing gaps, keeping
- * windows shut, and removing incense or tobacco smoke.
+ * windows shut, and removing incense, tobacco smoke or a heater that burns fuel in the room.
  */
 export function indoorHacks(home: Home, outdoorPm25: number): IndoorHack[] {
   const room = currentRoom(home, outdoorPm25);
   const cadr = home.purifierCount > 0 ? home.purifierCadrM3h : DEFAULT_PURIFIER_CADR_M3H;
-  const hacks = [
+  const hacks: IndoorHack[] = [
     hack('run_purifier', { ...room, cadrM3h: 0 }, { ...room, cadrM3h: cadr }),
     hack('keep_windows_shut', { ...room, airChangesPerH: AIR_CHANGES_PER_H.windows_open }, room),
   ];
@@ -86,6 +100,11 @@ export function indoorHacks(home: Home, outdoorPm25: number): IndoorHack[] {
     hacks.push(
       hack('no_indoor_smoking', { ...room, sourceUgPerH: INDOOR_SOURCE_UG_PER_H.smoking }, room),
     );
+  }
+  const { heating } = home;
+  if (heating === 'kerosene' || heating === 'coal_wood') {
+    const smoky = { ...room, sourceUgPerH: INDOOR_SOURCE_UG_PER_H[heating] };
+    hacks.push({ ...hack('safer_heating', smoky, room), heating });
   }
   return hacks;
 }

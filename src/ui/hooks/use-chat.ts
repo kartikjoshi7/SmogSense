@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { replyLanguage } from '../../core/explain/index.js';
-import { API_STATUS, type PlanRequest, type TextSource } from '../../shared/api.js';
+import type { PlanRequest, TextSource } from '../../shared/api.js';
 import type { Language } from '../../shared/languages.js';
 import { CHAT_LIMITS } from '../../shared/limits.js';
-import { api } from '../api/client.js';
+import { api, failureKind } from '../api/client.js';
 
 /** One turn of the conversation as shown. Answers say who wrote them and in which language. */
 export type ChatMessage =
@@ -31,7 +31,7 @@ export function useChat(request: PlanRequest) {
       .map(({ role, text }) => ({ role, text }));
     const result = await api.chat({ ...request, lang, question, history });
     if (!result.ok) {
-      setStatus(result.error.status === API_STATUS.tooManyRequests ? 'busy' : 'error');
+      setStatus(failureKind(result.error));
       return false;
     }
     const { answer, source } = result.value;

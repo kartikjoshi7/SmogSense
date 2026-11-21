@@ -16,7 +16,8 @@ const conditionSchema = z.enum(['asthma', 'copd', 'heart', 'pregnancy']);
 const memberSchema = z.object({
   id: memberIdSchema,
   ageGroup: ageGroupSchema,
-  conditions: z.array(conditionSchema).max(4),
+  /** Each condition at most once. */
+  conditions: z.array(conditionSchema).max(conditionSchema.options.length),
 });
 export type Member = z.infer<typeof memberSchema>;
 
@@ -45,7 +46,8 @@ export const commuteSchema = z.object({
   departHour: hourSchema,
   returnHour: hourSchema,
   daysPerWeek: rangeSchema(PROFILE_LIMITS.daysPerWeek).int(),
-  alternatives: z.array(commuteAlternativeSchema).max(6),
+  /** Each alternative at most once. */
+  alternatives: z.array(commuteAlternativeSchema).max(commuteAlternativeSchema.options.length),
 });
 export type Commute = z.infer<typeof commuteSchema>;
 
@@ -68,6 +70,14 @@ export type Airtightness = z.infer<typeof airtightnessSchema>;
 const cookingFuelSchema = z.enum(['lpg', 'png', 'induction', 'biomass', 'kerosene']);
 export type CookingFuel = z.infer<typeof cookingFuelSchema>;
 
+/** How the main room is heated in winter. */
+const heatingSchema = z.enum(['none', 'electric', 'gas', 'kerosene', 'coal_wood']);
+export type Heating = z.infer<typeof heatingSchema>;
+
+/** Heaters that burn their fuel in the room, unvented: a kerosene heater or a coal or wood fire. */
+export const smokyHeatingSchema = heatingSchema.extract(['kerosene', 'coal_wood']);
+export type SmokyHeating = z.infer<typeof smokyHeatingSchema>;
+
 /** How often incense, dhoop or mosquito coils are burned at home. */
 const incenseSchema = z.enum(['never', 'sometimes', 'daily']);
 
@@ -81,6 +91,8 @@ export const homeSchema = z.object({
   hasExhaustOrChimney: z.boolean(),
   incense: incenseSchema,
   indoorSmoking: z.boolean(),
+  /** A household saved before this question existed counts as unheated. */
+  heating: heatingSchema.default('none'),
 });
 export type Home = z.infer<typeof homeSchema>;
 

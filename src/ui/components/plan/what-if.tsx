@@ -32,6 +32,7 @@ export function WhatIf({
 }) {
   const t = useMessages().whatIf;
   const sliderId = useId();
+  const resultId = useId();
   const [hour, setHour] = useState(exercise.usualHour);
   const chosen = sessionAt(plan, exercise, members, hour);
   const usual = sessionAt(plan, exercise, members, exercise.usualHour);
@@ -40,8 +41,10 @@ export function WhatIf({
       <h2 id="whatif-heading" className="text-xl font-semibold">
         {t.title}
       </h2>
+      {/* The visible time is left out of the name, which stays the same as the value changes. */}
       <label htmlFor={sliderId}>
-        {t.label}: {clock(hour)}
+        {t.label}
+        <span aria-hidden="true">: {clock(hour)}</span>
       </label>
       <input
         id={sliderId}
@@ -51,11 +54,12 @@ export function WhatIf({
         step={1}
         value={hour}
         aria-valuetext={clock(hour)}
+        aria-describedby={resultId}
         onChange={(e) => {
           setHour(e.target.valueAsNumber);
         }}
       />
-      <p aria-live="polite">
+      <p id={resultId} aria-live="polite">
         {chosen === null || usual === null
           ? t.noData
           : t.result(clock(hour), chosen.pm25, chosen.dose, usual.dose)}

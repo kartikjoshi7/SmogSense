@@ -10,6 +10,7 @@ const HACK_EFFORT: Readonly<Record<IndoorHackId, Level>> = {
   keep_windows_shut: 'low',
   stop_incense: 'low',
   no_indoor_smoking: 'high',
+  safer_heating: 'medium',
 };
 
 function hackCandidate(ctx: PlanContext, hack: IndoorHack): Candidate {
@@ -29,6 +30,9 @@ function hackCandidate(ctx: PlanContext, hack: IndoorHack): Candidate {
     },
   };
   const facts = { outdoorPm25: Math.round(ctx.ambientPm25), roomAreaM2: home.roomAreaM2 };
+  if (hack.id === 'safer_heating') {
+    return candidate({ ...common, id: hack.id, facts: { ...facts, heating: hack.heating } });
+  }
   if (hack.id !== 'run_purifier') {
     return candidate({ ...common, id: hack.id, facts });
   }

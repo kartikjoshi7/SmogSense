@@ -49,9 +49,9 @@ implements it and the test that checks it.
   screen capture. The app has no inline scripts or styles. `e2e/flow.spec.ts` checks the header on the
   production build, and every end-to-end test fails on any console error, which includes CSP
   violations.
-- CORS allows only `ALLOWED_ORIGIN`, plus the Vite dev server when `NODE_ENV` is `development`.
-  `NODE_ENV` defaults to `production`, so a deployment that leaves it unset allows no localhost
-  origin (`app.test.ts`). The UI calls its own origin, so it needs no CORS at all.
+- CORS allows only `ALLOWED_ORIGIN`, and no origin at all when it is unset, not even localhost
+  (`app.test.ts`). The UI calls its own origin, in production and under `npm run dev` alike, so it
+  needs no CORS at all.
 
 ## AI safety
 

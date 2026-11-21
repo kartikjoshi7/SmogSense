@@ -15,12 +15,12 @@ which also runs the other gates in [Code quality](CODE_QUALITY.md#gates-that-fai
 
 | Layer                                  | Files  | Tests   | Environment                        |
 | -------------------------------------- | ------ | ------- | ---------------------------------- |
-| `src/core` (engine)                    | 13     | 214     | Node                               |
+| `src/core` (engine)                    | 14     | 218     | Node                               |
 | `src/shared` (schemas)                 | 3      | 16      | Node                               |
-| `src/server` (API, Open-Meteo, Gemini) | 14     | 119     | Node                               |
+| `src/server` (API, Open-Meteo, Gemini) | 14     | 117     | Node                               |
 | `api` (Vercel entry)                   | 1      | 3       | Node                               |
-| `src/ui` (React)                       | 15     | 114     | jsdom + Testing Library + axe-core |
-| **Vitest total**                       | **46** | **466** |                                    |
+| `src/ui` (React)                       | 15     | 115     | jsdom + Testing Library + axe-core |
+| **Vitest total**                       | **47** | **469** |                                    |
 | `e2e` (Playwright)                     | 4      | 19      | Chromium, production build         |
 
 **Engine.** Every AQI breakpoint edge on both scales (through `computeIndex`, so float error in
@@ -28,7 +28,8 @@ the 24-hour mean is covered too), the most-sensitive-member rule, severity
 modes, window search with missing hours and no daylight, the indoor model, emissions, ranking,
 and golden scenarios built on a Delhi forecast shaped like real data: the Sharma family on Severe,
 Very Poor and Moderate days, a healthy couple, a homebound senior, a London household on the US
-AQI, a walker offered the metro as protection on a smoggy day (and not on a clean one), and
+AQI, a walker offered the metro as protection on a smoggy day (and not on a clean one), a coal fire
+heating the main room, and
 gaps in the data (too few hours, no boundary-layer height). `constants.test.ts` also fails
 if the assumptions table in `docs/ARCHITECTURE.md` no longer matches `constants.ts`.
 
@@ -82,10 +83,10 @@ and 90% for the whole project. `npm run coverage`, and with it `npm run check` a
 below them. From the last run:
 
 ```
-Statements   : 99.16% ( 1537/1550 )
-Branches     : 96.66% ( 724/749 )
-Functions    : 98.79% ( 576/583 )
-Lines        : 99.32% ( 1463/1473 )
+Statements   : 99.16% ( 1552/1565 )
+Branches     : 96.81% ( 729/753 )
+Functions    : 98.8% ( 577/584 )
+Lines        : 99.32% ( 1479/1489 )
 ```
 
 `src/core` is at 100% on all four. Test helpers, fixtures and `src/ui/main.tsx` (the file that

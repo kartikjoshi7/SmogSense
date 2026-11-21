@@ -52,7 +52,7 @@ How `buildPlan(profile, air)` in `src/core/plan.ts` decides:
 4. **Winter inversion** (`inversion.ts`): a low boundary layer means pollution is trapped; the
    engine says when daytime mixing should clear it, falls back to wind speed and says so, and
    says it cannot tell when there is no weather data.
-5. **Candidates** (`recommendations/*`): 26 possible actions in five groups. Each is kept only if it
+5. **Candidates** (`recommendations/*`): 27 possible actions in five groups. Each is kept only if it
    fits the household (no carpool advice for someone who takes the metro) and carries its own
    numbers: exposure cut (`exposure.ts`, `windows.ts`), indoor PM2.5 before and after (`indoor.ts`,
    a mass-balance room model) and CO₂ saved per week (`emissions.ts`).
@@ -127,8 +127,10 @@ and the test suites in [Testing](docs/TESTING.md).
   worst pollutant the official index can read higher.
 - **Privacy.** Locations are rounded before any upstream call or cache, and health conditions
   never reach the AI ([Security › Privacy](docs/SECURITY.md#privacy)).
-- **Not modelled yet.** Home heating (coal or wood braziers, kerosene and gas heaters) is not asked
-  about or advised on, and commute doses use the 24-hour mean rather than the hours of travel.
+- **Heating.** A coal or wood fire (angithi) or a kerosene heater counts as a smoke source in the
+  room, at an order-of-magnitude emission rate; gas heaters, which give off little PM2.5, are not
+  modelled.
+- **Not modelled yet.** Commute doses use the 24-hour mean rather than the hours of travel.
 - **Not medical advice.** Every figure is a planning estimate. The model is instructed not to
   diagnose and to send anyone with symptoms to a doctor, and the footer says the same.
 - **Languages.** The interface and the plan's explanations are in English and Hindi. Chat answers

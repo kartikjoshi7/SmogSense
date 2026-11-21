@@ -91,6 +91,9 @@ describe('setup form', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('Please fix the highlighted fields.');
     expect(screen.getByText('Choose a location first.')).toBeInTheDocument();
+    const place = screen.getByRole('searchbox', { name: 'Search for a city or town' });
+    expect(place).toHaveAttribute('aria-invalid', 'true');
+    expect(place).toHaveAccessibleDescription('Choose a location first.');
     expect(distance).toHaveAttribute('aria-invalid', 'true');
     expect(distance).toHaveAccessibleDescription('Enter a number from 0 to 100.');
   });

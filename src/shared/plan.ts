@@ -2,7 +2,13 @@ import { z } from 'zod';
 import { localTimeSchema, pollutantsSchema } from './air.js';
 import { INDEX_BANDS, INDEX_VALUES } from './limits.js';
 import { concentrationSchema, hourSchema, rangeSchema } from './primitives.js';
-import { commuteSchema, exerciseSchema, homeSchema, maskTypeSchema } from './profile.js';
+import {
+  commuteSchema,
+  exerciseSchema,
+  homeSchema,
+  maskTypeSchema,
+  smokyHeatingSchema,
+} from './profile.js';
 
 const aqiScaleSchema = z.enum(['naqi', 'us_aqi']);
 export type AqiScale = z.infer<typeof aqiScaleSchema>;
@@ -158,6 +164,10 @@ const recommendationSchema = z.discriminatedUnion('id', [
   recommendation('keep_windows_shut', indoorImpactSchema, indoorHackFacts),
   recommendation('stop_incense', indoorImpactSchema, indoorHackFacts),
   recommendation('no_indoor_smoking', indoorImpactSchema, indoorHackFacts),
+  recommendation('safer_heating', indoorImpactSchema, {
+    ...indoorHackFacts,
+    heating: smokyHeatingSchema,
+  }),
   recommendation('cooking_ventilation', levelImpactSchema, {
     cookingFuel: homeSchema.shape.cookingFuel,
     hasExhaust: homeSchema.shape.hasExhaustOrChimney,

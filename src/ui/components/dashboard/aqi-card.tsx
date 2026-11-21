@@ -1,4 +1,4 @@
-import { categoryLabel } from '../../../core/explain/index.js';
+import { categoryLabel, scaleLabel } from '../../../core/explain/index.js';
 import type { TextSource } from '../../../shared/api.js';
 import type { Pollutants } from '../../../shared/air.js';
 import type { Plan } from '../../../shared/plan.js';
@@ -59,6 +59,7 @@ export function AqiCard({
         <p className="text-sm font-semibold">{t.dashboard.severity[severity]}</p>
         <p className="mt-2 flex flex-wrap items-center gap-3">
           <span aria-hidden="true" className="band-icon" />
+          <span className="text-sm font-semibold">{scaleLabel(index.scale, lang)}</span>
           <span className="aqi-number">{index.value}</span>
           <span className="text-2xl font-bold">{categoryLabel(index.category, lang)}</span>
         </p>

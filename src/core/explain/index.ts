@@ -1,6 +1,12 @@
 import type { Audience, TextSource } from '../../shared/api.js';
 import type { Language, UiLanguage } from '../../shared/languages.js';
-import type { AqiCategory, Plan, RecommendationId, RecommendationOf } from '../../shared/plan.js';
+import type {
+  AqiCategory,
+  AqiScale,
+  Plan,
+  RecommendationId,
+  RecommendationOf,
+} from '../../shared/plan.js';
 import { pack as en } from './en.js';
 import type { Explanation, LanguagePack } from './format.js';
 import { pack as hi } from './hi.js';
@@ -37,6 +43,11 @@ export function planHeadline(plan: Plan, lang: Language): string {
 /** The index reading plus the most useful timing fact (inversion clearing or cleanest hour). */
 export function planSummary(plan: Plan, lang: Language): string {
   return packFor(lang).summary(plan);
+}
+
+/** The display name of an index scale: India AQI or US AQI. */
+export function scaleLabel(scale: AqiScale, lang: Language): string {
+  return packFor(lang).scales[scale];
 }
 
 /** The display name of an AQI category. */

@@ -212,6 +212,14 @@ function HabitFields({ value, onChange }: Section<Home>) {
           onChange({ incense });
         }}
       />
+      <SelectField
+        label={t.setup.home.heating}
+        value={value.heating}
+        options={t.options.heating}
+        onChange={(heating) => {
+          onChange({ heating });
+        }}
+      />
       <CheckboxField
         label={t.setup.home.exhaust}
         checked={value.hasExhaustOrChimney}

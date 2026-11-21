@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AIR_DATA_MAX_DAYS, HOURS_PER_DAY } from './limits.js';
+import { AIR_DATA_MAX_DAYS, HOURS_PER_DAY, TIME_ZONE_CHARS } from './limits.js';
 import { concentrationSchema, coordinatesSchema, hourSchema } from './primitives.js';
 
 /** Local time as Open-Meteo returns it with `timezone=auto`: `YYYY-MM-DDTHH:MM`. */
@@ -38,7 +38,7 @@ export const airDataSchema = z
   .object({
     ...coordinatesSchema.shape,
     /** IANA time zone; it also decides which AQI scale applies. */
-    timezone: z.string().min(1).max(64),
+    timezone: z.string().min(1).max(TIME_ZONE_CHARS),
     hourly: z
       .array(hourlyReadingSchema)
       .min(1)

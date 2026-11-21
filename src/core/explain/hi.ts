@@ -1,7 +1,7 @@
 import type { Audience } from '../../shared/api.js';
 import type { Severity } from '../../shared/plan.js';
 import { recommendations } from './hi-recommendations.js';
-import { daySummary, type DayPhrases, type LanguagePack } from './format.js';
+import { languagePack, type DayPhrases, type LanguagePack } from './format.js';
 
 const AUDIENCE: Readonly<Record<Audience, string>> = {
   housing_society: 'प्रिय निवासियों',
@@ -46,18 +46,17 @@ const NOTICE_ADVICE: Readonly<Record<Severity, string>> = {
   emergency: 'कृपया जहाँ हो सके घर में रहें, बाहर N95 मास्क पहनें और कुछ भी न जलाएँ।',
 };
 
-const summary: LanguagePack['summary'] = (plan) =>
-  daySummary(plan, { scales, categories }, PHRASES);
-
 /** Hindi text for everything the app says without AI. */
-export const pack: LanguagePack = {
+export const pack = languagePack({
   recommendations,
   categories,
   scales,
   headlines,
-  summary,
-  chatFallback: (plan, topTitles) =>
-    `AI सहायक अभी जाँचा हुआ जवाब नहीं दे सका, इसलिए आज की मानक सलाह यह है। ${summary(plan)} सबसे ज़रूरी: ${topTitles.join('; ')}।`,
-  communityNotice: (plan, audience) =>
-    `${AUDIENCE[audience]}, ${summary(plan)} ${headlines[plan.severity]}। ${NOTICE_ADVICE[plan.severity]} — SmogSense से साझा`,
-};
+  dayPhrases: PHRASES,
+  greetings: AUDIENCE,
+  noticeAdvice: NOTICE_ADVICE,
+  chatIntro: 'AI सहायक अभी जाँचा हुआ जवाब नहीं दे सका, इसलिए आज की मानक सलाह यह है।',
+  mostImportant: 'सबसे ज़रूरी:',
+  sharedVia: 'SmogSense से साझा',
+  fullStop: '।',
+});

@@ -284,10 +284,16 @@ export const DEFAULT_PURIFIER_CADR_M3H = 250;
 /** Cooking fuels that fill the home with smoke: solid biomass and kerosene (WHO household-energy guidance). */
 export const SMOKY_FUELS: readonly CookingFuel[] = ['biomass', 'kerosene'];
 
-/** PM2.5 emitted while burning, µg/h (order-of-magnitude estimates). */
+/**
+ * PM2.5 emitted while burning, µg/h (order-of-magnitude estimates). `kerosene` and `coal_wood`
+ * are room heaters: an unvented kerosene heater, and a coal or wood fire (angithi) that burns
+ * like a stove with no chimney.
+ */
 export const INDOOR_SOURCE_UG_PER_H = {
   incense: 20_000,
   smoking: 25_000,
+  kerosene: 10_000,
+  coal_wood: 100_000,
 } as const;
 
 // ---------------------------------------------------------------- How strongly to react

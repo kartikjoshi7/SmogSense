@@ -77,7 +77,7 @@ export function createFakeApi(
     searchPlaces: () => Promise.resolve(ok([GURUGRAM])),
   };
   const app = createApp({
-    config: parseConfig({ NODE_ENV: 'test' }),
+    config: parseConfig({}),
     air,
     ai: createAiService({ client: fakeModel(options.ai ?? true), now: Date.now }),
     now: Date.now,

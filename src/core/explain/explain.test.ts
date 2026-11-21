@@ -15,6 +15,7 @@ import {
   fallbackCommunityNotice,
   planHeadline,
   planSummary,
+  scaleLabel,
 } from './index.js';
 
 function severePlan(): Plan {
@@ -24,6 +25,14 @@ function severePlan(): Plan {
   }
   return result.value;
 }
+
+describe('scale names', () => {
+  it('names each index scale in both languages', () => {
+    expect(scaleLabel('naqi', 'en')).toBe('India AQI');
+    expect(scaleLabel('naqi', 'hi')).toBe('भारत AQI');
+    expect(scaleLabel('us_aqi', 'en')).toBe('US AQI');
+  });
+});
 
 describe.each(['en', 'hi'] as const)('standard guidance in %s', (lang) => {
   it('explains every recommendation id without blanks', () => {

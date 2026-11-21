@@ -23,7 +23,8 @@ screen reader, by ear and in Hindi.
 - Range errors are linked to their field with `aria-describedby` and `aria-invalid`; a summary is
   announced with `role="alert"` when the form is submitted with problems.
 - Location search and GPS progress are announced through a `role="status"` live region, and a
-  failed search says so instead of reporting "no places found".
+  failed search says so instead of reporting "no places found". That status line also describes
+  the search field, which is marked invalid when the form is sent without a place.
 
 **Focus**
 
@@ -39,8 +40,8 @@ screen reader, by ear and in Hindi.
 
 **Information that does not rely on sight or colour**
 
-- The AQI is shown as a number, a category in words, a symbol and a colour band, never colour
-  alone; the advice is a sentence.
+- The AQI is shown as a number with its scale named beside it (India AQI or US AQI), a category
+  in words, a symbol and a colour band, never colour alone; the advice is a sentence.
 - The forecast chart is an SVG with `role="img"`, a title and a text description of the cleanest
   hour, and a button that swaps it for a data table with row headers. An hour with no forecast is
   drawn as a dashed outline, never as a zero-height bar that would look like clean air, and the
@@ -48,6 +49,9 @@ screen reader, by ear and in Hindi.
 - Every AI or standard-guidance label is text, not only an icon.
 - Loading, "writing explanations", chat answers and notices are announced through live regions.
   The chat's message list is a live region from the start, so the first answer is announced too.
+  A notice's live region holds only the notice or the problem, not the buttons under it.
+- The what-if slider keeps the same name as it moves ("Start time"); its value is read as a clock
+  time, and the dose it leads to is the slider's description and is announced as it changes.
 - Error messages are written in the interface language, chosen from the response status; server
   text is never shown, so a Hindi page never shows an English error.
 

@@ -1,6 +1,7 @@
 import type { ZodType } from 'zod';
 import { fail, ok, type Result } from '../../core/result.js';
 import {
+  API_STATUS,
   chatResponseSchema,
   communityResponseSchema,
   explainResponseSchema,
@@ -22,6 +23,11 @@ export interface ApiError {
 }
 
 const NO_ANSWER: ApiError = { status: null };
+
+/** A failed request as the user sees it: busy (too many requests, try later) or an error. */
+export function failureKind(error: ApiError): 'busy' | 'error' {
+  return error.status === API_STATUS.tooManyRequests ? 'busy' : 'error';
+}
 
 async function request<T>(
   path: string,

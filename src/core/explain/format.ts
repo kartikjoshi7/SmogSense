@@ -102,7 +102,7 @@ export function templateKit(phrases: ImpactPhrases) {
 }
 
 /** The day in a sentence or two: the reading, then when the inversion clears or the cleanest hour. */
-export function daySummary(
+function daySummary(
   plan: Plan,
   labels: Pick<LanguagePack, 'scales' | 'categories'>,
   phrases: DayPhrases,
@@ -119,4 +119,41 @@ export function daySummary(
   return cleanestHour === null
     ? reading
     : `${reading} ${phrases.cleanestAt(clock(cleanestHour.hour), cleanestHour.pm25)}`;
+}
+
+/** One language's own text, from which `languagePack` builds everything said without AI. */
+export interface LanguageText {
+  readonly recommendations: LanguagePack['recommendations'];
+  readonly categories: LanguagePack['categories'];
+  readonly scales: LanguagePack['scales'];
+  readonly headlines: LanguagePack['headlines'];
+  readonly dayPhrases: DayPhrases;
+  /** How a community notice greets each audience. */
+  readonly greetings: Readonly<Record<Audience, string>>;
+  /** What a community notice asks everyone to do, by severity. */
+  readonly noticeAdvice: Readonly<Record<Severity, string>>;
+  /** Opens the chat answer given without AI, saying why it is standard guidance. */
+  readonly chatIntro: string;
+  /** Introduces the day's top actions in that answer. */
+  readonly mostImportant: string;
+  /** Ends a notice, naming where it came from. */
+  readonly sharedVia: string;
+  /** The language's sentence end: "." or "।". */
+  readonly fullStop: string;
+}
+
+/** Everything the app says without AI in one language, composed the same way for every language. */
+export function languagePack(text: LanguageText): LanguagePack {
+  const summary = (plan: Plan): string => daySummary(plan, text, text.dayPhrases);
+  return {
+    recommendations: text.recommendations,
+    categories: text.categories,
+    scales: text.scales,
+    headlines: text.headlines,
+    summary,
+    chatFallback: (plan, topTitles) =>
+      `${text.chatIntro} ${summary(plan)} ${text.mostImportant} ${topTitles.join('; ')}${text.fullStop}`,
+    communityNotice: (plan, audience) =>
+      `${text.greetings[audience]}, ${summary(plan)} ${text.headlines[plan.severity]}${text.fullStop} ${text.noticeAdvice[plan.severity]} — ${text.sharedVia}`,
+  };
 }

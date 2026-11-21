@@ -114,6 +114,7 @@ describe('HomeFieldset', () => {
     ['How draughty is it?', 'leaky', { airtightness: 'leaky' }],
     ['Cooking fuel', 'induction', { cookingFuel: 'induction' }],
     ['Incense, dhoop or mosquito coils', 'daily', { incense: 'daily' }],
+    ['How you heat the main room in winter', 'coal_wood', { heating: 'coal_wood' }],
   ])('reports a new "%s"', (label, value, patch) => {
     const { onChange } = renderHome();
     fireEvent.change(screen.getByLabelText(label), { target: { value } });

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { replyLanguage } from '../../core/explain/index.js';
-import { API_STATUS, type Audience, type PlanRequest, type TextSource } from '../../shared/api.js';
+import type { Audience, PlanRequest, TextSource } from '../../shared/api.js';
 import type { Language } from '../../shared/languages.js';
-import { api } from '../api/client.js';
+import { api, failureKind } from '../api/client.js';
 
 export type NoticeState =
   /** "busy" when the server's AI rate limit was reached, "error" for any other failure. */
@@ -25,7 +25,7 @@ export function useCommunityNotice(request: PlanRequest) {
     setState(
       result.ok
         ? { status: 'ready', ...result.value, lang: replyLanguage(result.value.source, lang) }
-        : { status: result.error.status === API_STATUS.tooManyRequests ? 'busy' : 'error' },
+        : { status: failureKind(result.error) },
     );
   };
 

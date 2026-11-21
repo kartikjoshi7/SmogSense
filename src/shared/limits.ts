@@ -20,6 +20,9 @@ export const CLOCK_HOURS = { min: 0, max: HOURS_PER_DAY - 1 } as const satisfies
 export const LATITUDE = { min: -90, max: 90 } as const satisfies Range;
 export const LONGITUDE = { min: -180, max: 180 } as const satisfies Range;
 
+/** Longest IANA time zone name accepted from upstream (real names are under 40 characters). */
+export const TIME_ZONE_CHARS = 64;
+
 /** Most days of hourly air data accepted from upstream (a week). */
 export const AIR_DATA_MAX_DAYS = 7;
 

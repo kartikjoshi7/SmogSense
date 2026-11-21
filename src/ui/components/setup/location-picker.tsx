@@ -84,6 +84,9 @@ export function LocationPicker({
   const [query, setQuery] = useState('');
   const { places, status, search, locate } = useLocationSearch(onChange, t.myLocation);
   const announcement = statusText(t, { value, status, found: places.length, invalid });
+  const statusId = useId();
+  // Submitting without a place marks the search field invalid, described by the status line.
+  const missing = invalid && value === null;
 
   return (
     <fieldset className="card grid gap-3">
@@ -100,6 +103,8 @@ export function LocationPicker({
             className="flex-1"
             value={query}
             maxLength={PLACE_QUERY_CHARS.max}
+            aria-invalid={missing}
+            aria-describedby={statusId}
             onChange={(e) => {
               setQuery(e.target.value);
             }}
@@ -121,7 +126,7 @@ export function LocationPicker({
         </div>
       </div>
       <PlaceResults places={places} chooseLabel={t.choose} onPick={onChange} />
-      <p role="status" className={invalid && value === null ? 'field-error' : 'muted'}>
+      <p id={statusId} role="status" className={missing ? 'field-error' : 'muted'}>
         {announcement}
       </p>
     </fieldset>

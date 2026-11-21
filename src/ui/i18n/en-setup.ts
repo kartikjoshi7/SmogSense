@@ -5,6 +5,7 @@ import type {
   CommuteMode,
   CookingFuel,
   ExerciseActivity,
+  Heating,
   MaskType,
 } from '../../shared/profile.js';
 import type { Labels } from './labels.js';
@@ -78,6 +79,7 @@ export const setup = {
     exhaust: 'Kitchen has an exhaust fan or chimney',
     incense: 'Incense, dhoop or mosquito coils',
     smoking: 'Someone smokes indoors',
+    heating: 'How you heat the main room in winter',
     mask: 'Mask you usually wear',
   },
 };
@@ -139,6 +141,13 @@ export const options = {
     kerosene: 'Kerosene',
   } satisfies Labels<CookingFuel>,
   incense: { never: 'Never', sometimes: 'Sometimes', daily: 'Daily' },
+  heating: {
+    none: 'No heating',
+    electric: 'Electric heater',
+    gas: 'Gas heater',
+    kerosene: 'Kerosene heater',
+    coal_wood: 'Coal or wood fire (angithi)',
+  } satisfies Labels<Heating>,
   mask: {
     none: 'No mask',
     cloth: 'Cloth mask',

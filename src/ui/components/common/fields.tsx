@@ -5,8 +5,12 @@ import type { Labels } from '../../i18n/labels.js';
 
 /** Each option's key and text, in the order the table lists them. */
 function entries<K extends string>(labels: Labels<K>): [K, string][] {
-  const keys = Object.keys(labels).filter((key): key is K => Object.hasOwn(labels, key));
-  return keys.map((key) => [key, labels[key]]);
+  const pairs: [K, string][] = [];
+  // Over a generic record, `for...in` types each key as K; message objects are plain literals.
+  for (const key in labels) {
+    pairs.push([key, labels[key]]);
+  }
+  return pairs;
 }
 
 /**

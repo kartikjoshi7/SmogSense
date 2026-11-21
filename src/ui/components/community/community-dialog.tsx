@@ -74,19 +74,22 @@ export function CommunityDialog({
         >
           {state.status === 'generating' ? t.community.generating : t.community.generate}
         </button>
+        {/* Only the outcome is announced: the notice or the problem, not its buttons. */}
         <div aria-live="polite" className="grid gap-2">
           {state.status === 'error' ? <p className="field-error">{t.community.error}</p> : null}
           {state.status === 'busy' ? <p className="field-error">{t.community.busy}</p> : null}
           {state.status === 'ready' ? (
-            <>
-              <p className="card whitespace-pre-line" lang={state.lang}>
-                {state.notice}
-              </p>
-              <SourceTag source={state.source} />
-              <NoticeActions notice={state.notice} />
-            </>
+            <p className="card whitespace-pre-line" lang={state.lang}>
+              {state.notice}
+            </p>
           ) : null}
         </div>
+        {state.status === 'ready' ? (
+          <>
+            <SourceTag source={state.source} />
+            <NoticeActions notice={state.notice} />
+          </>
+        ) : null}
       </div>
     </Dialog>
   );

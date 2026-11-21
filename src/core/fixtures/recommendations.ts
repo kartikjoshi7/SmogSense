@@ -68,6 +68,12 @@ export const SAMPLE_RECOMMENDATIONS: { readonly [Id in RecommendationId]: Recomm
   keep_windows_shut: { ...BASE, id: 'keep_windows_shut', impact: INDOOR, facts: ROOM },
   stop_incense: { ...BASE, id: 'stop_incense', impact: INDOOR, facts: ROOM },
   no_indoor_smoking: { ...BASE, id: 'no_indoor_smoking', impact: INDOOR, facts: ROOM },
+  safer_heating: {
+    ...BASE,
+    id: 'safer_heating',
+    impact: INDOOR,
+    facts: { ...ROOM, heating: 'coal_wood' },
+  },
   cooking_ventilation: {
     ...BASE,
     id: 'cooking_ventilation',

@@ -24,7 +24,8 @@ describe('ForecastChart', () => {
     const chart = screen.getByRole('img', { name: 'PM2.5 over the next 24 hours' });
 
     expect(chart).toHaveAccessibleDescription(/2 hours have no forecast/);
-    expect(chart.querySelectorAll('rect[data-missing="true"]')).toHaveLength(2);
+    // The outline is the dashed rectangle the chart draws in place of a bar.
+    expect(chart.querySelectorAll('rect[stroke-dasharray]')).toHaveLength(2);
     expect(await checkA11y(container)).toEqual([]);
   });
 

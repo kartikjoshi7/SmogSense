@@ -11,6 +11,7 @@ const home: Home = {
   hasExhaustOrChimney: true,
   incense: 'never',
   indoorSmoking: false,
+  heating: 'none',
 };
 
 describe('indoorPm25', () => {
@@ -56,5 +57,23 @@ describe('indoorHacks', () => {
     expect(hacks.map((h) => h.id)).toContain('no_indoor_smoking');
     expect(incense?.after).toBe(200);
     expect(incense?.before).toBeGreaterThan(600);
+  });
+
+  it('counts a heater that burns fuel in the room as a smoke source, and others not at all', () => {
+    const fire = indoorHacks({ ...home, heating: 'coal_wood' }, 300).find(
+      (h) => h.id === 'safer_heating',
+    );
+    const kerosene = indoorHacks({ ...home, heating: 'kerosene' }, 300).find(
+      (h) => h.id === 'safer_heating',
+    );
+
+    expect(fire).toMatchObject({ heating: 'coal_wood', after: 200 });
+    expect(fire?.before).toBeGreaterThan(kerosene?.before ?? Infinity);
+    expect(kerosene?.before).toBeGreaterThan(200);
+    for (const heating of ['none', 'electric', 'gas'] as const) {
+      expect(indoorHacks({ ...home, heating }, 300).map((h) => h.id)).not.toContain(
+        'safer_heating',
+      );
+    }
   });
 });

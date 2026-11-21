@@ -34,7 +34,7 @@ function fakeAir(overrides: Partial<AirService> = {}): AirService {
 
 function app(overrides: Partial<AppDeps> = {}) {
   return createApp({
-    config: parseConfig({ NODE_ENV: 'production', ALLOWED_ORIGIN: ORIGIN }),
+    config: parseConfig({ ALLOWED_ORIGIN: ORIGIN }),
     air: fakeAir(),
     ai: createAiService({
       client: { generate: () => Promise.resolve(fail('unavailable')) },
@@ -118,20 +118,13 @@ describe('CORS', () => {
     expect(other.headers.get('Access-Control-Allow-Origin')).toBeNull();
   });
 
-  it('allows no localhost origin when NODE_ENV is not set', async () => {
+  it('allows no other origin, not even localhost, when none is configured', async () => {
     const unset = app({ config: parseConfig({}) });
     const res = await unset.request('/api/health', {
       headers: { Origin: 'http://localhost:5173' },
     });
 
     expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull();
-  });
-
-  it('also allows the Vite dev server in development', async () => {
-    const dev = app({ config: parseConfig({ NODE_ENV: 'development' }) });
-    const res = await dev.request('/api/health', { headers: { Origin: 'http://localhost:5173' } });
-
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:5173');
   });
 });
 
