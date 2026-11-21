@@ -84,6 +84,7 @@ export function CommunityDialog({
           label={t.community.language}
           value={lang}
           options={NATIVE_NAMES}
+          keysAreLanguages
           onChange={setLang}
         />
         <button

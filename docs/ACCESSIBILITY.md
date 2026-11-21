@@ -12,9 +12,8 @@ screen reader, by ear and in Hindi.
   order (`src/ui/app.tsx`).
 - One `h1` per screen, then `h2` sections that are labelled regions (AQI, forecast, inversion,
   timeline, plan, what-if).
-- `lang` on the page follows the chosen language (`state/app-context.tsx`). A community notice in
-  another language carries its own `lang`: the language asked for when the AI wrote it, English
-  when it is standard guidance.
+- `lang` on the page follows the chosen language (`state/app-context.tsx`). Chat answers and
+  community notices carry their own `lang` (see Reading and language).
 
 **Forms** (`components/setup/*`, `components/common/fields.tsx`)
 
@@ -53,7 +52,10 @@ screen reader, by ear and in Hindi.
 
 **Reading and language**
 
-- The interface is in English and Hindi; AI answers and notices can be in ten languages.
+- The interface and the plan are in English and Hindi; chat answers and community notices can be
+  in ten languages. Each answer and notice carries the `lang` it is written in (English when it is
+  standard guidance for a language without its own), and every language picker marks each option,
+  written in its own script, with its own `lang`.
 - Every recommendation card has a "Read aloud" button that uses the browser's speech synthesis
   and asks for an Indian English or Hindi voice; it is hidden where the browser cannot speak.
 - Plain, short sentences in the problem's own words.

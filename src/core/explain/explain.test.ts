@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Language } from '../../shared/languages.js';
-import { recommendationIdSchema, type Plan } from '../../shared/plan.js';
+import { planSchema, recommendationIdSchema, type Plan } from '../../shared/plan.js';
 import { makeAir } from '../fixtures/air.js';
 import { SHARMA_FAMILY } from '../fixtures/profiles.js';
 import {
@@ -108,6 +108,22 @@ describe.each(['en', 'hi'] as const)('standard guidance in %s', (lang) => {
     expect(bare.length).toBeLessThan(clear.length);
     expect(planHeadline(plan, lang).length).toBeGreaterThan(5);
     expect(categoryLabel('severe', lang).length).toBeGreaterThan(2);
+  });
+
+  it('words every headline without naming a category, so it fits both scales', () => {
+    const plan = severePlan();
+    const categories = planSchema.shape.index.shape.category.options.map((category) =>
+      categoryLabel(category, lang),
+    );
+
+    for (const severity of ['normal', 'caution', 'restrict', 'emergency'] as const) {
+      const headline = planHeadline({ ...plan, severity }, lang).toLowerCase();
+
+      expect(
+        categories.filter((name) => headline.includes(name.toLowerCase())),
+        severity,
+      ).toEqual([]);
+    }
   });
 
   it('builds fallback chat answers and community notices from the plan', () => {

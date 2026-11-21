@@ -9,16 +9,21 @@ function entries<K extends string>(labels: OptionLabels<K>): [K, string][] {
   return (Object.keys(labels) as K[]).map((key) => [key, labels[key]]);
 }
 
-/** A labelled select whose value is one of the option keys. */
+/**
+ * A labelled select whose value is one of the option keys. With `keysAreLanguages`, the keys are
+ * language codes and each option, named in its own script, is marked with its own `lang`.
+ */
 export function SelectField<K extends string>({
   label,
   value,
   options,
+  keysAreLanguages = false,
   onChange,
 }: {
   readonly label: string;
   readonly value: K;
   readonly options: OptionLabels<K>;
+  readonly keysAreLanguages?: boolean;
   readonly onChange: (value: K) => void;
 }) {
   const id = useId();
@@ -37,7 +42,7 @@ export function SelectField<K extends string>({
         }}
       >
         {pairs.map(([key, text]) => (
-          <option key={key} value={key}>
+          <option key={key} value={key} lang={keysAreLanguages ? key : undefined}>
             {text}
           </option>
         ))}

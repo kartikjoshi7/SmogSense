@@ -22,6 +22,7 @@ function Header() {
           label={t.app.language}
           value={state.lang}
           options={UI_LANGUAGE_NAMES}
+          keysAreLanguages
           onChange={(lang) => {
             dispatch({ type: 'set_language', lang });
           }}

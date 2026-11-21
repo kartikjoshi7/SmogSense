@@ -1,4 +1,4 @@
-import type { Audience } from '../../shared/api.js';
+import type { Audience, TextSource } from '../../shared/api.js';
 import type { Language, UiLanguage } from '../../shared/languages.js';
 import type { AqiCategory, Plan, RecommendationId, RecommendationOf } from '../../shared/plan.js';
 import { pack as en } from './en.js';
@@ -10,8 +10,13 @@ export type { Explanation } from './format.js';
 const PACKS: Readonly<Record<UiLanguage, LanguagePack>> = { en, hi };
 
 /** The language standard guidance is written in for a request: Hindi or English for the rest. */
-export function guidanceLanguage(lang: Language): UiLanguage {
+function guidanceLanguage(lang: Language): UiLanguage {
   return lang === 'hi' ? 'hi' : 'en';
+}
+
+/** The language a reply is written in: the one asked for when the AI wrote it, else the guidance's. */
+export function replyLanguage(source: TextSource, lang: Language): Language {
+  return source === 'ai' ? lang : guidanceLanguage(lang);
 }
 
 function packFor(lang: Language): LanguagePack {

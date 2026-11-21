@@ -233,6 +233,7 @@ export const en = {
   chat: {
     title: 'Ask SmogSense',
     intro: 'Ask about today’s air and your plan. Answers use your plan’s numbers.',
+    language: 'Language of the answers',
     label: 'Your question',
     send: 'Send',
     sending: 'Thinking…',

@@ -5,6 +5,7 @@ import type { Profile } from '../shared/profile.js';
 import { makeAir } from './fixtures/air.js';
 import { HEALTHY_COUPLE, HOMEBOUND_SENIOR, SHARMA_FAMILY } from './fixtures/profiles.js';
 import { findRecommendation as find } from './fixtures/recommendations.js';
+import { planHeadline } from './explain/index.js';
 import { buildPlan } from './plan.js';
 
 const SEVERE = 2.4;
@@ -138,6 +139,23 @@ describe('buildPlan — other households and places', () => {
       expect.arrayContaining(['exercise_window', 'n95_outdoors', 'sensitive_members']),
     );
     expect(ids(p)).not.toContain('ncr_grap_check');
+    expect(planHeadline(p, 'en')).toBe('A normal day: no extra precautions needed');
+  });
+
+  it('heads a US day unhealthy for sensitive groups with care for them, not "moderate"', () => {
+    const air = makeAir({
+      pm25Day: Array<number>(24).fill(40),
+      timezone: 'Europe/London',
+      lat: 51.5,
+      lon: -0.12,
+    });
+    const p = plan(SHARMA_FAMILY, air);
+
+    expect(p).toMatchObject({
+      severity: 'caution',
+      index: { scale: 'us_aqi', category: 'unhealthy_sensitive' },
+    });
+    expect(planHeadline(p, 'en')).toBe('Sensitive family members should take it easy today');
   });
 
   it('gives a homebound senior with N95s only indoor and community advice', () => {

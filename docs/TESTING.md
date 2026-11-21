@@ -51,7 +51,8 @@ empty category, table view, missing forecast hours, retry after an error, a mess
 error status), the what-if slider (its doses equal the plan's own exercise advice; a session past
 the forecast says so), language switching, saving and restoring the household, both dialogs
 (focus trap, Esc, focus return, the first answer announced, focus kept after a suggestion,
-errors, AI and standard answers, the notice's `lang`, copy and share failures), read-aloud with a
+suggestions disabled while an answer is on its way, errors, AI and standard answers, the answer
+language and the `lang` of answers, notices and language options, copy and share failures), read-aloud with a
 stubbed speech API, and both message catalogues (same keys, every template uses its arguments,
 nothing left untranslated except names and units).
 

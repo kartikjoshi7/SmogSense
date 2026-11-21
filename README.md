@@ -5,8 +5,8 @@
 A GenAI assistant that helps families and communities get through winter smog. It reads the
 live air-quality forecast for where you live, builds a plan for your household's day (low-emission
 routines, indoor air hacks, sustainable alternatives) and shows the impact of every choice in
-numbers. Gemini explains the plan, answers questions and writes community notices in ten
-languages, and it may only use the numbers the engine computed.
+numbers. Gemini explains the plan in English or Hindi, answers questions and writes community
+notices in ten languages, and it may only use the numbers the engine computed.
 
 **Live:** https://smog-sense-sigma.vercel.app · More detail: [Architecture](docs/ARCHITECTURE.md) ·
 [Security](docs/SECURITY.md) · [Testing](docs/TESTING.md) · [Accessibility](docs/ACCESSIBILITY.md)
@@ -77,7 +77,8 @@ How `buildPlan(profile, air)` in `src/core/plan.ts` decides:
    with a table view, the inversion card, the day's timeline, five tabs named after the brief and a
    "what if" slider that recomputes exercise exposure in the browser with the same engine.
 4. **Ask and share.** A chat dialog for questions such as "Can the children play outside at 4 pm?"
-   and a community notice that can be copied or shared. Both are loaded only when opened.
+   and a community notice that can be copied or shared, each in any of ten languages. Both are
+   loaded only when opened.
 
 **GenAI usage.** Gemini (through `@google/genai`) is used in three places, all in
 `src/server/ai/`:
@@ -124,8 +125,9 @@ The quality gates and test suites are described in [Testing](docs/TESTING.md).
 - **Privacy.** Locations are rounded to 0.1° (about 11 km) before any upstream call or cache.
 - **Not medical advice.** Every figure is a planning estimate. The model is instructed not to
   diagnose and to send anyone with symptoms to a doctor, and the footer says the same.
-- **Languages.** The interface is in English and Hindi. AI answers can be in ten languages; standard
-  guidance exists in English and Hindi, and other languages fall back to English.
+- **Languages.** The interface and the plan's explanations are in English and Hindi. Chat answers
+  and community notices can be in ten languages; their standard guidance exists in English and
+  Hindi, and the other languages fall back to English.
 - **Coefficients.** Every coefficient and threshold the engine uses is a named constant in
   `src/core/constants.ts`; the bounds it shares with the API (index 0–500, bands 0–5, clock hours)
   are in `src/shared/limits.ts`. The table below shows every constant in `constants.ts`, and

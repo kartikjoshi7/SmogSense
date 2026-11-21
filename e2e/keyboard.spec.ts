@@ -50,7 +50,9 @@ test('a keyboard-only user can set up, plan, ask and close the dialog', async ({
   await page.keyboard.press('Enter');
   const chat = page.getByRole('dialog', { name: 'Ask SmogSense' });
   await expectVisibleFocus(chat.getByRole('button', { name: 'Close' }));
-  await page.keyboard.press('Tab');
+  const suggestion = chat.getByRole('button', { name: 'Can the children play outside at 4 pm?' });
+  await tabTo(page, suggestion);
+  await expectVisibleFocus(suggestion);
   await page.keyboard.press('Enter');
   await expect(chat.getByText(FAKE_AI.answer)).toBeVisible();
 

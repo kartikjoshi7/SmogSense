@@ -205,6 +205,7 @@ export const hi: Messages = {
   chat: {
     title: 'SmogSense से पूछें',
     intro: 'आज की हवा और अपनी योजना के बारे में पूछें। जवाब आपकी योजना के आँकड़ों पर आधारित हैं।',
+    language: 'जवाबों की भाषा',
     label: 'आपका सवाल',
     send: 'भेजें',
     sending: 'सोच रहे हैं…',

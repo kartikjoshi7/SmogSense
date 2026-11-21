@@ -97,4 +97,43 @@ describe('ChatDialog', () => {
 
     expect(await screen.findByText('Standard guidance')).toBeInTheDocument();
   });
+
+  it('answers in the language chosen for the answers, marked with that language', async () => {
+    const { ask, sent, user } = openChat();
+    const picker = screen.getByRole('combobox', { name: 'Language of the answers' });
+    expect(screen.getByRole('option', { name: 'தமிழ்' })).toHaveAttribute('lang', 'ta');
+    await user.selectOptions(picker, 'ta');
+    await ask('Can the children play outside?');
+
+    expect(await screen.findByText('Keep the children indoors today.')).toHaveAttribute(
+      'lang',
+      'ta',
+    );
+    expect(sent(0).lang).toBe('ta');
+  });
+
+  it('marks standard guidance with the language it is written in', async () => {
+    const { ask, user } = openChat({ ai: false });
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Language of the answers' }),
+      'ta',
+    );
+    await ask('Can the children play outside?');
+
+    expect(await screen.findByText(/standard guidance/)).toHaveAttribute('lang', 'en');
+  });
+
+  it('disables the suggestions while a question is being answered', async () => {
+    const { user } = openChat();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise<Response>(() => undefined)),
+    );
+    await user.click(screen.getByRole('button', { name: 'Is it safe to open the windows today?' }));
+
+    for (const suggestion of screen.getAllByRole('button', { name: /\?$/ })) {
+      expect(suggestion).toBeDisabled();
+    }
+    expect(screen.getByRole('status')).toHaveTextContent('Thinking…');
+  });
 });
