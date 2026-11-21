@@ -7,14 +7,21 @@ describe('profileSchema', () => {
     expect(profileSchema.parse(SHARMA_FAMILY)).toEqual(SHARMA_FAMILY);
   });
 
+  it('accepts only opaque member ids, so a name cannot reach the server as an id', () => {
+    const named = [{ id: 'riya', ageGroup: 'adult', conditions: [] }];
+
+    expect(profileSchema.safeParse({ ...SHARMA_FAMILY, members: named }).success).toBe(false);
+    expect(profileSchema.safeParse(SHARMA_FAMILY).success).toBe(true);
+  });
+
   it('rejects duplicate member ids', () => {
-    const members = [...SHARMA_FAMILY.members, { id: 'riya', ageGroup: 'teen', conditions: [] }];
+    const members = [...SHARMA_FAMILY.members, { id: 'm1', ageGroup: 'teen', conditions: [] }];
 
     expect(profileSchema.safeParse({ ...SHARMA_FAMILY, members }).success).toBe(false);
   });
 
   it('rejects an exercising member who is not in the household', () => {
-    const exercise = { ...SHARMA_FAMILY.exercise, memberId: 'stranger' };
+    const exercise = { ...SHARMA_FAMILY.exercise, memberId: 'm9' };
 
     expect(profileSchema.safeParse({ ...SHARMA_FAMILY, exercise }).success).toBe(false);
   });

@@ -54,7 +54,7 @@ describe('buildPlan — the Sharma family in Delhi', () => {
     const p = plan(SHARMA_FAMILY, makeAir({ scale: SEVERE }));
 
     expect(find(p, 'exercise_indoors')).toMatchObject({
-      memberIds: ['dadaji'],
+      memberIds: ['m3'],
       facts: { usualHour: 6, outdoorPm25: 317, indoorPm25: 211 },
     });
     expect(p.timeline).toEqual([
@@ -78,11 +78,11 @@ describe('buildPlan — the Sharma family in Delhi', () => {
 
     expect(p).toMatchObject({ severity: 'caution', outdoorAdvice: 'reduce' });
     expect(find(p, 'exercise_window')).toMatchObject({
-      memberIds: ['dadaji'],
+      memberIds: ['m3'],
       facts: { usualHour: 6, bestHour: 14 },
       impact: { exposureReductionPct: 56 },
     });
-    expect(find(p, 'sensitive_members')?.memberIds).toEqual(['aarav', 'dadaji']);
+    expect(find(p, 'sensitive_members')?.memberIds).toEqual(['m2', 'm3']);
     expect(ids(p)).toContain('n95_outdoors');
     expect(ids(p)).not.toContain('check_on_neighbours');
   });

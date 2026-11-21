@@ -70,7 +70,8 @@ implements it and the test that checks it.
 ## Privacy
 
 - Family members' names stay in the browser. Requests to the server carry member ids (`m1`,
-  `m2`…), age groups and health conditions, which the engine needs; nothing is stored.
+  `m2`…), age groups and health conditions, which the engine needs; nothing is stored. The schema
+  accepts only ids of that form, so a name cannot pass as an id (`profile.test.ts`).
 - Prompts to Gemini carry member ids and age groups, never conditions: the model learns who needs
   extra care only from the plan (the household's sensitivity level and the members each
   recommendation is for). Community notices are prompted without member ids at all

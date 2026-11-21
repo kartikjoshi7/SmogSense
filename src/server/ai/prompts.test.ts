@@ -25,7 +25,7 @@ describe('prompts', () => {
     const prompt = explainPrompt({ plan, profile: SHARMA_FAMILY, lang: 'hi' });
 
     expect(prompt).toContain('LANGUAGE: Hindi');
-    expect(prompt).toContain('[{"id":"riya","ageGroup":"adult"},{"id":"aarav","ageGroup":"child"}');
+    expect(prompt).toContain('[{"id":"m1","ageGroup":"adult"},{"id":"m2","ageGroup":"child"}');
     expect(prompt).toContain('"householdSensitivity":"high"');
     expect(prompt).not.toMatch(/conditions|asthma|copd/);
     expect(prompt).toContain(`"value":${plan.index.value}`);
@@ -76,6 +76,6 @@ describe('prompts', () => {
     expect(prompt).toContain('AUDIENCE: parents and staff of a school');
     expect(prompt).toContain('check_on_neighbours');
     expect(prompt).not.toContain('run_purifier');
-    expect(prompt).not.toContain('dadaji');
+    expect(prompt).not.toContain('memberIds');
   });
 });

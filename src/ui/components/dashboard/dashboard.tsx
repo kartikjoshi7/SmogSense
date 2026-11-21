@@ -111,7 +111,7 @@ export function Dashboard({
   };
 
   return (
-    <div className="grid gap-4" aria-busy={state.status === 'loading'}>
+    <div className="grid gap-4">
       <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold">
         {t.dashboard.title(location.label)}
       </h1>

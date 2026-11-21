@@ -2,10 +2,11 @@ import { z } from 'zod';
 import { PROFILE_LIMITS } from './limits.js';
 import { hourSchema, rangeSchema } from './primitives.js';
 
-/** Short opaque id for a household member. Display names never leave the device. */
-const memberIdSchema = z
-  .string()
-  .regex(/^[a-z0-9-]{1,12}$/, 'Member ids are 1–12 lowercase letters, digits or hyphens');
+/**
+ * Opaque id for a household member: "m" and a number, as the setup form generates them. Only
+ * this form is accepted, so a name can never pass as an id; display names never leave the device.
+ */
+const memberIdSchema = z.string().regex(/^m[1-9]\d{0,2}$/, 'Member ids are m1, m2 and so on');
 
 const ageGroupSchema = z.enum(['infant', 'child', 'teen', 'adult', 'senior']);
 export type AgeGroup = z.infer<typeof ageGroupSchema>;

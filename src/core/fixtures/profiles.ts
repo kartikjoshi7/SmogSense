@@ -6,9 +6,9 @@ import type { Profile } from '../../shared/profile.js';
  */
 export const SHARMA_FAMILY: Profile = {
   members: [
-    { id: 'riya', ageGroup: 'adult', conditions: [] },
-    { id: 'aarav', ageGroup: 'child', conditions: ['asthma'] },
-    { id: 'dadaji', ageGroup: 'senior', conditions: ['copd'] },
+    { id: 'm1', ageGroup: 'adult', conditions: [] },
+    { id: 'm2', ageGroup: 'child', conditions: ['asthma'] },
+    { id: 'm3', ageGroup: 'senior', conditions: ['copd'] },
   ],
   commute: {
     mode: 'car_petrol',
@@ -20,7 +20,7 @@ export const SHARMA_FAMILY: Profile = {
   },
   exercise: {
     activity: 'walk',
-    memberId: 'dadaji',
+    memberId: 'm3',
     usualHour: 6,
     durationMin: 30,
     canMoveIndoors: true,
@@ -41,8 +41,8 @@ export const SHARMA_FAMILY: Profile = {
 /** Two healthy adults who run at 6 am and ride a two-wheeler 6 km to work. */
 export const HEALTHY_COUPLE: Profile = {
   members: [
-    { id: 'kabir', ageGroup: 'adult', conditions: [] },
-    { id: 'meera', ageGroup: 'adult', conditions: [] },
+    { id: 'm1', ageGroup: 'adult', conditions: [] },
+    { id: 'm2', ageGroup: 'adult', conditions: [] },
   ],
   commute: {
     mode: 'two_wheeler',
@@ -74,7 +74,7 @@ export const HEALTHY_COUPLE: Profile = {
 
 /** A household that does not commute or exercise and already wears N95s indoors and out. */
 export const HOMEBOUND_SENIOR: Profile = {
-  members: [{ id: 'nani', ageGroup: 'senior', conditions: [] }],
+  members: [{ id: 'm1', ageGroup: 'senior', conditions: [] }],
   commute: {
     mode: 'none',
     oneWayKm: 0,

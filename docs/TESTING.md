@@ -16,11 +16,11 @@ CI (`.github/workflows/ci.yml`) runs all three on every push and pull request, p
 | Layer                                  | Files  | Tests   | Environment                        |
 | -------------------------------------- | ------ | ------- | ---------------------------------- |
 | `src/core` (engine)                    | 12     | 209     | Node                               |
-| `src/shared` (schemas)                 | 3      | 15      | Node                               |
+| `src/shared` (schemas)                 | 3      | 16      | Node                               |
 | `src/server` (API, Open-Meteo, Gemini) | 14     | 117     | Node                               |
 | `api` (Vercel entry)                   | 1      | 3       | Node                               |
-| `src/ui` (React)                       | 15     | 112     | jsdom + Testing Library + axe-core |
-| **Vitest total**                       | **45** | **456** |                                    |
+| `src/ui` (React)                       | 15     | 113     | jsdom + Testing Library + axe-core |
+| **Vitest total**                       | **45** | **458** |                                    |
 | `e2e` (Playwright)                     | 4      | 19      | Chromium, production build         |
 
 **Engine.** Every AQI breakpoint edge on both scales (through `computeIndex`, so float error in

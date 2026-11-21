@@ -130,7 +130,7 @@ describe('createAiService', () => {
     const changedBelowTop = {
       ...plan,
       recommendations: plan.recommendations.map((rec, i) =>
-        i === last ? { ...rec, memberIds: [...rec.memberIds, 'riya'] } : rec,
+        i === last ? { ...rec, memberIds: [...rec.memberIds, 'm1'] } : rec,
       ),
     };
 

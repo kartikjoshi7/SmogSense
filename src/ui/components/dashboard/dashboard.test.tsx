@@ -56,6 +56,20 @@ function planFrom(air: AirData) {
   return result.value;
 }
 
+describe('Dashboard loading', () => {
+  it('announces that the plan is loading, outside any busy region', () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise<Response>(() => undefined)),
+    );
+    showDashboard();
+    const status = screen.getByRole('status');
+
+    expect(status).toHaveTextContent('Building your plan…');
+    expect(status.closest('[aria-busy="true"]')).toBeNull();
+  });
+});
+
 describe('Dashboard requests', () => {
   it('never shows a slow plan for a place the household has already left', async () => {
     const delhi = planFrom(makeAir());
