@@ -2,11 +2,12 @@ import type { Audience } from '../../shared/api.js';
 import type {
   AqiCategory,
   AqiScale,
-  Impact,
+  IndoorImpact,
   Plan,
   RecommendationId,
   RecommendationOf,
   Severity,
+  SwapImpact,
 } from '../../shared/plan.js';
 
 /** Plain-language text for one recommendation. */
@@ -18,9 +19,6 @@ export interface Explanation {
 
 /** The text for one kind of recommendation, written from that id's own facts and impact. */
 type Template<Id extends RecommendationId> = (rec: RecommendationOf<Id>) => Explanation;
-
-/** A template that needs only a recommendation's impact, so it fits any id. */
-type ImpactTemplate = (rec: { readonly impact: Impact }) => Explanation;
 
 /** Everything the app says without AI, in one language. */
 export interface LanguagePack {
@@ -38,18 +36,6 @@ export function clock(hour: number): string {
   return `${String(hour).padStart(2, '0')}:00`;
 }
 
-type NumericImpact = Exclude<keyof Impact, 'level'>;
-
-/** A numeric impact value, or 0 when it does not apply. */
-export function impact(rec: { readonly impact: Impact }, field: NumericImpact): number {
-  return rec.impact[field] ?? 0;
-}
-
-/** The measured exposure cut in percent (0 when not measured). */
-export function pct(rec: { readonly impact: Impact }): number {
-  return impact(rec, 'exposureReductionPct');
-}
-
 /** The sentences each language supplies for the recommendation shapes every pack shares. */
 export interface ImpactPhrases {
   /** Indoor PM2.5 before and after, in µg/m³, and the percentage cut. */
@@ -60,6 +46,8 @@ export interface ImpactPhrases {
   readonly exposureDown: (percent: number) => string;
   /** Clause for a swap that raises in-transit exposure, by `percent`. */
   readonly exposureUp: (percent: number) => string;
+  /** A swap that saves no CO₂ but cuts the PM2.5 breathed on the way, and the CO₂ it adds. */
+  readonly saferCommute: (percent: number, extraKg: number) => string;
 }
 
 /** The sentences each language supplies for the one-line summary of the day. */
@@ -74,8 +62,8 @@ export interface DayPhrases {
 
 /** Template builders for the shapes every language shares, worded with that language's phrases. */
 export function templateKit(phrases: ImpactPhrases) {
-  const exposureClause = (rec: { readonly impact: Impact }): string => {
-    const change = pct(rec);
+  const exposureClause = (impact: SwapImpact): string => {
+    const change = impact.exposureReductionPct;
     if (change > 0) {
       return phrases.exposureDown(change);
     }
@@ -84,24 +72,32 @@ export function templateKit(phrases: ImpactPhrases) {
   return {
     /** An indoor hack: a lead sentence, then the modelled before and after. */
     indoor:
-      (title: string, lead: string, steps: readonly string[]): ImpactTemplate =>
-      (rec) => {
-        const before = impact(rec, 'indoorBeforeUgM3');
-        const after = impact(rec, 'indoorAfterUgM3');
-        return { title, why: `${lead} ${phrases.indoorChange(before, after, pct(rec))}`, steps };
+      (title: string, lead: string, steps: readonly string[]) =>
+      ({ impact }: { readonly impact: IndoorImpact }): Explanation => {
+        const { indoorBeforeUgM3: before, indoorAfterUgM3: after, exposureReductionPct } = impact;
+        return {
+          title,
+          why: `${lead} ${phrases.indoorChange(before, after, exposureReductionPct)}`,
+          steps,
+        };
       },
-    /** A commute swap: CO₂ saved, plus what happens to exposure on the way. */
+    /** A commute swap: CO₂ saved and the exposure on the way, or only the exposure it cuts. */
     swap:
-      (title: string, steps: readonly string[]): ImpactTemplate =>
-      (rec) => ({
+      (title: string, steps: readonly string[]) =>
+      ({ impact }: { readonly impact: SwapImpact }): Explanation => ({
         title,
-        why: phrases.co2Saved(impact(rec, 'co2SavedKgPerWeek'), exposureClause(rec)),
+        why:
+          impact.co2SavedKgPerWeek > 0
+            ? phrases.co2Saved(impact.co2SavedKgPerWeek, exposureClause(impact))
+            : phrases.saferCommute(impact.exposureReductionPct, -impact.co2SavedKgPerWeek),
         steps,
       }),
     /** Advice whose benefit is described, not measured. */
-    qualitative:
-      (title: string, why: string, steps: readonly string[]): ImpactTemplate =>
-      () => ({ title, why, steps }),
+    qualitative: (title: string, why: string, steps: readonly string[]) => (): Explanation => ({
+      title,
+      why,
+      steps,
+    }),
   };
 }
 

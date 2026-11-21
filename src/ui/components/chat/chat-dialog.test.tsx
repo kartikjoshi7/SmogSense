@@ -91,11 +91,11 @@ describe('ChatDialog', () => {
     expect(screen.getByRole('textbox', { name: 'Your question' })).toHaveValue('Can we go out?');
   });
 
-  it('says to wait when the AI rate limit is reached', async () => {
+  it('asks to try again later when the AI rate limit is reached', async () => {
     const { ask } = openChat({ failures: { chat: { status: 429, error: 'Too many' } } });
     await ask('Can we go out?');
 
-    expect(await screen.findByText(/Too many questions just now/)).toBeInTheDocument();
+    expect(await screen.findByText(/Too many questions for now/)).toBeInTheDocument();
   });
 
   it('labels an answer written without the AI as standard guidance', async () => {

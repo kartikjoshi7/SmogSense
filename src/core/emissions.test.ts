@@ -65,6 +65,15 @@ describe('commuteSwaps', () => {
     expect(commuteSwaps(metroRider, 125)).toEqual([]);
   });
 
+  it('keeps a swap that adds CO₂ when it cuts the commute dose enough: walking to the metro', () => {
+    const walker: Commute = { ...carCommute, mode: 'walk', oneWayKm: 2, alternatives: ['metro'] };
+    const [metro] = commuteSwaps(walker, 125);
+
+    expect(metro?.alternative).toBe('metro');
+    expect(metro?.co2SavedKgPerWeek).toBeLessThan(0);
+    expect(metro?.exposureReductionPct).toBeGreaterThanOrEqual(10);
+  });
+
   it('returns nothing for households that do not commute', () => {
     expect(commuteSwaps({ ...carCommute, mode: 'none' }, 125)).toEqual([]);
     expect(commuteSwaps({ ...carCommute, daysPerWeek: 0 }, 125)).toEqual([]);

@@ -1,13 +1,6 @@
 import type { OutdoorAdvice } from '../../shared/plan.js';
 import type { CookingFuel, MaskType } from '../../shared/profile.js';
-import {
-  clock,
-  impact,
-  pct,
-  templateKit,
-  type ImpactPhrases,
-  type LanguagePack,
-} from './format.js';
+import { clock, templateKit, type ImpactPhrases, type LanguagePack } from './format.js';
 
 const MASK: Readonly<Record<MaskType, string>> = {
   none: 'बिना मास्क',
@@ -37,6 +30,10 @@ const PHRASES: ImpactPhrases = {
   co2Saved: (kg, exposureClause) => `इससे हर हफ़्ते ${kg} kg CO₂ बचता है${exposureClause}।`,
   exposureDown: (percent) => ` और रास्ते में साँस से जाने वाला PM2.5 ${percent}% घटता है`,
   exposureUp: (percent) => `; रास्ते में प्रदूषण ${percent}% बढ़ता है, इसलिए N95 पहनें`,
+  saferCommute: (percent, extraKg) =>
+    extraKg > 0
+      ? `धुंध वाले दिनों में इससे रास्ते में साँस से जाने वाला PM2.5 ${percent}% घटता है, पर हर हफ़्ते लगभग ${extraKg} kg CO₂ ज़्यादा बनता है।`
+      : `धुंध वाले दिनों में इससे रास्ते में साँस से जाने वाला PM2.5 ${percent}% घटता है।`,
 };
 
 const { indoor, swap, qualitative } = templateKit(PHRASES);
@@ -45,7 +42,7 @@ const { indoor, swap, qualitative } = templateKit(PHRASES);
 export const recommendations: LanguagePack['recommendations'] = {
   exercise_window: (rec) => ({
     title: `${clock(rec.facts.usualHour)} की जगह ${clock(rec.facts.bestHour)} पर व्यायाम करें`,
-    why: `${clock(rec.facts.bestHour)} पर PM2.5 लगभग ${rec.facts.bestPm25} µg/m³ रहने का अनुमान है, जबकि ${clock(rec.facts.usualHour)} पर ${rec.facts.usualPm25}; इससे आप ${pct(rec)}% कम प्रदूषण साँस में लेते हैं (${impact(rec, 'doseBeforeUg')} → ${impact(rec, 'doseAfterUg')} µg)।`,
+    why: `${clock(rec.facts.bestHour)} पर PM2.5 लगभग ${rec.facts.bestPm25} µg/m³ रहने का अनुमान है, जबकि ${clock(rec.facts.usualHour)} पर ${rec.facts.usualPm25}; इससे आप ${rec.impact.exposureReductionPct}% कम प्रदूषण साँस में लेते हैं (${rec.impact.doseBeforeUg} → ${rec.impact.doseAfterUg} µg)।`,
     steps: [
       'साफ़ समय पर शुरू करें और उसी समय में पूरा करें।',
       'रफ़्तार हल्की रखें; खाँसी या साँस फूले तो रुक जाएँ।',
@@ -54,7 +51,7 @@ export const recommendations: LanguagePack['recommendations'] = {
   }),
   exercise_indoors: (rec) => ({
     title: 'आज घर के अंदर व्यायाम करें',
-    why: `${clock(rec.facts.usualHour)} पर बाहर की हवा लगभग ${rec.facts.outdoorPm25} µg/m³ है और आपके कमरे में लगभग ${rec.facts.indoorPm25}। अंदर व्यायाम करने से साँस में जाने वाला PM2.5 ${pct(rec)}% घटता है।`,
+    why: `${clock(rec.facts.usualHour)} पर बाहर की हवा लगभग ${rec.facts.outdoorPm25} µg/m³ है और आपके कमरे में लगभग ${rec.facts.indoorPm25}। अंदर व्यायाम करने से साँस में जाने वाला PM2.5 ${rec.impact.exposureReductionPct}% घटता है।`,
     steps: [
       'बाहर की जगह घर पर योग, स्ट्रेचिंग या सीढ़ियाँ चढ़ें।',
       'व्यायाम के समय खिड़कियाँ बंद रखें और प्यूरीफ़ायर चालू रखें।',
@@ -63,7 +60,7 @@ export const recommendations: LanguagePack['recommendations'] = {
   }),
   commute_protection: (rec) => ({
     title: 'आने-जाने में N95 पहनें',
-    why: `${MASK[rec.facts.currentMask]} की जगह ठीक से फ़िट N95 पहनने से रोज़ का PM2.5 ${impact(rec, 'doseBeforeUg')} से ${impact(rec, 'doseAfterUg')} µg रह जाता है (${pct(rec)}% कम)।`,
+    why: `${MASK[rec.facts.currentMask]} की जगह ठीक से फ़िट N95 पहनने से रोज़ का PM2.5 ${rec.impact.doseBeforeUg} से ${rec.impact.doseAfterUg} µg रह जाता है (${rec.impact.exposureReductionPct}% कम)।`,
     steps: [
       `दोनों सफ़र में पहनें, ${clock(rec.facts.departHour)} और ${clock(rec.facts.returnHour)} पर।`,
       'निकलने से पहले नाक की क्लिप दबाएँ और फ़िटिंग जाँचें।',
@@ -87,7 +84,7 @@ export const recommendations: LanguagePack['recommendations'] = {
   ),
   run_purifier: (rec) => ({
     title: rec.facts.purifiersOwned > 0 ? 'प्यूरीफ़ायर तेज़ चलाएँ' : 'एयर प्यूरीफ़ायर लगाएँ',
-    why: `आपके ${rec.facts.roomAreaM2} m² के कमरे में प्यूरीफ़ायर से PM2.5 लगभग ${impact(rec, 'indoorBeforeUgM3')} से ${impact(rec, 'indoorAfterUgM3')} µg/m³ हो जाता है (${pct(rec)}% कम)।`,
+    why: `आपके ${rec.facts.roomAreaM2} m² के कमरे में प्यूरीफ़ायर से PM2.5 लगभग ${rec.impact.indoorBeforeUgM3} से ${rec.impact.indoorAfterUgM3} µg/m³ हो जाता है (${rec.impact.exposureReductionPct}% कम)।`,
     steps: [
       'इसे उस कमरे में रखें जहाँ परिवार सोता है, दरवाज़ा बंद रखें।',
       'रात भर और सबसे ज़्यादा धुंध के समय तेज़ चलाएँ।',
@@ -160,7 +157,7 @@ export const recommendations: LanguagePack['recommendations'] = {
   }),
   n95_outdoors: (rec) => ({
     title: 'बाहर ठीक से फ़िट N95 पहनें',
-    why: `${MASK[rec.facts.currentMask]} के साथ लगभग ${rec.facts.inhaledShareNowPct}% बारीक कण अंदर जाते हैं; ठीक से फ़िट N95 से लगभग ${rec.facts.inhaledShareN95Pct}%, यानी ${pct(rec)}% कम।`,
+    why: `${MASK[rec.facts.currentMask]} के साथ लगभग ${rec.facts.inhaledShareNowPct}% बारीक कण अंदर जाते हैं; ठीक से फ़िट N95 से लगभग ${rec.facts.inhaledShareN95Pct}%, यानी ${rec.impact.exposureReductionPct}% कम।`,
     steps: [
       'चेहरे पर अच्छी तरह फ़िट होने वाला प्रमाणित N95 या FFP2 चुनें।',
       'बच्चों के लिए बच्चों के साइज़ का मास्क लें।',

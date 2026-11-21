@@ -27,7 +27,7 @@ describe('rateLimit', () => {
     expect(blocked.status).toBe(429);
     expect(blocked.headers.get('Retry-After')).toBe('50');
     expect(await blocked.json()).toEqual({
-      error: 'Too many requests. Please wait a moment and try again.',
+      error: 'Too many requests. Please try again later.',
     });
   });
 

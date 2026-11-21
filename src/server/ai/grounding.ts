@@ -70,7 +70,8 @@ function extractQuantities(text: string): Quantity[] {
 function addNumbers(target: Set<number>, values: readonly unknown[]): void {
   for (const value of values) {
     if (typeof value === 'number') {
-      target.add(value);
+      // Text states sizes ("rises by 30%", "0.4 kg more"), so a negative fact allows its size.
+      target.add(Math.abs(value));
     }
   }
 }
@@ -87,7 +88,10 @@ export function allowedNumbers(plan: Plan): ReadonlySet<number> {
     plan.forecast.map((point) => point.pm25),
   );
   for (const rec of plan.recommendations) {
-    addNumbers(allowed, [...Object.values(rec.impact), ...Object.values<unknown>(rec.facts)]);
+    addNumbers(allowed, [
+      ...Object.values<unknown>(rec.impact),
+      ...Object.values<unknown>(rec.facts),
+    ]);
   }
   return allowed;
 }

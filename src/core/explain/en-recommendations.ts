@@ -1,13 +1,6 @@
 import type { OutdoorAdvice } from '../../shared/plan.js';
 import type { CookingFuel, MaskType } from '../../shared/profile.js';
-import {
-  clock,
-  impact,
-  pct,
-  templateKit,
-  type ImpactPhrases,
-  type LanguagePack,
-} from './format.js';
+import { clock, templateKit, type ImpactPhrases, type LanguagePack } from './format.js';
 
 const MASK: Readonly<Record<MaskType, string>> = {
   none: 'no mask',
@@ -37,6 +30,10 @@ const PHRASES: ImpactPhrases = {
   co2Saved: (kg, exposureClause) => `This saves ${kg} kg of CO₂ a week${exposureClause}.`,
   exposureDown: (percent) => ` and cuts the PM2.5 you breathe on the way by ${percent}%`,
   exposureUp: (percent) => `; in-transit exposure rises by ${percent}%, so wear an N95`,
+  saferCommute: (percent, extraKg) =>
+    extraKg > 0
+      ? `On smoggy days this cuts the PM2.5 you breathe on the way by ${percent}%, for about ${extraKg} kg more CO₂ a week.`
+      : `On smoggy days this cuts the PM2.5 you breathe on the way by ${percent}%.`,
 };
 
 const { indoor, swap, qualitative } = templateKit(PHRASES);
@@ -45,7 +42,7 @@ const { indoor, swap, qualitative } = templateKit(PHRASES);
 export const recommendations: LanguagePack['recommendations'] = {
   exercise_window: (rec) => ({
     title: `Exercise at ${clock(rec.facts.bestHour)} instead of ${clock(rec.facts.usualHour)}`,
-    why: `PM2.5 is forecast at ${rec.facts.bestPm25} µg/m³ at ${clock(rec.facts.bestHour)} versus ${rec.facts.usualPm25} at ${clock(rec.facts.usualHour)}, so you breathe in ${pct(rec)}% less (${impact(rec, 'doseBeforeUg')} → ${impact(rec, 'doseAfterUg')} µg).`,
+    why: `PM2.5 is forecast at ${rec.facts.bestPm25} µg/m³ at ${clock(rec.facts.bestHour)} versus ${rec.facts.usualPm25} at ${clock(rec.facts.usualHour)}, so you breathe in ${rec.impact.exposureReductionPct}% less (${rec.impact.doseBeforeUg} → ${rec.impact.doseAfterUg} µg).`,
     steps: [
       'Start at the cleaner time and finish inside the clean window.',
       'Keep the pace easy and stop if you cough or wheeze.',
@@ -54,7 +51,7 @@ export const recommendations: LanguagePack['recommendations'] = {
   }),
   exercise_indoors: (rec) => ({
     title: 'Exercise indoors today',
-    why: `Outdoor air at ${clock(rec.facts.usualHour)} is about ${rec.facts.outdoorPm25} µg/m³ and your room about ${rec.facts.indoorPm25}. Exercising inside cuts the PM2.5 you breathe by ${pct(rec)}%.`,
+    why: `Outdoor air at ${clock(rec.facts.usualHour)} is about ${rec.facts.outdoorPm25} µg/m³ and your room about ${rec.facts.indoorPm25}. Exercising inside cuts the PM2.5 you breathe by ${rec.impact.exposureReductionPct}%.`,
     steps: [
       'Swap the outdoor session for yoga, stretching or stair climbing at home.',
       'Keep windows shut and the purifier on while you exercise.',
@@ -63,7 +60,7 @@ export const recommendations: LanguagePack['recommendations'] = {
   }),
   commute_protection: (rec) => ({
     title: 'Wear an N95 on the commute',
-    why: `A fitted N95 instead of ${MASK[rec.facts.currentMask]} cuts commute PM2.5 from ${impact(rec, 'doseBeforeUg')} to ${impact(rec, 'doseAfterUg')} µg a day (${pct(rec)}% less).`,
+    why: `A fitted N95 instead of ${MASK[rec.facts.currentMask]} cuts commute PM2.5 from ${rec.impact.doseBeforeUg} to ${rec.impact.doseAfterUg} µg a day (${rec.impact.exposureReductionPct}% less).`,
     steps: [
       `Wear it on both trips, at ${clock(rec.facts.departHour)} and ${clock(rec.facts.returnHour)}.`,
       'Pinch the nose clip and check the seal before you set off.',
@@ -93,7 +90,7 @@ export const recommendations: LanguagePack['recommendations'] = {
   ),
   run_purifier: (rec) => ({
     title: rec.facts.purifiersOwned > 0 ? 'Run your purifier on high' : 'Use an air purifier',
-    why: `In your ${rec.facts.roomAreaM2} m² room, PM2.5 drops from about ${impact(rec, 'indoorBeforeUgM3')} to ${impact(rec, 'indoorAfterUgM3')} µg/m³ (${pct(rec)}% less) with a purifier running.`,
+    why: `In your ${rec.facts.roomAreaM2} m² room, PM2.5 drops from about ${rec.impact.indoorBeforeUgM3} to ${rec.impact.indoorAfterUgM3} µg/m³ (${rec.impact.exposureReductionPct}% less) with a purifier running.`,
     steps: [
       'Keep it in the room where the family sleeps, with the door closed.',
       'Run it on high overnight and during the smoggiest hours.',
@@ -178,7 +175,7 @@ export const recommendations: LanguagePack['recommendations'] = {
   }),
   n95_outdoors: (rec) => ({
     title: 'Wear a fitted N95 outdoors',
-    why: `With ${MASK[rec.facts.currentMask]} about ${rec.facts.inhaledShareNowPct}% of fine particles get through; a well-fitted N95 lets through about ${rec.facts.inhaledShareN95Pct}%, ${pct(rec)}% less.`,
+    why: `With ${MASK[rec.facts.currentMask]} about ${rec.facts.inhaledShareNowPct}% of fine particles get through; a well-fitted N95 lets through about ${rec.facts.inhaledShareN95Pct}%, ${rec.impact.exposureReductionPct}% less.`,
     steps: [
       'Choose a certified N95 or FFP2 that fits the face closely.',
       'Use child-size masks for children.',

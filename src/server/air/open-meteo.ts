@@ -110,6 +110,7 @@ function normalizeAirData(
   const hourly = mergeHourly(aq, forecast);
   const nowIndex = hourly.findIndex((h) => h.time === localHourStamp(now, aq.utc_offset_seconds));
   if (nowIndex === -1) {
+    logger.warn('Air data unusable', { reason: 'stale' });
     return fail('stale');
   }
   const daylight = forecast.daily.sunrise.flatMap((sunrise, i) => {
@@ -123,7 +124,11 @@ function normalizeAirData(
     daylight,
     nowIndex,
   });
-  return parsed.success ? ok(parsed.data) : fail('invalid_response');
+  if (!parsed.success) {
+    logger.warn('Air data unusable', { reason: 'invalid_response' });
+    return fail('invalid_response');
+  }
+  return ok(parsed.data);
 }
 
 /**

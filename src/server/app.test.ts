@@ -204,10 +204,10 @@ describe('POST /api/plan', () => {
 });
 
 describe('AI routes', () => {
-  function post(path: string, body: unknown, target = app()) {
+  function post(path: string, body: unknown, target = app(), ip = '1.1.1.1') {
     return target.request(path, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': ip },
       body: JSON.stringify(body),
     });
   }
@@ -273,5 +273,27 @@ describe('AI routes', () => {
 
     expect(statuses.at(-1)).toBe(429);
     expect(statuses.filter((s) => s === 200)).toHaveLength(10);
+  });
+
+  it('gives each client a daily AI allowance of 30, so no one client spends the budget', async () => {
+    let clock = 0;
+    const limited = app({ now: () => clock });
+    const explain = (ip: string) =>
+      post('/api/explain', { ...validPlanRequest, lang: 'en' }, limited, ip);
+    const statuses: number[] = [];
+    for (let i = 0; i < 30; i++) {
+      // Spread out so the per-minute limit never applies.
+      clock += 10 * 60_000;
+      statuses.push((await explain('1.1.1.1')).status);
+    }
+    clock += 10 * 60_000;
+    const blocked = await explain('1.1.1.1');
+
+    expect(statuses.every((s) => s === 200)).toBe(true);
+    expect(blocked.status).toBe(429);
+    expect(Number(blocked.headers.get('Retry-After'))).toBeGreaterThan(60);
+    expect((await explain('2.2.2.2')).status).toBe(200);
+    clock += 24 * 60 * 60_000;
+    expect((await explain('1.1.1.1')).status).toBe(200);
   });
 });

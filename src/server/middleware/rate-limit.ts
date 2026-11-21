@@ -38,7 +38,7 @@ export function rateLimit(options: RateLimitOptions) {
       const oldest = recent[0] ?? now;
       c.header('Retry-After', String(Math.ceil((oldest + options.windowMs - now) / SECOND_MS)));
       return c.json(
-        { error: 'Too many requests. Please wait a moment and try again.' },
+        { error: 'Too many requests. Please try again later.' },
         API_STATUS.tooManyRequests,
       );
     }

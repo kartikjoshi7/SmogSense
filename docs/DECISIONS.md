@@ -10,7 +10,7 @@ quietly undone. The other docs describe how things work; this one records why.
 | [2](#2-every-number-the-ai-writes-is-checked)         | Every number in an AI reply must match a number in the plan     | Some correct replies are replaced by standard guidance      |
 | [3](#3-one-hono-app-in-one-vercel-function)           | One Hono app, served by one Vercel function                     | State in memory is per instance; cold starts                |
 | [4](#4-one-set-of-zod-schemas-on-both-sides)          | One set of Zod schemas, used by the server and the browser      | Zod is about a quarter of the main bundle                   |
-| [5](#5-facts-are-typed-per-recommendation)            | Each recommendation's facts are typed by its id                 | A new recommendation touches the schema and both languages  |
+| [5](#5-facts-are-typed-per-recommendation)            | Each recommendation's facts and impact are typed by its id      | A new recommendation touches the schema and both languages  |
 | [6](#6-one-exception-to-a-pure-engine-sharedlimitsts) | The engine may read one dependency-free module from `shared`    | One documented exception in the layer rule                  |
 | [7](#7-caches-and-limits-in-memory)                   | Caches, rate limits and the AI budget live in memory            | Limits are per instance, not global                         |
 | [8](#8-the-time-zone-picks-the-aqi-scale)             | The location's time zone picks India's NAQI or the US AQI       | Near a border, the grid point's time zone decides           |
@@ -104,8 +104,11 @@ misspelt key silently printed 0 or an empty string, and only a test of that exac
 notice.
 
 **Decision.** The facts are a Zod discriminated union on the recommendation id
-(`src/shared/plan.ts`), and each language's templates are typed per id, so reading a fact the
-recommendation does not carry fails the type check. This replaced the loose record in `0a3281c`.
+(`src/shared/plan.ts`), and each id also fixes the shape of its impact: a dose, an indoor
+change, a commute swap, a share of particles, or a qualitative level. Each language's templates
+are typed per id, so reading a fact or figure the recommendation does not carry fails the type
+check. The facts stopped being a loose record in `0a3281c`; the impact, which a later review
+found still read through a default of 0, followed.
 
 **Turned down.** Keeping the lookup helpers with defaults (the earlier design): they hid mistakes
 as zeros and empty text. Plain TypeScript interfaces without a schema: types and validation would drift.
@@ -141,11 +144,13 @@ argument: noise in every signature.
 with no database.
 
 **Decision.** One bounded in-memory cache (`TtlCache`) holds air data, place searches and AI
-answers; the rate limiter and the daily AI budget are kept in memory too.
+answers; the rate limits (per minute, plus a daily AI allowance per client) and the daily AI
+budget are kept in memory too.
 
 **Turned down.** A hosted key-value store: another service, another secret and a network round
-trip on every request, for a demo-sized deployment. No limits at all: one client could spend the
-day's AI budget.
+trip on every request, for a demo-sized deployment. A per-minute limit alone: within it, one
+client could spend the whole day's AI budget in about twenty minutes, which the daily allowance
+prevents.
 
 **Cost.** The limits hold per instance, not across the deployment; what that allows, and the
 upgrade path, are in [Security › Rate limits](SECURITY.md#rate-limits-caches-and-budgets).

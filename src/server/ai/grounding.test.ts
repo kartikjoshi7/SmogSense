@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { makeAir } from '../../core/fixtures/air.js';
 import { SHARMA_FAMILY } from '../../core/fixtures/profiles.js';
 import { buildPlan } from '../../core/plan.js';
+import type { Profile } from '../../shared/profile.js';
 import { allowedNumbers, isGrounded } from './grounding.js';
 
 function severePlan() {
@@ -111,6 +112,24 @@ describe('isGrounded', () => {
   it('rejects numbers the plan does not support', () => {
     expect(isGrounded('PM2.5 will fall by 73% tomorrow.', allowed)).toBe(false);
     expect(isGrounded('The index is 999.', allowed)).toBe(false);
+  });
+
+  it('accepts the size of a negative fact, as text writes it', () => {
+    const walker: Profile = {
+      ...SHARMA_FAMILY,
+      commute: { ...SHARMA_FAMILY.commute, mode: 'walk', oneWayKm: 2, alternatives: ['metro'] },
+    };
+    const result = buildPlan(walker, makeAir({ scale: 2.4 }));
+    if (!result.ok) {
+      throw new Error(result.error);
+    }
+    const metro = result.value.recommendations.find((rec) => rec.id === 'switch_to_metro');
+    const co2 = metro && 'co2SavedKgPerWeek' in metro.impact ? metro.impact.co2SavedKgPerWeek : 0;
+
+    expect(co2).toBeLessThan(0);
+    expect(
+      isGrounded(`It adds ${String(-co2)} kg of CO₂ a week.`, allowedNumbers(result.value)),
+    ).toBe(true);
   });
 
   it('accepts text with no numbers at all', () => {

@@ -15,12 +15,12 @@ which also runs the other gates in [Code quality](CODE_QUALITY.md#gates-that-fai
 
 | Layer                                  | Files  | Tests   | Environment                        |
 | -------------------------------------- | ------ | ------- | ---------------------------------- |
-| `src/core` (engine)                    | 12     | 209     | Node                               |
+| `src/core` (engine)                    | 13     | 214     | Node                               |
 | `src/shared` (schemas)                 | 3      | 16      | Node                               |
-| `src/server` (API, Open-Meteo, Gemini) | 14     | 117     | Node                               |
+| `src/server` (API, Open-Meteo, Gemini) | 14     | 119     | Node                               |
 | `api` (Vercel entry)                   | 1      | 3       | Node                               |
-| `src/ui` (React)                       | 15     | 113     | jsdom + Testing Library + axe-core |
-| **Vitest total**                       | **45** | **458** |                                    |
+| `src/ui` (React)                       | 15     | 114     | jsdom + Testing Library + axe-core |
+| **Vitest total**                       | **46** | **466** |                                    |
 | `e2e` (Playwright)                     | 4      | 19      | Chromium, production build         |
 
 **Engine.** Every AQI breakpoint edge on both scales (through `computeIndex`, so float error in
@@ -28,12 +28,13 @@ the 24-hour mean is covered too), the most-sensitive-member rule, severity
 modes, window search with missing hours and no daylight, the indoor model, emissions, ranking,
 and golden scenarios built on a Delhi forecast shaped like real data: the Sharma family on Severe,
 Very Poor and Moderate days, a healthy couple, a homebound senior, a London household on the US
-AQI, and gaps in the data (too few hours, no boundary-layer height). `constants.test.ts` also fails
+AQI, a walker offered the metro as protection on a smoggy day (and not on a clean one), and
+gaps in the data (too few hours, no boundary-layer height). `constants.test.ts` also fails
 if the assumptions table in `docs/ARCHITECTURE.md` no longer matches `constants.ts`.
 
 **Server.** Routes through `app.request()`: validation errors, oversized and malformed bodies,
 CORS, security headers, CDN cache headers, 404s, a safe 500, upstream 502 and sparse-data 503,
-and both rate limits. The Open-Meteo client runs against recorded responses
+both rate limits and the daily AI allowance per client. The Open-Meteo client runs against recorded responses
 (`src/server/air/fixtures`), and the fetch wrapper is tested for retries on 5xx and network errors,
 no retry on 4xx or timeouts, and malformed bodies. The Gemini client is tested with an injected SDK
 call: a valid reply, the request settings (schema, system rules, thinking level), the 10-minute
@@ -81,10 +82,10 @@ and 90% for the whole project. `npm run coverage`, and with it `npm run check` a
 below them. From the last run:
 
 ```
-Statements   : 99.15% ( 1524/1537 )
-Branches     : 96.64% ( 720/745 )
-Functions    : 98.79% ( 573/580 )
-Lines        : 99.31% ( 1451/1461 )
+Statements   : 99.16% ( 1537/1550 )
+Branches     : 96.66% ( 724/749 )
+Functions    : 98.79% ( 576/583 )
+Lines        : 99.32% ( 1463/1473 )
 ```
 
 `src/core` is at 100% on all four. Test helpers, fixtures and `src/ui/main.tsx` (the file that

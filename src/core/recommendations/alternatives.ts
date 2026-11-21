@@ -1,6 +1,6 @@
-import type { Level, RecommendationId } from '../../shared/plan.js';
+import type { Level, RecommendationCategory, RecommendationId } from '../../shared/plan.js';
 import type { CommuteAlternative } from '../../shared/profile.js';
-import { ACTIVE_ALTERNATIVES, SMOKY_FUELS } from '../constants.js';
+import { ACTION_BAND, ACTIVE_ALTERNATIVES, SMOKY_FUELS } from '../constants.js';
 import { commuteSwaps, type CommuteSwap } from '../emissions.js';
 import { outdoorExertionUnsafe } from '../risk.js';
 import { candidate, type Candidate, type PlanContext } from './context.js';
@@ -23,11 +23,26 @@ const SWAP_EFFORT: Readonly<Record<CommuteAlternative, Level>> = {
   wfh: 'low',
 };
 
-function swapCandidate(ctx: PlanContext, swap: CommuteSwap): Candidate {
+/**
+ * A swap that saves CO₂ is a sustainable alternative. One that only cuts the commute dose (walking
+ * to the metro, say) is protection, offered only on days smoggy enough to protect the commute.
+ */
+function swapCategory(ctx: PlanContext, swap: CommuteSwap): RecommendationCategory | null {
+  if (swap.co2SavedKgPerWeek > 0) {
+    return 'alternative';
+  }
+  return ctx.index.band >= ACTION_BAND.commuteMask ? 'protection' : null;
+}
+
+function swapCandidate(
+  ctx: PlanContext,
+  swap: CommuteSwap,
+  category: RecommendationCategory,
+): Candidate {
   const { mode, oneWayKm, daysPerWeek } = ctx.profile.commute;
   return candidate({
     id: SWAP_ID[swap.alternative],
-    category: 'alternative',
+    category,
     effort: SWAP_EFFORT[swap.alternative],
     memberIds: [],
     impact: {
@@ -57,13 +72,17 @@ function cleanCookingFuel(ctx: PlanContext): Candidate[] {
 }
 
 /**
- * Sustainable alternatives: commute swaps the household can make and cleaner cooking fuel.
- * Walking and cycling are left out on days when exertion outdoors is unsafe.
+ * Sustainable alternatives: commute swaps the household can make and cleaner cooking fuel, plus,
+ * on smoggy days, swaps that only cut the commute dose. Walking and cycling are left out on days
+ * when exertion outdoors is unsafe.
  */
 export function alternativeCandidates(ctx: PlanContext): Candidate[] {
   const unsafe = outdoorExertionUnsafe(ctx.advice, ctx.severity);
   const swaps = commuteSwaps(ctx.profile.commute, ctx.ambientPm25)
     .filter((s) => !(unsafe && ACTIVE_ALTERNATIVES.includes(s.alternative)))
-    .map((s) => swapCandidate(ctx, s));
+    .flatMap((s) => {
+      const category = swapCategory(ctx, s);
+      return category === null ? [] : [swapCandidate(ctx, s, category)];
+    });
   return [...swaps, ...cleanCookingFuel(ctx)];
 }

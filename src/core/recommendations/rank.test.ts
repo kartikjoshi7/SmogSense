@@ -10,7 +10,7 @@ function rec(overrides: Partial<Unranked>): Unranked {
     category: 'indoor',
     effort: 'low',
     memberIds: [],
-    impact: {},
+    impact: { exposureReductionPct: 0 },
     facts: {},
     ...overrides,
   };
@@ -26,7 +26,10 @@ function order(recs: readonly Unranked[], ctx: RankingContext): string[] {
 describe('ranking weights', () => {
   it('weights measured exposure cuts by sensitivity, against unweighted CO₂ savings', () => {
     const seal = rec({ id: 'seal_gaps', impact: { exposureReductionPct: 20 } });
-    const metro = rec({ id: 'switch_to_metro', impact: { co2SavedKgPerWeek: 50 } });
+    const metro = rec({
+      id: 'switch_to_metro',
+      impact: { co2SavedKgPerWeek: 50, exposureReductionPct: 0 },
+    });
 
     expect(order([seal, metro], smoggy)).toEqual(['switch_to_metro', 'seal_gaps']);
     expect(order([seal, metro], { ...smoggy, sensitivity: 'high' })).toEqual([
@@ -38,7 +41,7 @@ describe('ranking weights', () => {
   it('values described benefits by their level and counts exposure increases as zero', () => {
     const ranked = order(
       [
-        rec({ id: 'wet_mopping', impact: {} }),
+        rec({ id: 'wet_mopping', impact: { exposureReductionPct: 0 } }),
         rec({ id: 'switch_to_walk', impact: { exposureReductionPct: -20 } }),
         rec({ id: 'ncr_grap_check', impact: { level: 'high' } }),
       ],
@@ -51,8 +54,14 @@ describe('ranking weights', () => {
   it('adds CO₂ savings and subtracts effort', () => {
     const lowEffort = rec({ id: 'wet_mopping', impact: { level: 'low' } });
     const highEffort = rec({ id: 'carpool', effort: 'high', impact: { level: 'low' } });
-    const moreCo2 = rec({ id: 'switch_to_bus', impact: { co2SavedKgPerWeek: 10 } });
-    const lessCo2 = rec({ id: 'carpool', impact: { co2SavedKgPerWeek: 5 } });
+    const moreCo2 = rec({
+      id: 'switch_to_bus',
+      impact: { co2SavedKgPerWeek: 10, exposureReductionPct: 0 },
+    });
+    const lessCo2 = rec({
+      id: 'carpool',
+      impact: { co2SavedKgPerWeek: 5, exposureReductionPct: 0 },
+    });
 
     expect(order([highEffort, lowEffort], smoggy)).toEqual(['wet_mopping', 'carpool']);
     expect(order([lessCo2, moreCo2], smoggy)).toEqual(['switch_to_bus', 'carpool']);

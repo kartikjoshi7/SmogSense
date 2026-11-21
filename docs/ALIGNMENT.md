@@ -1,9 +1,7 @@
 # Problem statement alignment
 
-**The brief:** _"Create a GenAI-powered assistant that helps families and communities navigate
-severe winter smog and urban air pollution. The application should suggest low-emission daily
-routines, indoor air quality hacks, and sustainable alternatives tailored to their location and
-lifestyle, while clearly explaining the direct impact of their choices."_
+The brief is quoted in the README's [chosen vertical](../README.md#chosen-vertical); this page
+shows who SmogSense serves and where each part of the brief is met.
 
 ## Who it is for
 
@@ -24,7 +22,7 @@ lifestyle, while clearly explaining the direct impact of their choices."_
 | Urban air pollution           | This hour's PM2.5, PM10, NO₂, O₃, CO and SO₂ and a 24-hour PM2.5 forecast for the chosen place                                                                                                                      | `server/air/open-meteo.ts`, `core/plan.ts`             | `open-meteo.test.ts`, `plan.test.ts`          |
 | Low-emission daily routines   | Cleanest exercise window, commute protection, a brief airing time and a timeline for the day                                                                                                                        | `recommendations/routine.ts`, `core/windows.ts`        | `windows.test.ts`, `plan.test.ts`             |
 | Indoor air quality hacks      | Purifier, sealing gaps, closed windows, cooking ventilation, no incense or smoking, with indoor µg/m³ before and after                                                                                              | `core/indoor.ts`, `recommendations/indoor-air.ts`      | `indoor.test.ts`                              |
-| Sustainable alternatives      | Metro, bus, carpool, cycling, walking, working from home, cleaner cooking fuel, with kg CO₂ saved per week                                                                                                          | `core/emissions.ts`, `recommendations/alternatives.ts` | `emissions.test.ts`                           |
+| Sustainable alternatives      | Metro, bus, carpool, cycling, walking, working from home, cleaner cooking fuel, with kg CO₂ saved per week; on smoggy days a walker or cyclist is offered the metro or bus as protection, with the CO₂ it adds      | `core/emissions.ts`, `recommendations/alternatives.ts` | `emissions.test.ts`                           |
 | Tailored to location          | GPS or city search; NAQI in India, US AQI elsewhere; the NCR-only GRAP check                                                                                                                                        | `core/aqi.ts`, `server/air/geocode.ts`                 | `aqi.test.ts`, `geocode.test.ts`              |
 | Tailored to lifestyle         | Commute mode, distance and days, exercise habit, home, cooking fuel, incense, smoking, mask                                                                                                                         | `shared/profile.ts`                                    | `profile.test.ts`                             |
 | Clearly explaining the impact | Every measurable card shows the engine's numbers and the rest a benefit level; AI text with a number the grounding check cannot match to the plan is replaced by standard guidance, and every text says which it is | `server/ai/grounding.ts`, `core/explain/*`             | `grounding.test.ts`, `e2e/flow.spec.ts`       |

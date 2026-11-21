@@ -18,7 +18,7 @@ implements it and the test that checks it.
 | Request bodies and queries | Zod schemas from `src/shared`; invalid input gets a 400 listing the problem fields, never a stack trace | `middleware/validate.ts`, `shared/api.ts` | `app.test.ts`, `profile.test.ts`           |
 | Body size                  | 16 KB limit, 413 beyond it                                                                              | `app.ts` (`bodyLimit`)                    | `app.test.ts`                              |
 | Chat                       | Question 1–500 characters, at most 6 earlier turns of up to 1,200 characters                            | `shared/limits.ts`, `shared/api.ts`       | `api.test.ts`, `app.test.ts`               |
-| City search                | 2–60 letters, spaces and `,.'-` only                                                                    | `shared/api.ts`                           | `app.test.ts`                              |
+| City search                | 2–60 characters: letters and digits in any script, spaces and `,.'()-` only                             | `shared/api.ts`                           | `app.test.ts`                              |
 | Open-Meteo responses       | Parsed with Zod before use; anything unexpected is a typed failure                                      | `air/open-meteo.ts`, `http/fetch-json.ts` | `open-meteo.test.ts`, `fetch-json.test.ts` |
 | Gemini replies             | Must match the JSON schema sent with the request, checked again with Zod                                | `ai/gemini-client.ts`                     | `gemini-client.test.ts`                    |
 | Saved state                | `localStorage` is parsed with Zod; anything invalid is ignored                                          | `ui/state/storage.ts`                     | `state.test.ts`                            |
@@ -28,6 +28,9 @@ implements it and the test that checks it.
 - `GET /api/geocode` and `POST /api/plan` share an allowance of 60 requests a minute per client
   IP; the three AI routes share one of 10. Over the limit the API answers 429 with `Retry-After`
   (`middleware/rate-limit.ts`, tested in `rate-limit.test.ts` and `app.test.ts`).
+- Each client may also make 30 AI requests a day. A request can try both models, so one client
+  can spend at most 60 of the default daily budget of 200, and cannot leave everyone else with
+  standard guidance (`app.test.ts`).
 - The client IP is the first `x-forwarded-for` entry, which Vercel's proxy sets.
 - **The rate limits, the caches and the Gemini daily budget are kept in memory, per serverless
   instance.** Two instances count separately, and a cold start begins empty. This bounds abuse on
@@ -41,8 +44,9 @@ implements it and the test that checks it.
 - The API sets secure headers with Hono's `secureHeaders` (`app.ts`, checked in `app.test.ts`).
 - Static pages get a strict Content-Security-Policy from `vercel.json`: `script-src 'self'`,
   `style-src 'self'`, `connect-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`, plus HSTS,
-  `X-Content-Type-Options: nosniff`, a referrer policy and a permissions policy that allows only
-  geolocation. The app has no inline scripts or styles. `e2e/flow.spec.ts` checks the header on the
+  `X-Content-Type-Options: nosniff`, a referrer policy and a permissions policy that allows
+  geolocation for the app's own origin and turns off the camera, microphone, payments, USB and
+  screen capture. The app has no inline scripts or styles. `e2e/flow.spec.ts` checks the header on the
   production build, and every end-to-end test fails on any console error, which includes CSP
   violations.
 - CORS allows only `ALLOWED_ORIGIN`, plus the Vite dev server when `NODE_ENV` is `development`.

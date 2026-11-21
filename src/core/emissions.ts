@@ -6,6 +6,7 @@ import {
   DECIMALS,
   MAX_CYCLE_KM,
   MAX_WALK_KM,
+  MIN_WORTHWHILE_REDUCTION_PCT,
   TRIPS_PER_COMMUTE_DAY,
 } from './constants.js';
 import { inhaledDoseUg, reduction } from './exposure.js';
@@ -104,7 +105,8 @@ function evaluateSwap(
 
 /**
  * Commute changes the household said it could make, filtered to those that apply (cycling
- * up to 8 km, walking up to 2 km, carpooling only for cars) and that help emissions or exposure.
+ * up to 8 km, walking up to 2 km, carpooling only for cars) and that either save CO₂ or cut the
+ * commute dose by at least `MIN_WORTHWHILE_REDUCTION_PCT`.
  */
 export function commuteSwaps(commute: Commute, ambientPm25: number): CommuteSwap[] {
   if (!commutes(commute)) {
@@ -113,5 +115,8 @@ export function commuteSwaps(commute: Commute, ambientPm25: number): CommuteSwap
   return commute.alternatives
     .map((alternative) => evaluateSwap(commute, alternative, ambientPm25))
     .filter((swap): swap is CommuteSwap => swap !== null)
-    .filter((swap) => swap.co2SavedKgPerWeek > 0);
+    .filter(
+      (swap) =>
+        swap.co2SavedKgPerWeek > 0 || swap.exposureReductionPct >= MIN_WORTHWHILE_REDUCTION_PCT,
+    );
 }

@@ -44,10 +44,10 @@ describe('WhatIf', () => {
     const { view, moveTo } = show(plan);
     moveTo(Number(advice?.facts.bestHour));
 
-    const { doseAfterUg, doseBeforeUg } = advice?.impact ?? {};
+    const dose = advice?.impact;
     expect(
       screen.getByText(
-        `about ${String(doseAfterUg)} µg inhaled (usual time: ${String(doseBeforeUg)} µg)`,
+        `about ${String(dose?.doseAfterUg)} µg inhaled (usual time: ${String(dose?.doseBeforeUg)} µg)`,
         {
           exact: false,
         },

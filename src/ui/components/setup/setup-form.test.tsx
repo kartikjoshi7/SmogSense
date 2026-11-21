@@ -108,6 +108,21 @@ describe('setup form', () => {
     expect(screen.getByRole('combobox', { name: 'Who exercises' })).toHaveValue('');
   });
 
+  it("groups each member's fields under the member's name", async () => {
+    const user = setup();
+    await user.click(screen.getByRole('button', { name: 'Add a family member' }));
+    const second = screen.getByRole('group', { name: 'Member 2' });
+    await user.type(
+      within(second).getByRole('textbox', { name: 'Name (stays on this device)' }),
+      'Meera',
+    );
+    const meera = screen.getByRole('group', { name: 'Meera' });
+
+    expect(within(meera).getByRole('combobox', { name: 'Age group' })).toBeInTheDocument();
+    expect(within(meera).getByRole('group', { name: 'Health conditions' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Member 1' })).not.toContainElement(meera);
+  });
+
   it('marks conditions and alternatives with labelled checkboxes', async () => {
     const user = setup();
     const conditions = screen.getByRole('group', { name: 'Health conditions' });

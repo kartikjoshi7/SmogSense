@@ -7,18 +7,18 @@ import type { ShownRecommendation } from './explained.js';
 
 /** Short badges for every measurable effect, or the qualitative level when nothing is measured. */
 function impactBadges(impact: Impact, t: Messages['plan']): string[] {
+  if ('level' in impact) {
+    return [t.level[impact.level]];
+  }
   const badges: string[] = [];
   const pct = impact.exposureReductionPct;
-  if (impact.indoorBeforeUgM3 !== undefined && impact.indoorAfterUgM3 !== undefined) {
+  if ('indoorBeforeUgM3' in impact) {
     badges.push(t.indoor(impact.indoorBeforeUgM3, impact.indoorAfterUgM3));
-  } else if (pct !== undefined && pct !== 0) {
+  } else if (pct !== 0) {
     badges.push(pct > 0 ? t.exposure(pct) : t.exposureUp(-pct));
   }
-  if (impact.co2SavedKgPerWeek !== undefined && impact.co2SavedKgPerWeek > 0) {
+  if ('co2SavedKgPerWeek' in impact && impact.co2SavedKgPerWeek > 0) {
     badges.push(t.co2(impact.co2SavedKgPerWeek));
-  }
-  if (badges.length === 0 && impact.level !== undefined) {
-    badges.push(t.level[impact.level]);
   }
   return badges;
 }
@@ -55,7 +55,8 @@ export function RecommendationCard({
       <p>{item.why}</p>
       <h4 className="font-semibold">{t.steps}</h4>
       <ol className="ml-5 list-decimal">
-        {item.steps.map((step) => (
+        {/* A step written twice is shown once, so each text is a unique key. */}
+        {[...new Set(item.steps)].map((step) => (
           <li key={step}>{step}</li>
         ))}
       </ol>

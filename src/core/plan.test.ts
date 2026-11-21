@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { AirData } from '../shared/air.js';
-import { planSchema, type Plan, type RecommendationId } from '../shared/plan.js';
-import type { Profile } from '../shared/profile.js';
 import { makeAir } from './fixtures/air.js';
 import { HEALTHY_COUPLE, HOMEBOUND_SENIOR, SHARMA_FAMILY } from './fixtures/profiles.js';
-import { findRecommendation as find } from './fixtures/recommendations.js';
+import {
+  findRecommendation as find,
+  idsOf as ids,
+  planFor as plan,
+} from './fixtures/recommendations.js';
 import { planHeadline } from './explain/index.js';
 import { buildPlan, communityPlan } from './plan.js';
 
@@ -12,18 +13,6 @@ const SEVERE = 2.4;
 const POOR = 0.8;
 const MODERATE = 0.55;
 const MUMBAI = { lat: 19.07, lon: 72.88 };
-
-function plan(profile: Profile, air: AirData): Plan {
-  const result = buildPlan(profile, air);
-  if (!result.ok) {
-    throw new Error(`expected a plan, got ${result.error}`);
-  }
-  return planSchema.parse(result.value);
-}
-
-function ids(p: Plan): RecommendationId[] {
-  return p.recommendations.map((r) => r.id);
-}
 
 describe('buildPlan — the Sharma family in Delhi', () => {
   it('declares a smog emergency on a Severe day and puts protection first', () => {
@@ -125,19 +114,6 @@ describe('buildPlan — other households and places', () => {
     expect(find(p, 'exercise_indoors')?.effort).toBe('medium');
   });
 
-  it('suggests walking to work on a moderate day but not when exertion outdoors is unsafe', () => {
-    const shortDrive: Profile = {
-      ...SHARMA_FAMILY,
-      commute: { ...SHARMA_FAMILY.commute, oneWayKm: 2, alternatives: ['walk', 'cycle', 'metro'] },
-    };
-
-    expect(ids(plan(shortDrive, makeAir({ scale: MODERATE })))).toContain('switch_to_walk');
-    const severe = ids(plan(shortDrive, makeAir({ scale: SEVERE })));
-    expect(severe).not.toContain('switch_to_walk');
-    expect(severe).not.toContain('switch_to_cycle');
-    expect(severe).toContain('switch_to_metro');
-  });
-
   it('gives every family the same plan for a community notice', () => {
     const air = makeAir({ scale: 1.5 });
     const sharma = communityPlan(plan(SHARMA_FAMILY, air));
@@ -178,7 +154,7 @@ describe('buildPlan — other households and places', () => {
       severity: 'caution',
       index: { scale: 'us_aqi', category: 'unhealthy_sensitive' },
     });
-    expect(planHeadline(p, 'en')).toBe('Sensitive family members should take it easy today');
+    expect(planHeadline(p, 'en')).toBe('People in sensitive groups should take it easy today');
   });
 
   it('gives a homebound senior with N95s only indoor and community advice', () => {

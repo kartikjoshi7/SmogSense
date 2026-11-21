@@ -1,9 +1,10 @@
+import { API_STATUS } from '../../shared/api.js';
 import type { Context } from 'hono';
 import { validator } from 'hono/validator';
 import type { ZodType } from 'zod';
 
 /** The parsed value, or a 400 that lists each problem by field path. */
-function parseOr400<T>(schema: ZodType<T>, value: unknown, c: Context) {
+function parseOrReject<T>(schema: ZodType<T>, value: unknown, c: Context) {
   const parsed = schema.safeParse(value);
   if (parsed.success) {
     return parsed.data;
@@ -12,15 +13,15 @@ function parseOr400<T>(schema: ZodType<T>, value: unknown, c: Context) {
     path: issue.path.join('.'),
     message: issue.message,
   }));
-  return c.json({ error: 'Invalid request', issues }, 400);
+  return c.json({ error: 'Invalid request', issues }, API_STATUS.badRequest);
 }
 
 /** Validate the JSON body against a schema. */
 export function jsonBody<T>(schema: ZodType<T>) {
-  return validator('json', (value, c) => parseOr400(schema, value, c));
+  return validator('json', (value, c) => parseOrReject(schema, value, c));
 }
 
 /** Validate query parameters against a schema. */
 export function queryParams<T>(schema: ZodType<T>) {
-  return validator('query', (value, c) => parseOr400(schema, value, c));
+  return validator('query', (value, c) => parseOrReject(schema, value, c));
 }

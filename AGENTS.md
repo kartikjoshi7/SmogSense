@@ -54,7 +54,7 @@ Dependencies point one way: `ui → shared, core` · `server → shared, core` �
 
 ## Testing rules
 
-- Tests sit next to the code they cover (`foo.ts` → `foo.test.ts`). A small module may instead be covered by the test of the module that uses it (`recommendations/*` through `plan.test.ts`, routes through `app.test.ts`), but nothing goes untested: `src/core` needs 100% lines and branches, and the whole project at least 90%. The thresholds are enforced in the Vitest config.
+- Tests sit next to the code they cover (`foo.ts` → `foo.test.ts`). A small module may instead be covered by the test of the module that uses it (`recommendations/*` through `plan.test.ts`, routes through `app.test.ts`, `state/storage.ts` through `state.test.ts`, the hooks through the components that use them, and the `shared/plan.ts` schema through the engine and API tests), but nothing goes untested: `src/core` needs 100% lines and branches, and the whole project at least 90%. The thresholds are enforced in the Vitest config.
 - End-to-end tests (`e2e/`, Playwright) run the production build with `/api/*` served by `src/ui/test/fake-server.ts`: the real Hono app with fakes for the air service and the AI client. The UI unit tests use the same harness; the services themselves are tested against recorded responses and an injected SDK call.
 - Test behaviour, not implementation. Cover the edges: breakpoint boundaries, missing data, invalid input, upstream failure, AI fallback.
 - UI tests query by role and label and include an axe check.

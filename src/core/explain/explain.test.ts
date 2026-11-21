@@ -26,7 +26,7 @@ function severePlan(): Plan {
 }
 
 describe.each(['en', 'hi'] as const)('standard guidance in %s', (lang) => {
-  it('explains every recommendation id, even with no measured impact, without blanks', () => {
+  it('explains every recommendation id without blanks', () => {
     expect(Object.keys(SAMPLE)).toEqual(recommendationIdSchema.options);
     for (const [id, sample] of Object.entries(SAMPLE)) {
       const explanation = explainRecommendation(sample, lang);
@@ -36,6 +36,21 @@ describe.each(['en', 'hi'] as const)('standard guidance in %s', (lang) => {
       expect(explanation.steps.length, id).toBeGreaterThanOrEqual(2);
       expect(JSON.stringify(explanation), id).not.toMatch(/undefined|NaN|\[object/);
     }
+  });
+
+  it('explains a swap that only cuts the commute dose, and says what CO₂ it adds', () => {
+    const adds = explainRecommendation(
+      { ...SAMPLE.switch_to_metro, impact: { co2SavedKgPerWeek: -0.4, exposureReductionPct: 96 } },
+      lang,
+    ).why;
+    const neutral = explainRecommendation(
+      { ...SAMPLE.switch_to_cycle, impact: { co2SavedKgPerWeek: 0, exposureReductionPct: 30 } },
+      lang,
+    ).why;
+
+    expect(adds).toMatch(/96%.*0\.4 kg/);
+    expect(neutral).toMatch(/30%/);
+    expect(neutral).not.toMatch(/kg/);
   });
 
   it("quotes the engine's numbers", () => {

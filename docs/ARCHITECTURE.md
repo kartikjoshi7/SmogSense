@@ -31,7 +31,7 @@ How it decides, step by step and module by module, is in the README's
 standard guidance in English and Hindi, and `constants.ts` every coefficient (listed under
 [Assumptions behind the numbers](#assumptions-behind-the-numbers)).
 
-Each recommendation id carries its own facts, the values its explanations quote. They are
+Each recommendation id carries its own facts and impact, the values its explanations quote. They are
 declared once, as a Zod discriminated union on `id` in `src/shared/plan.ts`, and the English and
 Hindi templates are typed per id, so a misspelt or missing fact fails the type check.
 
@@ -91,15 +91,15 @@ constant there; `src/core/constants.test.ts` fails if one is missing or shows an
 
 ```
 POST /api/plan  { profile, location }
-  secureHeaders → CORS → bodyLimit (16 KB) → data rate limit → Zod body validation
+  secureHeaders → CORS → bodyLimit → data rate limit → Zod body validation
   → loadPlan: AirService.getAir(location)
       round the location → TtlCache (key: lat, lon, UTC hour; 15 min) → on a miss,
-      Open-Meteo air quality + weather forecast in parallel (5 s timeout, 1 retry on 5xx)
+      Open-Meteo air quality + weather forecast in parallel (timeouts and retries: Security)
       → Zod-validated, merged by local hour (without the forecast: no inversion or daylight data)
   → buildPlan(profile, air) → 200 { plan } | 502 data unavailable | 503 not enough data
 
 POST /api/explain  { profile, location, lang }
-  same middleware with the AI rate limit → loadPlan
+  same middleware with the AI rate limits (per minute and per day) → loadPlan
   → AiService.explain: cache (SHA-256 of language, the whole plan and the members; 30 min)
   → GeminiClient.generate: each model in order, skipping cooled-down ones, within the daily budget,
     JSON schema in the request, Zod on the reply (a rejected reply is logged with its reason)

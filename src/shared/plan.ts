@@ -68,38 +68,55 @@ export type RecommendationCategory = z.infer<typeof recommendationCategorySchema
 const levelSchema = z.enum(['low', 'medium', 'high']);
 export type Level = z.infer<typeof levelSchema>;
 
-/** The measurable effect of following a recommendation. Absent fields do not apply. */
-const impactSchema = z.object({
-  exposureReductionPct: z.number().optional(),
-  doseBeforeUg: z.number().min(0).optional(),
-  doseAfterUg: z.number().min(0).optional(),
-  indoorBeforeUgM3: z.number().min(0).optional(),
-  indoorAfterUgM3: z.number().min(0).optional(),
-  co2SavedKgPerWeek: z.number().optional(),
-  /** Qualitative size of the benefit when it cannot be quantified. */
-  level: levelSchema.optional(),
+// What following a recommendation changes. Each id has exactly one of these shapes, so every
+// figure its explanation quotes is required and none can silently default to zero.
+
+/** A benefit that is described, not measured: its rough size. */
+const levelImpactSchema = z.object({ level: levelSchema });
+
+/** Less PM2.5 breathed in during an activity: the dose before and after, in µg. */
+const doseImpactSchema = z.object({
+  exposureReductionPct: z.number(),
+  doseBeforeUg: z.number().min(0),
+  doseAfterUg: z.number().min(0),
 });
 
-export type Impact = z.infer<typeof impactSchema>;
+/** Lower PM2.5 in the room, from the indoor model: before and after, in µg/m³. */
+const indoorImpactSchema = z.object({
+  exposureReductionPct: z.number(),
+  indoorBeforeUgM3: z.number().min(0),
+  indoorAfterUgM3: z.number().min(0),
+});
+export type IndoorImpact = z.infer<typeof indoorImpactSchema>;
 
-/** What every recommendation carries besides its id and facts. */
+/** A commute swap: CO₂ saved each week, and the change in exposure on the way (negative: more). */
+const swapImpactSchema = z.object({
+  co2SavedKgPerWeek: z.number(),
+  exposureReductionPct: z.number(),
+});
+export type SwapImpact = z.infer<typeof swapImpactSchema>;
+
+/** A smaller share of fine particles getting through, in percent. */
+const shareImpactSchema = z.object({ exposureReductionPct: z.number() });
+
+/** What every recommendation carries besides its id, impact and facts. */
 const recommendationBaseSchema = z.object({
   category: recommendationCategorySchema,
   priority: z.number().int().min(1),
   effort: levelSchema,
   memberIds: z.array(z.string()),
-  impact: impactSchema,
 });
 
 /**
- * One kind of recommendation: its id and the facts behind it. The facts are the values its
- * explanations quote, and the only numbers (with the impact) the AI may use for it.
+ * One kind of recommendation: its id, the shape of its impact and the facts behind it. The facts
+ * and the impact are the values its explanations quote, and the only numbers the AI may use for it.
  */
-function recommendation<const Id extends string, const Facts extends z.core.$ZodShape>(
-  id: Id,
-  facts: Facts,
-) {
-  return recommendationBaseSchema.extend({ id: z.literal(id), facts: z.object(facts) });
+function recommendation<
+  const Id extends string,
+  const ImpactSchema extends z.core.$ZodType,
+  const Facts extends z.core.$ZodShape,
+>(id: Id, impact: ImpactSchema, facts: Facts) {
+  return recommendationBaseSchema.extend({ id: z.literal(id), impact, facts: z.object(facts) });
 }
 
 /** A PM2.5 concentration in µg/m³, rounded for display. */
@@ -115,61 +132,69 @@ const drivingFacts = commuteSchema.pick({ mode: true }).shape;
 
 /** Every recommendation the engine can make, each with its own facts. */
 const recommendationSchema = z.discriminatedUnion('id', [
-  recommendation('exercise_window', {
+  recommendation('exercise_window', doseImpactSchema, {
     usualHour: hourSchema,
     bestHour: hourSchema,
     durationMin: exerciseSchema.shape.durationMin,
     usualPm25: pm25Schema,
     bestPm25: pm25Schema,
   }),
-  recommendation('exercise_indoors', {
+  recommendation('exercise_indoors', doseImpactSchema, {
     usualHour: hourSchema,
     durationMin: exerciseSchema.shape.durationMin,
     outdoorPm25: pm25Schema,
     indoorPm25: pm25Schema,
   }),
-  recommendation('commute_protection', {
+  recommendation('commute_protection', doseImpactSchema, {
     ...commuteSchema.pick({ mode: true, oneWayKm: true, departHour: true, returnHour: true }).shape,
     currentMask: maskTypeSchema,
   }),
-  recommendation('ventilate_briefly', { hour: hourSchema, pm25: pm25Schema }),
-  recommendation('run_purifier', {
+  recommendation('ventilate_briefly', levelImpactSchema, { hour: hourSchema, pm25: pm25Schema }),
+  recommendation('run_purifier', indoorImpactSchema, {
     ...indoorHackFacts,
     purifiersOwned: homeSchema.shape.purifierCount,
   }),
-  recommendation('seal_gaps', indoorHackFacts),
-  recommendation('keep_windows_shut', indoorHackFacts),
-  recommendation('stop_incense', indoorHackFacts),
-  recommendation('no_indoor_smoking', indoorHackFacts),
-  recommendation('cooking_ventilation', {
+  recommendation('seal_gaps', indoorImpactSchema, indoorHackFacts),
+  recommendation('keep_windows_shut', indoorImpactSchema, indoorHackFacts),
+  recommendation('stop_incense', indoorImpactSchema, indoorHackFacts),
+  recommendation('no_indoor_smoking', indoorImpactSchema, indoorHackFacts),
+  recommendation('cooking_ventilation', levelImpactSchema, {
     cookingFuel: homeSchema.shape.cookingFuel,
     hasExhaust: homeSchema.shape.hasExhaustOrChimney,
   }),
-  recommendation('wet_mopping', {}),
-  recommendation('switch_to_metro', commuteFacts),
-  recommendation('switch_to_bus', commuteFacts),
-  recommendation('carpool', commuteFacts),
-  recommendation('switch_to_cycle', commuteFacts),
-  recommendation('switch_to_walk', commuteFacts),
-  recommendation('work_from_home', commuteFacts),
-  recommendation('engine_off_at_signals', drivingFacts),
-  recommendation('combine_errands', drivingFacts),
-  recommendation('clean_cooking_fuel', { cookingFuel: homeSchema.shape.cookingFuel }),
-  recommendation('n95_outdoors', {
+  recommendation('wet_mopping', levelImpactSchema, {}),
+  recommendation('switch_to_metro', swapImpactSchema, commuteFacts),
+  recommendation('switch_to_bus', swapImpactSchema, commuteFacts),
+  recommendation('carpool', swapImpactSchema, commuteFacts),
+  recommendation('switch_to_cycle', swapImpactSchema, commuteFacts),
+  recommendation('switch_to_walk', swapImpactSchema, commuteFacts),
+  recommendation('work_from_home', swapImpactSchema, commuteFacts),
+  recommendation('engine_off_at_signals', levelImpactSchema, drivingFacts),
+  recommendation('combine_errands', levelImpactSchema, drivingFacts),
+  recommendation('clean_cooking_fuel', levelImpactSchema, {
+    cookingFuel: homeSchema.shape.cookingFuel,
+  }),
+  recommendation('n95_outdoors', shareImpactSchema, {
     currentMask: maskTypeSchema,
     inhaledShareNowPct: percentSchema,
     inhaledShareN95Pct: percentSchema,
   }),
-  recommendation('sensitive_members', { ...indexFacts, outdoorAdvice: outdoorAdviceSchema }),
-  recommendation('ncr_grap_check', indexFacts),
-  recommendation('check_on_neighbours', indexFacts),
-  recommendation('report_open_burning', {}),
-  recommendation('share_notice', indexFacts),
+  recommendation('sensitive_members', levelImpactSchema, {
+    ...indexFacts,
+    outdoorAdvice: outdoorAdviceSchema,
+  }),
+  recommendation('ncr_grap_check', levelImpactSchema, indexFacts),
+  recommendation('check_on_neighbours', levelImpactSchema, indexFacts),
+  recommendation('report_open_burning', levelImpactSchema, {}),
+  recommendation('share_notice', levelImpactSchema, indexFacts),
 ]);
 export type Recommendation = z.infer<typeof recommendationSchema>;
 export type RecommendationId = Recommendation['id'];
 
-/** The recommendation with one id, with the facts that id carries. */
+/** What following a recommendation changes, in the shape its id carries. */
+export type Impact = Recommendation['impact'];
+
+/** The recommendation with one id, with the facts and impact that id carries. */
 export type RecommendationOf<Id extends RecommendationId> = Extract<Recommendation, { id: Id }>;
 
 /** Every recommendation id. Each has fixed standard guidance in `src/core/explain`. */

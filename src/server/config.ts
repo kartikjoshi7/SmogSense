@@ -61,6 +61,12 @@ export const SETTINGS = {
   rateLimitWindowMs: MINUTE_MS,
   dataRequestsPerWindow: 60,
   aiRequestsPerWindow: 10,
+  /**
+   * AI requests one client may make in a day. A request can try both models, so one client
+   * spends at most 60 calls of the default daily budget of 200; a family uses far fewer.
+   */
+  aiRequestsPerClientPerDay: 30,
+  aiDailyWindowMs: DAY_SECONDS * SECOND_MS,
   /** Distinct clients tracked by the rate limiter before the oldest are forgotten. */
   rateLimitMaxClients: 10_000,
   /** Origin allowed during local development. */

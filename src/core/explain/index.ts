@@ -5,8 +5,6 @@ import { pack as en } from './en.js';
 import type { Explanation, LanguagePack } from './format.js';
 import { pack as hi } from './hi.js';
 
-export type { Explanation } from './format.js';
-
 const PACKS: Readonly<Record<UiLanguage, LanguagePack>> = { en, hi };
 
 /** The language standard guidance is written in for a request: Hindi or English for the rest. */

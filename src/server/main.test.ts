@@ -16,7 +16,7 @@ describe('createServerApp', () => {
     expect((await app.request('/api/health')).status).toBe(200);
   });
 
-  it('builds the Gemini client when a key is configured, without calling the API', async () => {
+  it('starts with a Gemini key configured, without calling the API at start-up', async () => {
     const app = createServerApp({ NODE_ENV: 'test', GEMINI_API_KEY: 'test-key' });
 
     expect((await app.request('/api/health')).status).toBe(200);

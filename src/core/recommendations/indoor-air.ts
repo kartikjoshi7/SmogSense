@@ -1,13 +1,8 @@
-import type { Level } from '../../shared/plan.js';
+import type { Level, RecommendationOf } from '../../shared/plan.js';
 import { PURIFIER_NIGHT_HOUR, SMOKY_FUELS } from '../constants.js';
 import { reduction } from '../exposure.js';
 import { indoorHacks, type IndoorHack, type IndoorHackId } from '../indoor.js';
-import {
-  candidate,
-  type Candidate,
-  type PlanContext,
-  type UnrankedRecommendation,
-} from './context.js';
+import { candidate, type Candidate, type PlanContext } from './context.js';
 
 const HACK_EFFORT: Readonly<Record<IndoorHackId, Level>> = {
   run_purifier: 'low',
@@ -20,7 +15,10 @@ const HACK_EFFORT: Readonly<Record<IndoorHackId, Level>> = {
 function hackCandidate(ctx: PlanContext, hack: IndoorHack): Candidate {
   const { home } = ctx.profile;
   const change = reduction(hack.before, hack.after);
-  const common: Omit<UnrankedRecommendation, 'id' | 'facts'> = {
+  const common: Pick<
+    RecommendationOf<IndoorHackId>,
+    'category' | 'effort' | 'memberIds' | 'impact'
+  > = {
     category: 'indoor',
     effort: HACK_EFFORT[hack.id],
     memberIds: [],

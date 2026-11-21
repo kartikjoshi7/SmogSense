@@ -1,7 +1,8 @@
 # Code quality
 
-How SmogSense keeps its code clean, and how to check each claim yourself. `npm run check` runs every
-gate below, and CI (`.github/workflows/ci.yml`) runs them on every push.
+How SmogSense keeps its code clean, and how to check each claim yourself. `npm run check` runs the
+first six gates below and `npm run check:repo` the seventh; CI (`.github/workflows/ci.yml`) runs
+all eight on every push.
 
 ## Gates that fail the build
 
@@ -38,8 +39,8 @@ Each rule is stated here once; the linked section shows how the code applies it.
 - **Validation at every boundary.** Every input from outside the code is parsed by a Zod schema
   from `src/shared`, and every domain type is inferred from its schema
   ([Security › Input validation](SECURITY.md#input-validation) lists the boundaries).
-- **Typed facts.** Each recommendation id carries its own typed facts, so a template that reads a
-  fact its recommendation lacks fails the type check
+- **Typed facts and impact.** Each recommendation id carries its own typed facts and impact, so a
+  template that reads a figure its recommendation lacks fails the type check
   ([Architecture › The engine](ARCHITECTURE.md#the-engine-srccore)).
 - **Named numbers.** Coefficients and thresholds live in `core/constants.ts`, each with its source,
   and `constants.test.ts` fails if [the table of them](ARCHITECTURE.md#assumptions-behind-the-numbers)
@@ -65,7 +66,7 @@ Measured on the source (tests, fixtures and test helpers excluded) in the commit
 | Type assertions (other than `as const`)            | 0       |
 | Non-null assertions (`!`)                          | 0       |
 | `@ts-ignore`, `@ts-expect-error`, `eslint-disable` | 0       |
-| Source files / test files                          | 93 / 49 |
+| Source files / test files                          | 93 / 50 |
 
 ## Check it yourself
 

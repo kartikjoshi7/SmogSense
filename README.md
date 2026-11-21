@@ -92,11 +92,11 @@ flowchart LR
 **GenAI usage.** Gemini (through `@google/genai`) is used in three places, all in
 `src/server/ai/`:
 
-| Use              | Route                 | What the model gets and returns                                                                                                                                                                 |
-| ---------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Plan narrator    | `POST /api/explain`   | The top 8 recommendations with their numbers, the household's member ids and age groups (never names or health conditions), the language → JSON headline, summary, and `why` + `steps` per item |
-| Ask SmogSense    | `POST /api/chat`      | The same facts, the answer language, up to 6 earlier turns and the question inside `<user_question>` delimiters → JSON answer                                                                   |
-| Community notice | `POST /api/community` | The day's facts as they apply to everyone nearby (nothing about the household), the audience and language → JSON notice                                                                         |
+| Use              | Route                 | What the model gets and returns                                                                                                                                                                            |
+| ---------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Plan narrator    | `POST /api/explain`   | The highest-priority recommendations with their numbers, the household's member ids and age groups (never names or health conditions), the language → JSON headline, summary, and `why` + `steps` per item |
+| Ask SmogSense    | `POST /api/chat`      | The same facts, the answer language, up to 6 earlier turns and the question inside `<user_question>` delimiters → JSON answer                                                                              |
+| Community notice | `POST /api/community` | The day's facts as they apply to everyone nearby (nothing about the household), the audience and language → JSON notice                                                                                    |
 
 Every reply must match a JSON schema and pass the numeric grounding check
 ([Security › AI safety](docs/SECURITY.md#ai-safety)). Anything that fails, times out or cannot be
@@ -122,7 +122,9 @@ and the test suites in [Testing](docs/TESTING.md).
 - **Data.** Open-Meteo's CAMS air-quality forecast and weather forecast are good enough for
   household planning. They are model estimates for a grid cell, not readings from a nearby monitor.
 - **Index.** The headline index uses the trailing 24-hour mean, as CPCB and the EPA do, so it barely
-  moves within a day; clean windows are found from hourly PM2.5 instead.
+  moves within a day; clean windows are found from hourly PM2.5 instead. It is computed from PM2.5
+  and PM10 only: the gases are shown on the AQI card but not counted, so on a day when a gas is the
+  worst pollutant the official index can read higher.
 - **Privacy.** Locations are rounded before any upstream call or cache, and health conditions
   never reach the AI ([Security › Privacy](docs/SECURITY.md#privacy)).
 - **Not modelled yet.** Home heating (coal or wood braziers, kerosene and gas heaters) is not asked

@@ -24,7 +24,7 @@ describe('api client', () => {
   });
 
   it('reports the status of an error response', async () => {
-    respond({ error: 'Too many requests. Please wait a moment and try again.' }, 429);
+    respond({ error: 'Too many requests. Please try again later.' }, 429);
 
     expect(await api.geocode('Delhi', 'en')).toEqual({ ok: false, error: { status: 429 } });
   });

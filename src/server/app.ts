@@ -27,20 +27,18 @@ function allowedOrigins(config: EnvConfig): string[] {
   return config.NODE_ENV === 'development' ? [...origins, SETTINGS.devOrigin] : origins;
 }
 
-function limiter(limit: number, now: () => number) {
-  return rateLimit({
-    limit,
-    now,
-    windowMs: SETTINGS.rateLimitWindowMs,
-    maxClients: SETTINGS.rateLimitMaxClients,
-  });
+function limiter(limit: number, windowMs: number, now: () => number) {
+  return rateLimit({ limit, windowMs, now, maxClients: SETTINGS.rateLimitMaxClients });
 }
 
 /** The API: security middleware, rate limits, routes and safe error handling. */
 export function createApp(deps: AppDeps) {
   const origins = allowedOrigins(deps.config);
-  const dataLimit = limiter(SETTINGS.dataRequestsPerWindow, deps.now);
-  const aiLimit = limiter(SETTINGS.aiRequestsPerWindow, deps.now);
+  const { rateLimitWindowMs, aiDailyWindowMs } = SETTINGS;
+  const dataLimit = limiter(SETTINGS.dataRequestsPerWindow, rateLimitWindowMs, deps.now);
+  const aiLimit = limiter(SETTINGS.aiRequestsPerWindow, rateLimitWindowMs, deps.now);
+  // A day-long allowance per client, so no one client can spend the shared Gemini budget.
+  const aiDailyLimit = limiter(SETTINGS.aiRequestsPerClientPerDay, aiDailyWindowMs, deps.now);
   const app = new Hono().basePath('/api');
 
   app.use(secureHeaders());
@@ -61,14 +59,14 @@ export function createApp(deps: AppDeps) {
   app.use('/geocode', dataLimit);
   app.use('/plan', dataLimit);
   for (const path of ['/explain', '/chat', '/community']) {
-    app.use(path, aiLimit);
+    app.use(path, aiLimit, aiDailyLimit);
   }
 
   app.get('/health', (c) => c.json({ status: 'ok' }));
   app.route('/', dataRoutes(deps.air));
   app.route('/', aiRoutes(deps.air, deps.ai));
 
-  app.notFound((c) => c.json({ error: 'Not found' }, 404));
+  app.notFound((c) => c.json({ error: 'Not found' }, API_STATUS.notFound));
   app.onError((error, c) => {
     if (error instanceof HTTPException) {
       return c.json({ error: 'Invalid request' }, error.status);
@@ -78,7 +76,7 @@ export function createApp(deps: AppDeps) {
       path: c.req.path,
       error: error.name,
     });
-    return c.json({ error: 'Internal error' }, 500);
+    return c.json({ error: 'Internal error' }, API_STATUS.internal);
   });
   return app;
 }

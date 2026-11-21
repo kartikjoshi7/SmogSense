@@ -30,6 +30,8 @@ async function attempt<T>(url: URL, schema: ZodType<T>, deps: HttpDeps): Promise
     return classifyThrown(error);
   }
   if (!response.ok) {
+    // Release the connection now rather than when the response is garbage-collected.
+    await response.body?.cancel();
     return failure('http', response.status >= 500);
   }
   const parsed = schema.safeParse(await response.json().catch(() => undefined));

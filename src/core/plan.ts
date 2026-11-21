@@ -9,7 +9,7 @@ import { communityCandidates } from './recommendations/community.js';
 import type { Candidate, PlanContext } from './recommendations/context.js';
 import { indoorAirCandidates } from './recommendations/indoor-air.js';
 import { protectionCandidates } from './recommendations/protection.js';
-import { rank } from './recommendations/rank.js';
+import { compareIds, rank } from './recommendations/rank.js';
 import { routineCandidates } from './recommendations/routine.js';
 import { sensitiveMemberIds, householdSensitivity, outdoorAdvice } from './risk.js';
 import { severityMode } from './severity.js';
@@ -77,7 +77,7 @@ function timeline(
     .flatMap((c) => c.hours.map((hour) => ({ hour, recommendationId: c.recommendation.id })))
     .sort(
       (a, b) =>
-        position(a.hour) - position(b.hour) || a.recommendationId.localeCompare(b.recommendationId),
+        position(a.hour) - position(b.hour) || compareIds(a.recommendationId, b.recommendationId),
     );
 }
 

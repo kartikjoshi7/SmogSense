@@ -7,10 +7,13 @@ import { profileSchema } from './profile.js';
 
 /** The statuses the API answers with when it cannot help, shared by the server and the UI. */
 export const API_STATUS = {
+  badRequest: 400,
+  notFound: 404,
   tooLarge: 413,
   tooManyRequests: 429,
   upstreamFailed: 502,
   noData: 503,
+  internal: 500,
 } as const;
 
 /** A point on the map. The server rounds it to 0.1° before using it. */

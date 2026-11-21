@@ -24,12 +24,15 @@ const EMERGENCY_FIRST: ReadonlySet<RecommendationId> = new Set([
 ]);
 
 /** Health benefit in exposure-percentage points: measured when known, else from the qualitative level. */
-function healthBenefit(rec: Rankable): number {
-  const { exposureReductionPct, level } = rec.impact;
-  if (exposureReductionPct !== undefined) {
-    return Math.max(exposureReductionPct, 0);
-  }
-  return level === undefined ? 0 : QUALITATIVE_BENEFIT_PCT[level];
+function healthBenefit({ impact }: Rankable): number {
+  return 'level' in impact
+    ? QUALITATIVE_BENEFIT_PCT[impact.level]
+    : Math.max(impact.exposureReductionPct, 0);
+}
+
+/** CO₂ avoided per week, for the swaps that measure it. */
+function co2Saved({ impact }: Rankable): number {
+  return 'co2SavedKgPerWeek' in impact ? impact.co2SavedKgPerWeek : 0;
 }
 
 /**
@@ -38,10 +41,15 @@ function healthBenefit(rec: Rankable): number {
  */
 function score(rec: Rankable, ctx: RankingContext): number {
   const healthWeight = (ctx.band + 1) * SENSITIVITY_WEIGHT[ctx.sensitivity];
-  const co2 = (rec.impact.co2SavedKgPerWeek ?? 0) * CO2_RANK_WEIGHT;
+  const co2 = co2Saved(rec) * CO2_RANK_WEIGHT;
   const urgent = rec.category === 'protection' || EMERGENCY_FIRST.has(rec.id);
   const boost = ctx.severity === 'emergency' && urgent ? EMERGENCY_BOOST : 0;
   return healthWeight * healthBenefit(rec) + co2 - EFFORT_PENALTY[rec.effort] + boost;
+}
+
+/** Code-unit order of two ids: the same on every runtime, whatever its locale. */
+export function compareIds(a: string, b: string): number {
+  return Number(a > b) - Number(a < b);
 }
 
 /** Sort by score (highest first, ties by id for stable output) and number the priorities from 1. */
@@ -51,6 +59,6 @@ export function rank<R extends Rankable>(
 ): (R & { priority: number })[] {
   return recs
     .map((rec) => ({ rec, points: score(rec, ctx) }))
-    .sort((a, b) => b.points - a.points || a.rec.id.localeCompare(b.rec.id))
+    .sort((a, b) => b.points - a.points || compareIds(a.rec.id, b.rec.id))
     .map(({ rec }, position) => ({ ...rec, priority: position + 1 }));
 }

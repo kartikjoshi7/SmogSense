@@ -25,7 +25,7 @@ function n95Outdoors(ctx: PlanContext): Candidate[] {
   ];
 }
 
-/** Personal precautions for infants, seniors and anyone with a heart or lung condition or pregnancy. */
+/** Personal precautions for the sensitive members: children, seniors, and anyone with a heart or lung condition or a pregnancy. */
 function sensitiveMembers(ctx: PlanContext): Candidate[] {
   if (ctx.sensitiveIds.length === 0 || ctx.index.band < ACTION_BAND.alertSensitive) {
     return [];

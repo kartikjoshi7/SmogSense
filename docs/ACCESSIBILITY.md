@@ -18,7 +18,8 @@ screen reader, by ear and in Hindi.
 **Forms** (`components/setup/*`, `components/common/fields.tsx`)
 
 - Every control has a visible `label`; groups such as health conditions and commute alternatives
-  are `fieldset`s with a `legend`.
+  are `fieldset`s with a `legend`, and each family member's fields are a group named after that
+  member, so a screen reader says whose details are being edited.
 - Range errors are linked to their field with `aria-describedby` and `aria-invalid`; a summary is
   announced with `role="alert"` when the form is submitted with problems.
 - Location search and GPS progress are announced through a `role="status"` live region, and a

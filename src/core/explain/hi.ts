@@ -33,7 +33,7 @@ const scales: LanguagePack['scales'] = { naqi: 'भारत AQI', us_aqi: 'US A
 /** Worded by severity alone, never by category, so they read true on both index scales. */
 const headlines: LanguagePack['headlines'] = {
   normal: 'सामान्य दिन: किसी खास सावधानी की ज़रूरत नहीं',
-  caution: 'संवेदनशील सदस्य आज सावधानी रखें',
+  caution: 'संवेदनशील समूहों के लोग आज सावधानी रखें',
   restrict: 'आज बाहर कम समय बिताएँ',
   emergency: 'धुंध आपातकाल: घर में रहें और संवेदनशील सदस्यों को बचाएँ',
 };

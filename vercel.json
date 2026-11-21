@@ -29,7 +29,7 @@
         },
         {
           "key": "Permissions-Policy",
-          "value": "geolocation=(self), camera=(), microphone=()"
+          "value": "geolocation=(self), camera=(), microphone=(), payment=(), usb=(), display-capture=()"
         }
       ]
     },
