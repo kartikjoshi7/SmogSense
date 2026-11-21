@@ -6,7 +6,7 @@ import { api } from '../api/client.js';
 import type { UiLanguage } from '../state/app-state.js';
 import type { SavedLocation } from '../state/storage.js';
 
-export type PlanState =
+type PlanState =
   | { readonly status: 'loading' }
   | { readonly status: 'error'; readonly message: string | null }
   | {
@@ -17,55 +17,95 @@ export type PlanState =
       readonly explaining: boolean;
     };
 
-const LOADING: PlanState = { status: 'loading' };
+type Loaded =
+  | { readonly status: 'loading' }
+  | { readonly status: 'error'; readonly message: string | null }
+  | { readonly status: 'ready'; readonly plan: Plan };
 
-/**
- * Load the household's plan, then its AI explanation. The plan renders as soon as it arrives;
- * changing the household, place or language cancels requests that are still running. Each
- * result is tagged with the request it answers, so stale results are never shown.
- */
-export function usePlan(profile: Profile, location: SavedLocation, lang: UiLanguage) {
-  const [attempt, setAttempt] = useState(0);
-  const [result, setResult] = useState<{ readonly key: string; readonly state: PlanState }>({
-    key: '',
-    state: LOADING,
-  });
-  const key = JSON.stringify([profile, location.lat, location.lon, lang, attempt]);
+/** A result tagged with the request it answers, so a stale result is never shown. */
+interface Tagged<T> {
+  readonly key: string;
+  readonly value: T;
+}
+
+const LOADING: Loaded = { status: 'loading' };
+
+/** The plan for a household and place; changing either cancels the request still running. */
+function usePlanRequest(profile: Profile, location: SavedLocation, attempt: number) {
+  const key = JSON.stringify([profile, location.lat, location.lon, attempt]);
+  const [loaded, setLoaded] = useState<Tagged<Loaded>>({ key: '', value: LOADING });
 
   useEffect(() => {
     const controller = new AbortController();
-    const cancelled = () => controller.signal.aborted;
-    const publish = (state: PlanState) => {
-      if (!cancelled()) {
-        setResult({ key, state });
-      }
-    };
     const body = { profile, location: { lat: location.lat, lon: location.lon } };
-
-    void (async () => {
-      const planned = await api.plan(body, controller.signal);
-      if (!planned.ok) {
-        publish({ status: 'error', message: planned.message });
-        return;
+    void api.plan(body, controller.signal).then((result) => {
+      if (!controller.signal.aborted) {
+        const value: Loaded = result.ok
+          ? { status: 'ready', plan: result.data.plan }
+          : { status: 'error', message: result.message };
+        setLoaded({ key, value });
       }
-      const { plan } = planned.data;
-      publish({ status: 'ready', plan, explanation: null, explaining: true });
-      const explained = await api.explain({ ...body, lang }, controller.signal);
-      publish({
-        status: 'ready',
-        plan,
-        explanation: explained.ok ? explained.data : null,
-        explaining: false,
-      });
-    })();
-
+    });
     return () => {
       controller.abort();
     };
-  }, [key, profile, location.lat, location.lon, lang]);
+  }, [key, profile, location.lat, location.lon]);
+
+  return loaded.key === key ? loaded.value : LOADING;
+}
+
+/** The AI explanation of a loaded plan in one language; a new language only asks for new text. */
+function useExplanation(
+  plan: Plan | null,
+  profile: Profile,
+  location: SavedLocation,
+  lang: UiLanguage,
+) {
+  const [explained, setExplained] = useState<Tagged<ExplainResponse | null> | null>(null);
+  const key = JSON.stringify([profile, location.lat, location.lon, lang]);
+
+  useEffect(() => {
+    if (plan === null) {
+      return undefined;
+    }
+    const controller = new AbortController();
+    const body = { profile, location: { lat: location.lat, lon: location.lon }, lang };
+    void api.explain(body, controller.signal).then((result) => {
+      if (!controller.signal.aborted) {
+        setExplained({ key, value: result.ok ? result.data : null });
+      }
+    });
+    return () => {
+      controller.abort();
+    };
+  }, [key, plan, profile, location.lat, location.lon, lang]);
+
+  return explained?.key === key
+    ? { done: true, value: explained.value }
+    : { done: false, value: null };
+}
+
+/**
+ * Load the household's plan, then its AI explanation. The plan renders as soon as it arrives.
+ * Changing the household or place reloads both; changing the language keeps the plan and only
+ * asks for an explanation in the new language.
+ */
+export function usePlan(profile: Profile, location: SavedLocation, lang: UiLanguage) {
+  const [attempt, setAttempt] = useState(0);
+  const loaded = usePlanRequest(profile, location, attempt);
+  const explanation = useExplanation(
+    loaded.status === 'ready' ? loaded.plan : null,
+    profile,
+    location,
+    lang,
+  );
+  const state: PlanState =
+    loaded.status === 'ready'
+      ? { ...loaded, explanation: explanation.value, explaining: !explanation.done }
+      : loaded;
 
   return {
-    state: result.key === key ? result.state : LOADING,
+    state,
     retry: () => {
       setAttempt((n) => n + 1);
     },

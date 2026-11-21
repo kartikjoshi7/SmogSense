@@ -5,6 +5,13 @@ import { App } from './app.js';
 import { checkA11y } from './test/axe.js';
 import { fakeApi, memoryStore } from './test/fake-api.js';
 
+/** How many requests went to one API path. */
+function calls(fetchMock: ReturnType<typeof fakeApi>, path: string): number {
+  return fetchMock.mock.calls.filter(
+    ([input]) => typeof input === 'string' && input.startsWith(path),
+  ).length;
+}
+
 async function startWithExampleFamily() {
   const user = userEvent.setup();
   const store = memoryStore();
@@ -121,15 +128,20 @@ describe('the plan', () => {
 });
 
 describe('language and editing', () => {
-  it('switches the interface and the page language to Hindi', async () => {
-    fakeApi();
+  it('switches to Hindi, asking only for new wording, not a new plan', async () => {
+    const fetchMock = fakeApi();
     const { user } = await startWithExampleFamily();
+    await screen.findByText('AI headline: stay in today');
     await user.selectOptions(screen.getByRole('combobox', { name: 'Language' }), 'hi');
 
     expect(
       await screen.findByRole('heading', { level: 1, name: 'आज New Delhi में' }),
     ).toBeInTheDocument();
     expect(document.documentElement.lang).toBe('hi');
+    await waitFor(() => {
+      expect(calls(fetchMock, '/api/explain')).toBe(2);
+    });
+    expect(calls(fetchMock, '/api/plan')).toBe(1);
   });
 
   it('reopens the household form and can cancel back, moving focus to each new heading', async () => {

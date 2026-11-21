@@ -1,6 +1,8 @@
 import { categoryLabel } from '../../../core/explain/index.js';
+import type { TextSource } from '../../../shared/api.js';
 import type { Plan, Pollutants } from '../../../shared/plan.js';
 import { useAppState, useMessages } from '../../state/app-context.js';
+import { SourceTag } from '../common/source-tag.js';
 
 /** One symbol per band so the level is never shown by colour alone. */
 const BAND_ICON = ['☺', '◔', '◑', '◕', '●', '⚠'] as const;
@@ -38,10 +40,13 @@ export function AqiCard({
   plan,
   headline,
   summary,
+  source,
 }: {
   readonly plan: Plan;
   readonly headline: string;
   readonly summary: string;
+  /** Who wrote the headline and summary: the AI, or standard guidance. */
+  readonly source: TextSource;
 }) {
   const t = useMessages();
   const { lang } = useAppState();
@@ -64,6 +69,7 @@ export function AqiCard({
         {headline}
       </h2>
       <p className="mt-1">{summary}</p>
+      <SourceTag source={source} />
       <p className="mt-2 font-semibold">{t.dashboard.advice[plan.outdoorAdvice]}</p>
       <p className="mt-1 text-sm">{t.dashboard.mean(index.pm25Mean24h)}</p>
       <CurrentPollutants current={plan.current} />

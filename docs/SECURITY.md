@@ -54,9 +54,13 @@ implements it and the test that checks it.
   `<user_question>` delimiters with `<` and `>` removed, and the instruction says it can never change
   the rules (`ai/prompts.ts`, `prompts.test.ts`).
 - The model may only use the plan's numbers. `ai/grounding.ts` extracts every number from the
-  reply (Devanagari digits included) and rejects any that is not a plan fact within rounding; a
-  rejected reply is replaced by standard guidance (`grounding.test.ts`, `ai-service.test.ts`).
-- Every response says truthfully whether it is `ai` or `fallback` text, and the UI shows it.
+  reply (Devanagari digits included) and rejects any that is not one of the plan's numbers within
+  rounding; a rejected reply is replaced by standard guidance (`grounding.test.ts`,
+  `ai-service.test.ts`). Two limits: whole numbers up to 24 pass as clock hours or counts unless a
+  percent sign or a unit of mass follows them, and a number may come from anywhere in the plan, not
+  only from the item being explained.
+- Every response says truthfully whether it is `ai` or `fallback` text (the headline and summary
+  have their own label), and the UI shows it.
 - AI output is rendered as plain React text; the codebase has no `dangerouslySetInnerHTML`.
 - The model is told not to diagnose and to send people with symptoms to a doctor.
 

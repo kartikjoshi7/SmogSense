@@ -7,13 +7,15 @@ import {
   planHeadline,
   planSummary,
 } from '../../core/explain/index.js';
-import type {
-  Audience,
-  ChatResponse,
-  ChatTurn,
-  CommunityResponse,
-  ExplainResponse,
-  Language,
+import {
+  CHAT_LIMITS,
+  type Audience,
+  type ChatResponse,
+  type ChatTurn,
+  type CommunityResponse,
+  type ExplainResponse,
+  type Language,
+  type TextSource,
 } from '../../shared/api.js';
 import type { Plan, Recommendation } from '../../shared/plan.js';
 import type { Profile } from '../../shared/profile.js';
@@ -36,8 +38,8 @@ const explanationReply = z.object({
 });
 type ExplanationReply = z.infer<typeof explanationReply>;
 
-const chatReply = z.object({ answer: z.string().min(1).max(1200) });
-const noticeReply = z.object({ notice: z.string().min(1).max(1200) });
+const chatReply = z.object({ answer: z.string().min(1).max(CHAT_LIMITS.turnChars) });
+const noticeReply = z.object({ notice: z.string().min(1).max(CHAT_LIMITS.turnChars) });
 
 interface ChatInput {
   readonly plan: Plan;
@@ -93,7 +95,7 @@ function explainItem(
 }
 
 /** "ai" when every part (headline and items) is AI-written, "fallback" when none is, else "mixed". */
-function overallSource(parts: readonly ('ai' | 'fallback')[]): ExplainResponse['source'] {
+function overallSource(parts: readonly TextSource[]): ExplainResponse['source'] {
   const aiCount = parts.filter((source) => source === 'ai').length;
   if (aiCount === 0) {
     return 'fallback';
@@ -114,6 +116,7 @@ export function composeExplanation(
   return {
     headline: intro?.headline ?? planHeadline(plan, lang),
     summary: intro?.summary ?? planSummary(plan, lang),
+    introSource: intro === null ? 'fallback' : 'ai',
     items,
     source: overallSource([
       intro === null ? 'fallback' : 'ai',

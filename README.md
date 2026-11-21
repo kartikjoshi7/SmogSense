@@ -97,7 +97,8 @@ Browser (React 19)                        Vercel function (Hono)
 Every reply must match a JSON schema (sent to the model and checked again with Zod) and pass the
 numeric grounding check in `grounding.ts`. Anything that fails, times out or cannot be reached is
 replaced by standard guidance from `src/core/explain` (English and Hindi), and the response says
-so with `source: "ai" | "fallback" | "mixed"`, which the UI shows on every card.
+so: each item and the headline carry their own `ai` or `fallback` label, which the UI shows next to
+the text.
 
 **Free-tier strategy.** The app is built to run on a free AI Studio key:
 

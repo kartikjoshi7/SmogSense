@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { makeAir } from '../../core/fixtures/air.js';
 import { SHARMA_FAMILY } from '../../core/fixtures/profiles.js';
 import { buildPlan } from '../../core/plan.js';
-import { allowedNumbers, extractNumbers, isGrounded } from './grounding.js';
+import { allowedNumbers, extractQuantities, isGrounded } from './grounding.js';
+
+const values = (text: string) => extractQuantities(text).map((q) => q.value);
 
 function severePlan() {
   const result = buildPlan(SHARMA_FAMILY, makeAir({ scale: 2.4 }));
@@ -12,13 +14,13 @@ function severePlan() {
   return result.value;
 }
 
-describe('extractNumbers', () => {
+describe('extractQuantities', () => {
   it('reads decimals, thousands separators and percentages', () => {
-    expect(extractNumbers('PM2.5 hit 1,234 µg/m³, 12.5% more')).toEqual([2.5, 1234, 12.5]);
+    expect(values('PM2.5 hit 1,234 µg/m³, 12.5% more')).toEqual([2.5, 1234, 12.5]);
   });
 
   it('reads Devanagari digits in Hindi text', () => {
-    expect(extractNumbers('PM2.5 २०१ से घटकर २८ µg/m³')).toEqual([2.5, 201, 28]);
+    expect(values('PM2.5 २०१ से घटकर २८ µg/m³')).toEqual([2.5, 201, 28]);
   });
 });
 
@@ -39,6 +41,22 @@ describe('isGrounded', () => {
     const plan = severePlan();
 
     expect(isGrounded(`PM2.5 is ${plan.current.pm25 ?? 0} right now.`, allowed)).toBe(true);
+  });
+
+  it('marks numbers given as a percentage or a mass as measurements', () => {
+    expect(extractQuantities('cuts 20% and 3 kg, at 14:00')).toEqual([
+      { value: 20, measured: true },
+      { value: 3, measured: true },
+      { value: 14, measured: false },
+      { value: 0, measured: false },
+    ]);
+  });
+
+  it('rejects small invented percentages and masses that pass as clock hours otherwise', () => {
+    expect([allowed.has(17), allowed.has(7)]).toEqual([false, false]);
+    expect(isGrounded('This cuts exposure by 17%.', allowed)).toBe(false);
+    expect(isGrounded('You save 7 kg of CO₂.', allowed)).toBe(false);
+    expect(isGrounded('Go out at 3 in the afternoon, for 20 minutes.', allowed)).toBe(true);
   });
 
   it('rejects numbers the plan does not support', () => {

@@ -65,13 +65,19 @@ function aiExplanation(plan: Plan) {
       : [
           {
             id: first.id,
-            title: 'Run the purifier',
+            title: explainRecommendation(first, 'en').title,
             why: 'AI reason.',
             steps: ['AI step.'],
             source: 'ai',
           },
         ];
-  return { headline: FAKE_AI.headline, summary: 'AI summary of the day.', items, source: 'mixed' };
+  return {
+    headline: FAKE_AI.headline,
+    summary: 'AI summary of the day.',
+    introSource: 'ai',
+    items,
+    source: 'mixed',
+  };
 }
 
 /** What the server sends when the model is unavailable: standard guidance for everything. */
@@ -85,6 +91,7 @@ function standardExplanation(plan: Plan, body: unknown) {
   return {
     headline: planHeadline(plan, lang),
     summary: planSummary(plan, lang),
+    introSource: 'fallback',
     items,
     source: 'fallback',
   };

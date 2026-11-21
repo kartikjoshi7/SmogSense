@@ -1,5 +1,5 @@
 import { explainRecommendation } from '../../../core/explain/index.js';
-import type { ExplainResponse } from '../../../shared/api.js';
+import type { ExplainResponse, TextSource } from '../../../shared/api.js';
 import type { Plan, Recommendation } from '../../../shared/plan.js';
 import type { UiLanguage } from '../../state/app-state.js';
 
@@ -9,7 +9,7 @@ export interface ShownRecommendation {
   readonly title: string;
   readonly why: string;
   readonly steps: readonly string[];
-  readonly source: 'ai' | 'fallback';
+  readonly source: TextSource;
 }
 
 /** Pair each recommendation with AI text when the server sent some, else standard guidance. */

@@ -48,6 +48,13 @@ export type Audience = z.infer<typeof audienceSchema>;
 
 /** Where a piece of text came from: Gemini (checked against the facts) or standard guidance. */
 const textSourceSchema = z.enum(['ai', 'fallback']);
+export type TextSource = z.infer<typeof textSourceSchema>;
+
+/**
+ * Chat size limits, shared by the request schema, the AI reply schema and the chat dialog.
+ * An answer may be sent back as history, so a turn may be as long as the longest answer.
+ */
+export const CHAT_LIMITS = { questionChars: 500, historyTurns: 6, turnChars: 1200 } as const;
 
 export const explainRequestSchema = planRequestSchema.extend({ lang: languageSchema });
 export type ExplainRequest = z.infer<typeof explainRequestSchema>;
@@ -63,6 +70,8 @@ const explainedItemSchema = z.object({
 export const explainResponseSchema = z.object({
   headline: z.string(),
   summary: z.string(),
+  /** Whether the headline and summary were written by the AI or are standard guidance. */
+  introSource: textSourceSchema,
   items: z.array(explainedItemSchema),
   /** "mixed" when some items are AI-written and others are standard guidance. */
   source: z.enum(['ai', 'fallback', 'mixed']),
@@ -71,14 +80,14 @@ export type ExplainResponse = z.infer<typeof explainResponseSchema>;
 
 const chatTurnSchema = z.object({
   role: z.enum(['user', 'assistant']),
-  text: z.string().max(1000),
+  text: z.string().max(CHAT_LIMITS.turnChars),
 });
 export type ChatTurn = z.infer<typeof chatTurnSchema>;
 
 export const chatRequestSchema = planRequestSchema.extend({
   lang: languageSchema,
-  question: z.string().trim().min(1).max(500),
-  history: z.array(chatTurnSchema).max(6),
+  question: z.string().trim().min(1).max(CHAT_LIMITS.questionChars),
+  history: z.array(chatTurnSchema).max(CHAT_LIMITS.historyTurns),
 });
 
 export type ChatRequest = z.infer<typeof chatRequestSchema>;

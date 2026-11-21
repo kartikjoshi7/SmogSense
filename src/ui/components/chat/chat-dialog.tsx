@@ -1,16 +1,18 @@
 import { useId, useState, type SyntheticEvent } from 'react';
-import type { ChatTurn, PlanRequest } from '../../../shared/api.js';
+import {
+  CHAT_LIMITS,
+  type ChatTurn,
+  type PlanRequest,
+  type TextSource,
+} from '../../../shared/api.js';
 import { api } from '../../api/client.js';
 import { useAppState, useMessages } from '../../state/app-context.js';
 import { Dialog } from '../common/dialog.js';
 import { SourceTag } from '../common/source-tag.js';
 
-const MAX_QUESTION = 500;
-const MAX_HISTORY = 6;
-
 interface Message extends ChatTurn {
   readonly id: number;
-  readonly source?: 'ai' | 'fallback';
+  readonly source?: TextSource;
 }
 
 type ChatStatus = 'idle' | 'sending' | 'error';
@@ -23,7 +25,9 @@ function useChat(request: PlanRequest) {
 
   const ask = async (question: string) => {
     setStatus('sending');
-    const history = messages.slice(-MAX_HISTORY).map(({ role, text }) => ({ role, text }));
+    const history = messages
+      .slice(-CHAT_LIMITS.historyTurns)
+      .map(({ role, text }) => ({ role, text }));
     const result = await api.chat({ ...request, lang, question, history });
     if (!result.ok) {
       setStatus('error');
@@ -102,7 +106,7 @@ function ChatForm({
         <textarea
           id={inputId}
           rows={3}
-          maxLength={MAX_QUESTION}
+          maxLength={CHAT_LIMITS.questionChars}
           value={question}
           aria-describedby={counterId}
           onChange={(e) => {
@@ -110,7 +114,7 @@ function ChatForm({
           }}
         />
         <p id={counterId} className="muted text-sm">
-          {t.counter(question.length, MAX_QUESTION)}
+          {t.counter(question.length, CHAT_LIMITS.questionChars)}
         </p>
       </div>
       <p role="status" className={status === 'error' ? 'field-error' : 'muted'}>

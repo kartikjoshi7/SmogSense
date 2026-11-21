@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Audience, Language, PlanRequest } from '../../../shared/api.js';
+import type { Audience, Language, PlanRequest, TextSource } from '../../../shared/api.js';
 import { api } from '../../api/client.js';
 import { LANGUAGE_NAMES } from '../../i18n/languages.js';
 import { useAppState, useMessages } from '../../state/app-context.js';
@@ -9,7 +9,7 @@ import { SourceTag } from '../common/source-tag.js';
 
 type NoticeState =
   | { readonly status: 'idle' | 'generating' | 'error' }
-  | { readonly status: 'ready'; readonly notice: string; readonly source: 'ai' | 'fallback' };
+  | { readonly status: 'ready'; readonly notice: string; readonly source: TextSource };
 
 function NoticeActions({ notice }: { readonly notice: string }) {
   const t = useMessages().community;
