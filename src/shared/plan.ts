@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { pollutantsSchema } from './air.js';
-import { concentrationSchema, hourSchema } from './primitives.js';
+import { INDEX_BANDS, INDEX_VALUES } from './limits.js';
+import { concentrationSchema, hourSchema, rangeSchema } from './primitives.js';
 import { commuteSchema, exerciseSchema, homeSchema, maskTypeSchema } from './profile.js';
 
 const aqiScaleSchema = z.enum(['naqi', 'us_aqi']);
@@ -22,14 +23,14 @@ const aqiCategorySchema = z.enum([
 export type AqiCategory = z.infer<typeof aqiCategorySchema>;
 
 /** An index value on either scale. */
-const indexValueSchema = z.number().int().min(0).max(500);
+const indexValueSchema = rangeSchema(INDEX_VALUES).int();
 
 const indexReadingSchema = z.object({
   scale: aqiScaleSchema,
   value: indexValueSchema,
   category: aqiCategorySchema,
   /** Position of the category on its scale, 0 (best) to 5 (worst). */
-  band: z.number().int().min(0).max(5),
+  band: rangeSchema(INDEX_BANDS).int(),
   pm25Mean24h: z.number().min(0),
 });
 export type IndexReading = z.infer<typeof indexReadingSchema>;

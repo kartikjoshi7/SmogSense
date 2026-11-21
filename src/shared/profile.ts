@@ -1,16 +1,6 @@
 import { z } from 'zod';
-import { hourSchema, rangeSchema, type Range } from './primitives.js';
-
-/** Bounds on every number in a profile, shared by the schema and the setup form's inputs. */
-export const PROFILE_LIMITS = {
-  members: { min: 1, max: 8 },
-  oneWayKm: { min: 0, max: 100 },
-  daysPerWeek: { min: 0, max: 7 },
-  durationMin: { min: 10, max: 180 },
-  purifierCount: { min: 0, max: 5 },
-  purifierCadrM3h: { min: 50, max: 1000 },
-  roomAreaM2: { min: 5, max: 60 },
-} as const satisfies Record<string, Range>;
+import { PROFILE_LIMITS } from './limits.js';
+import { hourSchema, rangeSchema } from './primitives.js';
 
 /** Short opaque id for a household member. Display names never leave the device. */
 const memberIdSchema = z

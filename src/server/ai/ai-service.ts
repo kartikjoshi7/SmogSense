@@ -8,7 +8,6 @@ import {
   planSummary,
 } from '../../core/explain/index.js';
 import {
-  CHAT_LIMITS,
   type Audience,
   type ChatResponse,
   type ChatTurn,
@@ -16,6 +15,7 @@ import {
   type ExplainResponse,
   type TextSource,
 } from '../../shared/api.js';
+import { CHAT_LIMITS } from '../../shared/limits.js';
 import type { Language } from '../../shared/languages.js';
 import type { Plan, Recommendation } from '../../shared/plan.js';
 import type { Profile } from '../../shared/profile.js';

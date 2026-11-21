@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { PLACE_QUERY_CHARS, type Place } from '../../shared/api.js';
+import type { Place } from '../../shared/api.js';
+import { PLACE_QUERY_CHARS } from '../../shared/limits.js';
 import { api } from '../api/client.js';
 import { UI_SETTINGS } from '../settings.js';
 import type { SavedLocation } from '../state/storage.js';

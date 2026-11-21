@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SHARMA_FAMILY } from '../core/fixtures/profiles.js';
-import { CHAT_LIMITS, chatRequestSchema } from './api.js';
+import { chatRequestSchema } from './api.js';
+import { CHAT_LIMITS } from './limits.js';
 
 const REQUEST = {
   profile: SHARMA_FAMILY,

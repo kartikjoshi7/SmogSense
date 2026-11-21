@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import { clock } from '../../../core/explain/format.js';
-import { CLOCK_HOURS, type Range } from '../../../shared/primitives.js';
+import { CLOCK_HOURS, type Range } from '../../../shared/limits.js';
 
 /** Options as a value → label table, kept in the order written. */
 type OptionLabels<K extends string> = Readonly<Record<K, string>>;

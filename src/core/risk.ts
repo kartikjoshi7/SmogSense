@@ -1,5 +1,6 @@
 import type { OutdoorAdvice, Sensitivity } from '../shared/plan.js';
 import type { Member } from '../shared/profile.js';
+import { OUTDOOR_ADVICE_BAND, SENSITIVE_ADVICE_SHIFT } from './constants.js';
 
 /**
  * How sensitive one member is to particulate pollution: "high" with any health condition or
@@ -31,22 +32,16 @@ export function highRiskMemberIds(members: readonly Member[]): string[] {
 }
 
 /**
- * Outdoor-activity advice for an AQI band (0–5) and sensitivity. Sensitive people move one
- * step sooner; at band 5 everyone stays indoors.
+ * Outdoor-activity advice for an AQI band (0–5) and sensitivity. Highly sensitive people get
+ * each step one band sooner; at the worst band everyone stays indoors.
  */
 export function outdoorAdvice(band: number, sensitivity: Sensitivity): OutdoorAdvice {
-  const isHigh = sensitivity === 'high';
-  if (band <= 1) {
-    return 'ok';
+  const felt = sensitivity === 'high' ? band + SENSITIVE_ADVICE_SHIFT : band;
+  if (felt >= OUTDOOR_ADVICE_BAND.stayIndoors) {
+    return 'stay_indoors';
   }
-  if (band === 2) {
-    return isHigh ? 'reduce' : 'ok';
+  if (felt >= OUTDOOR_ADVICE_BAND.avoid) {
+    return 'avoid';
   }
-  if (band === 3) {
-    return isHigh ? 'avoid' : 'reduce';
-  }
-  if (band === 4) {
-    return isHigh ? 'stay_indoors' : 'avoid';
-  }
-  return 'stay_indoors';
+  return felt >= OUTDOOR_ADVICE_BAND.reduce ? 'reduce' : 'ok';
 }

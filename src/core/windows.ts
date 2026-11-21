@@ -1,4 +1,5 @@
 import type { Daylight, HourlyReading } from '../shared/air.js';
+import { HOURS_PER_DAY, MINUTES_PER_HOUR } from '../shared/limits.js';
 import type { CleanestHour } from '../shared/plan.js';
 import { DECIMALS, PLAN_HORIZON_HOURS } from './constants.js';
 import { reduction } from './exposure.js';
@@ -35,12 +36,12 @@ function isDaylight(time: string, daylight: readonly Daylight[]): boolean {
 /** Distance between two clock hours, going the short way round (0–12). */
 function hourDistance(a: number, b: number): number {
   const diff = Math.abs(a - b);
-  return Math.min(diff, 24 - diff);
+  return Math.min(diff, HOURS_PER_DAY - diff);
 }
 
 /** Whole clock hours an activity occupies: a part hour counts as a whole one, and at least one. */
 function spanHours(durationMin: number): number {
-  return Math.max(1, Math.ceil(durationMin / 60));
+  return Math.max(1, Math.ceil(durationMin / MINUTES_PER_HOUR));
 }
 
 /** Mean PM2.5 over `span` hours from `start`, or null if any of those hours is missing. */
@@ -129,7 +130,7 @@ export function ventilationHour(
   const best = bestActivityWindow(hourly, {
     fromIndex,
     daylight,
-    durationMin: 60,
+    durationMin: MINUTES_PER_HOUR,
     usualHour: null,
   });
   return best === null ? null : { hour: best.startHour, pm25: best.meanPm25 };

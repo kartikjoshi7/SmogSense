@@ -111,8 +111,16 @@ export default tseslint.config(
               allowTypeImports: false,
             },
             {
-              group: ['src/shared', 'src/shared/**', '../shared/**', '../../shared/**'],
-              message: 'core may only use type-only imports from shared',
+              // shared/limits.ts imports nothing, so its bounds and units may be used as values.
+              group: [
+                'src/shared',
+                'src/shared/**',
+                '../shared/**',
+                '../../shared/**',
+                '!../shared/limits.js',
+                '!../../shared/limits.js',
+              ],
+              message: 'core may only use type-only imports from shared (values: shared/limits.ts)',
               allowTypeImports: true,
             },
           ],

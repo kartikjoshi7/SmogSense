@@ -86,9 +86,6 @@ export const AQI_SCALES: Readonly<Record<AqiScale, AqiScaleDefinition>> = {
   },
 };
 
-/** Highest value on both index scales. */
-export const AQI_MAX = 500;
-
 /** Hours in the averaging window for the headline index (CPCB and EPA use 24-hour PM means). */
 export const INDEX_WINDOW_HOURS = 24;
 
@@ -105,6 +102,12 @@ export const PLAN_HORIZON_HOURS = 24;
 
 /** Decimal places engine figures are rounded to: display precision, not measurement precision. */
 export const DECIMALS = { pm25Mean: 1, windowMean: 2, doseUg: 1, co2Kg: 1 } as const;
+
+/**
+ * Decimals a 24-hour mean is first rounded to, so float error cannot push it below a breakpoint
+ * (24 readings of 9.1 average to 9.0999…, which must still truncate to 9.1).
+ */
+export const FLOAT_ERROR_DECIMALS = 6;
 
 // ---------------------------------------------------------------- Winter inversion
 
@@ -278,6 +281,26 @@ export const INDOOR_SOURCE_UG_PER_H = {
   incense: 20_000,
   smoking: 25_000,
 } as const;
+
+// ---------------------------------------------------------------- How strongly to react
+
+/**
+ * The AQI band (0–5) at which each severity mode starts. A household with high sensitivity (an
+ * infant, a senior or anyone with a heart or lung condition or a pregnancy) is in emergency mode
+ * one band earlier.
+ */
+export const SEVERITY_BAND = {
+  caution: 2,
+  restrict: 3,
+  emergency: 5,
+  sensitiveEmergency: 4,
+} as const;
+
+/** The AQI band at which each outdoor advice starts for most people. */
+export const OUTDOOR_ADVICE_BAND = { reduce: 3, avoid: 4, stayIndoors: 5 } as const;
+
+/** How many bands sooner highly sensitive people get each outdoor advice. */
+export const SENSITIVE_ADVICE_SHIFT = 1;
 
 // ---------------------------------------------------------------- When actions apply
 

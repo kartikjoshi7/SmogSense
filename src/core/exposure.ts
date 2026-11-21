@@ -1,3 +1,4 @@
+import { MINUTES_PER_HOUR } from '../shared/limits.js';
 import type { Exercise, Member } from '../shared/profile.js';
 import { AGE_FACTOR, DECIMALS, EXERCISE_BREATHING_M3H } from './constants.js';
 import { roundTo } from './numbers.js';
@@ -53,7 +54,7 @@ export function exerciseDoseUg(
   const member = members.find((m) => m.id === exercise.memberId);
   return inhaledDoseUg({
     concentration,
-    hours: exercise.durationMin / 60,
+    hours: exercise.durationMin / MINUTES_PER_HOUR,
     breathingM3h: EXERCISE_BREATHING_M3H[exercise.activity],
     ageFactor: member === undefined ? AGE_FACTOR.adult : AGE_FACTOR[member.ageGroup],
   });

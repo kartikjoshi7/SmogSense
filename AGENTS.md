@@ -21,13 +21,13 @@ src/server/       Hono app, routes, middleware, services (Open-Meteo, Gemini), c
 src/ui/           React: components render, hooks orchestrate, api/ does fetch
 ```
 
-Dependencies point one way: `ui → shared, core` · `server → shared, core` · `core → (type-only) shared`. `core` never imports a package or anything from `ui`/`server`.
+Dependencies point one way: `ui → shared, core` · `server → shared, core` · `core → (type-only) shared`, except `src/shared/limits.ts`, which imports nothing and whose bounds and units `core` may use. `core` never imports a package or anything from `ui`/`server`.
 
 ## Code rules
 
 1. **One place per concept.** Search before you write a helper. Never create a second version of something that exists (one Gemini client, one fetch wrapper, one `Dialog`, one formatter module, one cache).
 2. **No `any`, no `as` on external data, no non-null `!`, no `@ts-ignore`.** Validate every boundary with Zod (request bodies and queries, Open-Meteo responses, Gemini JSON, `localStorage`) and use `z.infer` types. Define each domain type once.
-3. **Name every number.** Domain coefficients and thresholds live in `src/core/constants.ts`, each with a source comment. Runtime settings (timeouts, limits, TTLs, model list) live in `src/server/config.ts`, browser-side ones in `src/ui/settings.ts`. Input bounds are defined once in `src/shared` and used by both the schemas and the form controls.
+3. **Name every number.** Domain coefficients and thresholds live in `src/core/constants.ts`, each with a source comment. Runtime settings (timeouts, limits, TTLs, model list) live in `src/server/config.ts`, browser-side ones in `src/ui/settings.ts`. Input bounds are defined once in `src/shared/limits.ts` and used by the schemas, the form controls and the engine.
 4. **Small, flat functions:** at most 60 lines, complexity at most 10, nesting at most 3, no nested ternaries. Split code by responsibility. Never squash code onto long lines to meet a limit. Prettier formats everything (`printWidth` 100).
 5. **Explicit errors.** No empty `catch`. Only catch an error to handle it or add context. Services return the one `Result` type from `src/core/result.ts` (`{ ok: true, value } | { ok: false, error }`). All logging goes through `src/server/logger.ts`; no stray `console`.
 6. **Never present a failure as success.** AI output carries a truthful `source: "ai" | "fallback"`, and the UI shows it. Upstream failures return a proper status code with a safe message.

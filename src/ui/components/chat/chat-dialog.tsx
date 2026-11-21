@@ -1,5 +1,6 @@
 import { useId, useRef, useState, type RefObject, type SyntheticEvent } from 'react';
-import { CHAT_LIMITS, type PlanRequest } from '../../../shared/api.js';
+import type { PlanRequest } from '../../../shared/api.js';
+import { CHAT_LIMITS } from '../../../shared/limits.js';
 import { useChat, type ChatMessage, type ChatStatus } from '../../hooks/use-chat.js';
 import { useAppState, useMessages } from '../../state/app-context.js';
 import { Dialog } from '../common/dialog.js';

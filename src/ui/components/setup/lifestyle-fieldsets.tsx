@@ -1,11 +1,5 @@
-import type { Range } from '../../../shared/primitives.js';
-import {
-  PROFILE_LIMITS,
-  type Commute,
-  type Exercise,
-  type Home,
-  type MaskType,
-} from '../../../shared/profile.js';
+import { PROFILE_LIMITS, type Range } from '../../../shared/limits.js';
+import type { Commute, Exercise, Home, MaskType } from '../../../shared/profile.js';
 import { useMessages } from '../../state/app-context.js';
 import {
   CheckboxField,

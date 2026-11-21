@@ -16,9 +16,10 @@ e2e/              Playwright tests against the production build
 ```
 
 Dependencies point one way: `ui → shared, core`, `server → shared, core`, `core → shared`
-(types only). ESLint enforces it: `src/core` may not import a package or anything from `ui` or
-`server`, `src/ui` may not import `server` (only its test harness runs the real app), and
-`import-x/no-cycle` rejects import cycles anywhere.
+(types only, plus the bounds and time units in `shared/limits.ts`, which imports nothing). ESLint
+enforces it: `src/core` may not import a package, a value from the rest of `shared`, or anything
+from `ui` or `server`; `src/ui` may not import `server` (only its test harness runs the real app);
+and `import-x/no-cycle` rejects import cycles anywhere.
 
 ## The engine (`src/core`)
 

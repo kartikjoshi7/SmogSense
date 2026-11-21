@@ -1,9 +1,10 @@
 import type { AirData, HourlyReading } from '../shared/air.js';
+import { INDEX_VALUES } from '../shared/limits.js';
 import type { AqiCategory, AqiScale, IndexReading } from '../shared/plan.js';
 import {
-  AQI_MAX,
   AQI_SCALES,
   DECIMALS,
+  FLOAT_ERROR_DECIMALS,
   INDEX_MIN_VALID_HOURS,
   INDEX_WINDOW_HOURS,
   INDIA_TIMEZONES,
@@ -14,12 +15,6 @@ import { fail, ok, type Result } from './result.js';
 import { mean, roundTo } from './numbers.js';
 
 type Pollutant = 'pm25' | 'pm10';
-
-/**
- * Decimals a mean is first rounded to, so float error cannot push it below a breakpoint
- * (24 readings of 9.1 average to 9.0999…, which must still truncate to 9.1).
- */
-const FLOAT_ERROR_DECIMALS = 6;
 
 /** Truncate (not round) to the given number of decimals, as EPA requires; null leaves it as is. */
 function truncate(value: number, decimals: number | null): number {
@@ -40,7 +35,7 @@ function subIndex(concentration: number, pollutant: Pollutant, bands: readonly A
   }
   const row = bands.find((b) => concentration <= b[pollutant].cHi);
   if (row === undefined) {
-    return AQI_MAX;
+    return INDEX_VALUES.max;
   }
   const { cLo, cHi } = row[pollutant];
   return Math.round(((row.iHi - row.iLo) * (concentration - cLo)) / (cHi - cLo) + row.iLo);

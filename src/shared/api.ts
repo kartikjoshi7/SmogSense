@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CHAT_LIMITS, PLACE_QUERY_CHARS } from './limits.js';
 import { languageSchema } from './languages.js';
 import { planSchema, recommendationIdSchema } from './plan.js';
 import { coordinatesSchema } from './primitives.js';
@@ -6,9 +7,6 @@ import { profileSchema } from './profile.js';
 
 /** A point on the map. The server rounds it to 0.1° before using it. */
 export type Location = z.infer<typeof coordinatesSchema>;
-
-/** Length of a city search, shared by the query schema and the search box. */
-export const PLACE_QUERY_CHARS = { min: 2, max: 60 } as const;
 
 /** City search text: letters (any script), spaces and simple punctuation only. */
 export const geocodeQuerySchema = z.object({
@@ -46,12 +44,6 @@ export type Audience = z.infer<typeof audienceSchema>;
 /** Where a piece of text came from: Gemini (checked against the facts) or standard guidance. */
 const textSourceSchema = z.enum(['ai', 'fallback']);
 export type TextSource = z.infer<typeof textSourceSchema>;
-
-/**
- * Chat size limits, shared by the request schema, the AI reply schema and the chat dialog.
- * An answer may be sent back as history, so a turn may be as long as the longest answer.
- */
-export const CHAT_LIMITS = { questionChars: 500, historyTurns: 6, turnChars: 1200 } as const;
 
 export const explainRequestSchema = planRequestSchema.extend({ lang: languageSchema });
 export type ExplainRequest = z.infer<typeof explainRequestSchema>;

@@ -1,15 +1,18 @@
 import type { Sensitivity, Severity } from '../shared/plan.js';
+import { SEVERITY_BAND } from './constants.js';
 
 /**
- * How strongly the plan should react: bands 0–1 normal, 2 caution, 3–4 restrict, 5 smog
- * emergency. A highly sensitive household is already in emergency mode at band 4.
+ * How strongly the plan should react to an AQI band: normal, caution, restrict or smog
+ * emergency. A highly sensitive household reaches emergency mode one band earlier.
  */
 export function severityMode(band: number, sensitivity: Sensitivity): Severity {
-  if (band >= 5 || (band === 4 && sensitivity === 'high')) {
+  const emergencyBand =
+    sensitivity === 'high' ? SEVERITY_BAND.sensitiveEmergency : SEVERITY_BAND.emergency;
+  if (band >= emergencyBand) {
     return 'emergency';
   }
-  if (band >= 3) {
+  if (band >= SEVERITY_BAND.restrict) {
     return 'restrict';
   }
-  return band === 2 ? 'caution' : 'normal';
+  return band >= SEVERITY_BAND.caution ? 'caution' : 'normal';
 }

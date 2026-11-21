@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { CHAT_LIMITS, type ChatTurn, type PlanRequest, type TextSource } from '../../shared/api.js';
+import type { ChatTurn, PlanRequest, TextSource } from '../../shared/api.js';
+import { CHAT_LIMITS } from '../../shared/limits.js';
 import type { UiLanguage } from '../../shared/languages.js';
 import { api } from '../api/client.js';
 

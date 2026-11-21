@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
-import { PLACE_QUERY_CHARS, type Place } from '../../../shared/api.js';
+import type { Place } from '../../../shared/api.js';
+import { PLACE_QUERY_CHARS } from '../../../shared/limits.js';
 import {
   isSearchable,
   useLocationSearch,
