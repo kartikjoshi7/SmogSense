@@ -142,7 +142,9 @@ const recommendations: LanguagePack['recommendations'] = {
       ? `Cooking on ${FUEL[rec.facts.cookingFuel]} fills the home with fine smoke, one of the biggest indoor sources.`
       : 'Without an exhaust fan or chimney, smoke from frying and tempering stays indoors.',
     steps: [
-      'Run an exhaust fan or chimney while cooking and for a while after.',
+      rec.facts.hasExhaust
+        ? 'Run the exhaust fan or chimney while cooking and for a while after.'
+        : 'Open a kitchen window while cooking and keep the door to the other rooms shut.',
       'Use lids and lower heat to cut smoke.',
       'Keep children and older relatives out of the kitchen while frying.',
     ],
@@ -275,7 +277,7 @@ export const pack: LanguagePack = {
   headlines,
   summary,
   chatFallback: (plan, topTitles) =>
-    `The AI assistant is unavailable right now, so here is today's standard guidance. ${summary(plan)} Most important: ${topTitles.join('; ')}.`,
+    `The AI assistant could not give a checked answer right now, so here is today's standard guidance. ${summary(plan)} Most important: ${topTitles.join('; ')}.`,
   communityNotice: (plan, audience) =>
     `${AUDIENCE[audience]}, ${summary(plan)} ${headlines[plan.severity]}. ${NOTICE_ADVICE[plan.severity]} — Shared via SmogSense`,
 };

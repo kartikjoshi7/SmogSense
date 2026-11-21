@@ -127,7 +127,9 @@ const recommendations: LanguagePack['recommendations'] = {
       ? `${FUEL[rec.facts.cookingFuel]} पर खाना बनाने से घर में बारीक धुआँ भर जाता है।`
       : 'एग्ज़ॉस्ट फ़ैन या चिमनी के बिना तड़के और तलने का धुआँ घर में ही रहता है।',
     steps: [
-      'खाना बनाते समय और बाद में कुछ देर एग्ज़ॉस्ट या चिमनी चलाएँ।',
+      rec.facts.hasExhaust
+        ? 'खाना बनाते समय और बाद में कुछ देर एग्ज़ॉस्ट या चिमनी चलाएँ।'
+        : 'खाना बनाते समय रसोई की खिड़की खोलें और बाकी कमरों का दरवाज़ा बंद रखें।',
       'ढक्कन लगाएँ और आँच धीमी रखें।',
       'तलते समय बच्चों और बुज़ुर्गों को रसोई से दूर रखें।',
     ],
@@ -248,7 +250,7 @@ export const pack: LanguagePack = {
   headlines,
   summary,
   chatFallback: (plan, topTitles) =>
-    `AI सहायक अभी उपलब्ध नहीं है, इसलिए आज की मानक सलाह यह है। ${summary(plan)} सबसे ज़रूरी: ${topTitles.join('; ')}।`,
+    `AI सहायक अभी जाँचा हुआ जवाब नहीं दे सका, इसलिए आज की मानक सलाह यह है। ${summary(plan)} सबसे ज़रूरी: ${topTitles.join('; ')}।`,
   communityNotice: (plan, audience) =>
     `${AUDIENCE[audience]}, ${summary(plan)} ${headlines[plan.severity]}। ${NOTICE_ADVICE[plan.severity]} — SmogSense से साझा`,
 };

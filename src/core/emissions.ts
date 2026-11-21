@@ -6,6 +6,7 @@ import {
   DECIMALS,
   MAX_CYCLE_KM,
   MAX_WALK_KM,
+  TRIPS_PER_COMMUTE_DAY,
 } from './constants.js';
 import { inhaledDoseUg, reduction } from './exposure.js';
 import { roundTo } from './numbers.js';
@@ -30,7 +31,7 @@ function roundKg(kg: number): number {
 
 /** Weekly CO₂ of a commute in kg (round trip on each commuting day). */
 function weeklyCommuteCo2Kg(mode: CommuteMode, oneWayKm: number, daysPerWeek: number): number {
-  return COMMUTE_MODES[mode].co2KgPerKm * oneWayKm * 2 * daysPerWeek;
+  return COMMUTE_MODES[mode].co2KgPerKm * oneWayKm * TRIPS_PER_COMMUTE_DAY * daysPerWeek;
 }
 
 /** PM2.5 inhaled on one day's round trip in µg, from mode speed, in-transit levels and breathing. */
@@ -43,7 +44,7 @@ export function dailyCommuteDoseUg(
   const factors = COMMUTE_MODES[mode];
   return inhaledDoseUg({
     concentration: ambientPm25,
-    hours: (oneWayKm / factors.speedKmh) * 2,
+    hours: (oneWayKm / factors.speedKmh) * TRIPS_PER_COMMUTE_DAY,
     breathingM3h: factors.breathingM3h,
     exposureMultiplier: factors.exposureMultiplier,
     maskReduction,

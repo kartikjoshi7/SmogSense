@@ -1,8 +1,7 @@
 import { useId } from 'react';
-import { PROFILE_LIMITS } from '../../../shared/limits.js';
+import { MEMBER_NAME_CHARS, PROFILE_LIMITS } from '../../../shared/limits.js';
 import type { Member } from '../../../shared/profile.js';
 import { useMessages } from '../../state/app-context.js';
-import { MEMBER_NAME_CHARS } from '../../state/storage.js';
 import { CheckboxGroup, SelectField } from '../common/fields.js';
 
 interface MemberRowProps {

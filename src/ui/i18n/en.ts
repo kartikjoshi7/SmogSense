@@ -192,7 +192,9 @@ export const en = {
     cleanest: 'Cleanest daylight hour',
     missing: 'No data',
     missingNote: (count: number) =>
-      `${count === 1 ? 'One hour has' : `${count} hours have`} no forecast and is drawn as a dashed outline.`,
+      count === 1
+        ? 'One hour has no forecast and is drawn as a dashed outline.'
+        : `${count} hours have no forecast and are drawn as dashed outlines.`,
   },
   inversion: {
     title: 'Why the air is worse in the morning',

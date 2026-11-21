@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { Inversion } from '../../../shared/plan.js';
+import { checkA11y } from '../../test/axe.js';
 import { renderInApp } from '../../test/render.js';
 import { InversionCard } from './inversion-card.js';
 
@@ -13,13 +14,14 @@ const TRAPPED: Inversion = {
 };
 
 describe('InversionCard', () => {
-  it('says when a trapping inversion should clear', () => {
-    renderInApp(<InversionCard inversion={TRAPPED} />);
+  it('says when a trapping inversion should clear', async () => {
+    const view = renderInApp(<InversionCard inversion={TRAPPED} />);
 
     expect(
       screen.getByRole('region', { name: 'Why the air is worse in the morning' }),
     ).toHaveTextContent('Daytime mixing should clear it around 11:00.');
     expect(screen.queryByText(/Based on wind speed only/)).not.toBeInTheDocument();
+    expect(await checkA11y(view.container)).toEqual([]);
   });
 
   it('warns when the inversion may last all day', () => {

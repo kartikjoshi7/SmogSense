@@ -171,7 +171,7 @@ export interface CommuteModeFactors {
   readonly co2KgPerKm: number;
   /** Breathing rate while travelling, m³/h. */
   readonly breathingM3h: number;
-  /** True for modes the traveller drives (engine-off and carpool advice apply). */
+  /** True for modes whose traveller controls the engine (engine-off and errand advice apply). */
   readonly isPrivateMotor: boolean;
 }
 
@@ -237,6 +237,9 @@ export const COMMUTE_MODES: Readonly<Record<CommuteMode, CommuteModeFactors>> = 
 
 /** Modes that are cars, where carpooling applies. */
 export const CAR_MODES: readonly CommuteMode[] = ['car_petrol', 'car_diesel', 'car_cng', 'car_ev'];
+
+/** Trips on each commuting day: there and back. */
+export const TRIPS_PER_COMMUTE_DAY = 2;
 
 /** People sharing a car when carpooling (estimate). */
 export const CARPOOL_OCCUPANTS = 3;

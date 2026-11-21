@@ -76,7 +76,7 @@ export function createApp(deps: AppDeps) {
     logger.error('Unhandled error', {
       method: c.req.method,
       path: c.req.path,
-      error: error.message,
+      error: error.name,
     });
     return c.json({ error: 'Internal error' }, 500);
   });

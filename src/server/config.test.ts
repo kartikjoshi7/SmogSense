@@ -39,6 +39,7 @@ describe('parseConfig', () => {
   it.each([
     ['an origin without a scheme', { ALLOWED_ORIGIN: 'smog-sense-sigma.vercel.app' }],
     ['an unknown environment', { NODE_ENV: 'staging' }],
+    ['a model list with no model in it', { GEMINI_MODELS: ' , ' }],
     ['a non-numeric budget', { GEMINI_DAILY_BUDGET: 'lots' }],
     ['a negative budget', { GEMINI_DAILY_BUDGET: '-1' }],
     ['an unknown thinking level', { GEMINI_THINKING_LEVEL: 'MAX' }],

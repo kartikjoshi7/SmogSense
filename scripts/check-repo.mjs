@@ -1,7 +1,8 @@
 import { execSync } from 'node:child_process';
 import { statSync } from 'node:fs';
 
-const MAX_TRACKED_SIZE_BYTES = 9 * 1024 * 1024; // 9 MB
+const LIMIT_MB = 9;
+const MAX_TRACKED_SIZE_BYTES = LIMIT_MB * 1024 * 1024;
 let exitCode = 0;
 
 function fail(message) {
@@ -16,7 +17,7 @@ function pass(message) {
 // 1. Check number of local branches
 const branches = execSync('git branch', { encoding: 'utf-8' })
   .split('\n')
-  .map((b) => b.trim())
+  .map((b) => b.replace(/^\*\s*/, '').trim())
   .filter(Boolean);
 
 if (branches.length > 1) {
@@ -34,9 +35,9 @@ const totalSize = trackedFiles.reduce((sum, file) => sum + sizeOf(file), 0);
 
 const sizeMB = (totalSize / (1024 * 1024)).toFixed(2);
 if (totalSize > MAX_TRACKED_SIZE_BYTES) {
-  fail(`Tracked files total ${sizeMB} MB (limit: 9 MB)`);
+  fail(`Tracked files total ${sizeMB} MB (limit: ${LIMIT_MB} MB)`);
 } else {
-  pass(`Tracked files total ${sizeMB} MB (limit: 9 MB)`);
+  pass(`Tracked files total ${sizeMB} MB (limit: ${LIMIT_MB} MB)`);
 }
 
 // 3. Check for tracked .env files (other than .env.example)

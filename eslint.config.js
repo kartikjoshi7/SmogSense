@@ -143,6 +143,7 @@ export default tseslint.config(
   },
 
   {
+    // The logger is the one place that writes to the console.
     files: ['src/server/logger.ts'],
     rules: {
       'no-console': 'off',
@@ -169,6 +170,7 @@ export default tseslint.config(
   },
 
   {
+    // A describe block holds many tests, so its callback is long by nature.
     files: ['**/*.test.ts', '**/*.test.tsx', 'e2e/**/*.ts'],
     rules: {
       'max-lines-per-function': 'off',

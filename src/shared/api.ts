@@ -5,7 +5,7 @@ import { planSchema, recommendationIdSchema } from './plan.js';
 import { coordinatesSchema } from './primitives.js';
 import { profileSchema } from './profile.js';
 
-/** The statuses the API answers with when it cannot help; the UI has a message for each. */
+/** The statuses the API answers with when it cannot help, shared by the server and the UI. */
 export const API_STATUS = {
   tooLarge: 413,
   tooManyRequests: 429,

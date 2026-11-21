@@ -11,6 +11,7 @@ export interface CacheOptions {
  */
 export class TtlCache<V> {
   private readonly entries = new Map<string, { readonly value: V; readonly expiresAt: number }>();
+  private readonly loading = new Map<string, Promise<V>>();
 
   constructor(private readonly options: CacheOptions) {}
 
@@ -30,18 +31,30 @@ export class TtlCache<V> {
 
   /**
    * The cached value for a key, or a freshly loaded one. A loaded value is stored only when
-   * `keep` accepts it, so failures and fallbacks are never cached and the next call tries again.
+   * `keep` accepts it, so a failure is never cached and the next call tries again. Callers that
+   * ask for the same key while it loads share that one load.
    */
   async getOrLoad(key: string, load: () => Promise<V>, keep: (value: V) => boolean): Promise<V> {
     const hit = this.get(key);
     if (hit !== undefined) {
       return hit;
     }
-    const value = await load();
-    if (keep(value)) {
-      this.set(key, value);
+    const running = this.loading.get(key);
+    if (running !== undefined) {
+      return running;
     }
-    return value;
+    const loaded = load()
+      .then((value) => {
+        if (keep(value)) {
+          this.set(key, value);
+        }
+        return value;
+      })
+      .finally(() => {
+        this.loading.delete(key);
+      });
+    this.loading.set(key, loaded);
+    return loaded;
   }
 
   /** Store a value, evicting the least recently used entry when full. */

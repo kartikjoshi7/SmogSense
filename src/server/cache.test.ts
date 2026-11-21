@@ -34,6 +34,19 @@ describe('TtlCache', () => {
     expect(load).toHaveBeenCalledTimes(3);
   });
 
+  it('shares one load between callers that miss the same key at once', async () => {
+    const { instance } = cache();
+    const load = vi.fn(() => Promise.resolve('fresh'));
+
+    const both = await Promise.all([
+      instance.getOrLoad('a', load, () => false),
+      instance.getOrLoad('a', load, () => false),
+    ]);
+
+    expect(both).toEqual(['fresh', 'fresh']);
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
   it('evicts the least recently used entry when full', () => {
     const { instance } = cache(2);
     instance.set('a', 'apple');

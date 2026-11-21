@@ -77,7 +77,7 @@ describe('health, errors and headers', () => {
     expect(await res.json()).toEqual({ error: 'Not found' });
   });
 
-  it('hides unexpected errors behind a safe 500 and logs them', async () => {
+  it('hides unexpected errors behind a safe 500 and logs their class, not their message', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const broken = app({
       air: fakeAir({ getAir: () => Promise.reject(new Error('database exploded')) }),
@@ -91,7 +91,12 @@ describe('health, errors and headers', () => {
 
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ error: 'Internal error' });
-    expect(String(error.mock.calls[0]?.[0])).toContain('database exploded');
+    expect(JSON.parse(String(error.mock.calls[0]?.[0]))).toMatchObject({
+      method: 'POST',
+      path: '/api/plan',
+      error: 'Error',
+    });
+    expect(String(error.mock.calls[0]?.[0])).not.toContain('database exploded');
   });
 
   it('rejects malformed JSON and oversized bodies without details', async () => {

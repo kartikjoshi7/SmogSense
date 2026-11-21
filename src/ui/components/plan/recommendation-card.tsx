@@ -60,7 +60,10 @@ export function RecommendationCard({
         ))}
       </ol>
       <div>
-        <ReadAloudButton text={[item.title, item.why, ...item.steps].join('. ')} />
+        <ReadAloudButton
+          text={[item.title, item.why, ...item.steps].join('. ')}
+          subject={item.title}
+        />
       </div>
     </article>
   );

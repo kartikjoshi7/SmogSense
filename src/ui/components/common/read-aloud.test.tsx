@@ -1,6 +1,7 @@
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { checkA11y } from '../../test/axe.js';
 import { renderInApp } from '../../test/render.js';
 import { ReadAloudButton } from './read-aloud.js';
 
@@ -76,6 +77,18 @@ describe('ReadAloudButton', () => {
 
     expect(utterances[0]?.lang).toBe('hi-IN');
     expect(screen.getByRole('button', { name: 'पढ़ना रोकें' })).toBeInTheDocument();
+  });
+
+  it('names what it reads, keeping the visible words in the name', async () => {
+    stubSpeech();
+    const view = renderInApp(
+      <ReadAloudButton text="Close the windows." subject="Keep windows shut" />,
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'Read aloud: Keep windows shut' }),
+    ).toBeInTheDocument();
+    expect(await checkA11y(view.container)).toEqual([]);
   });
 
   it('stops speaking when it leaves the page', () => {

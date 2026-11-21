@@ -9,6 +9,7 @@ export interface Range {
   readonly max: number;
 }
 
+export const SECONDS_PER_MINUTE = 60;
 export const MINUTES_PER_HOUR = 60;
 export const HOURS_PER_DAY = 24;
 
@@ -38,6 +39,10 @@ export const PROFILE_LIMITS = {
   purifierCadrM3h: { min: 50, max: 1000 },
   roomAreaM2: { min: 5, max: 60 },
 } as const satisfies Record<string, Range>;
+
+/** Longest display name for a member (names stay on the device) and saved place label. */
+export const MEMBER_NAME_CHARS = 40;
+export const PLACE_LABEL_CHARS = 120;
 
 /** Length of a city search, shared by the query schema and the search box. */
 export const PLACE_QUERY_CHARS = { min: 2, max: 60 } as const satisfies Range;

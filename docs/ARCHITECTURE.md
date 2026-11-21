@@ -23,7 +23,8 @@ and `import-x/no-cycle` rejects import cycles anywhere.
 
 ## The engine (`src/core`)
 
-`buildPlan(profile, air)` in `plan.ts` is the only entry point the rest of the app needs. It
+`buildPlan(profile, air)` in `plan.ts` builds the whole plan; the UI also calls the explain
+functions and, for the what-if slider, the exposure functions. `buildPlan`
 returns either a plan or `insufficient_data`; it never throws for bad data.
 
 How it decides, step by step and module by module, is in the README's
@@ -62,6 +63,7 @@ constant there; `src/core/constants.test.ts` fails if one is missing or shows an
 | `COMMUTE_MODES › speedKmh`           | walk 5, cycle 12, two_wheeler 25, auto 20, bus 15, metro 30, car_petrol 22, car_diesel 22, car_cng 22, car_ev 22 (km/h)                 | Estimate: typical urban door-to-door speeds                                                                                  |
 | `COMMUTE_MODES › breathingM3h`       | walk 1.6, cycle 2.5, two_wheeler 0.7, auto 0.7, bus 0.7, metro 0.7, car_petrol 0.7, car_diesel 0.7, car_cng 0.7, car_ev 0.7 (m³/h)      | US EPA Exposure Factors Handbook (2011) rates: moderate walking, between moderate and high for cycling, light for passengers |
 | `CAR_MODES`                          | car_petrol, car_diesel, car_cng, car_ev                                                                                                 | The modes where carpooling applies                                                                                           |
+| `TRIPS_PER_COMMUTE_DAY`              | 2 trips                                                                                                                                 | There and back on each commuting day                                                                                         |
 | `CARPOOL_OCCUPANTS`                  | 3 people                                                                                                                                | Estimate                                                                                                                     |
 | `MAX_CYCLE_KM, MAX_WALK_KM`          | 8 km, 2 km                                                                                                                              | Estimate: longest one-way trips suggested for cycling and walking                                                            |
 | `INDOOR_PENETRATION`                 | 0.8                                                                                                                                     | Estimate; typical range 0.6–1.0                                                                                              |
@@ -114,7 +116,9 @@ CDN cache header. The rate limits and the location rounding are described in
 
 **Errors.** The engine, the services and the UI's API client share one `Result` type
 (`core/result.ts`: `{ ok: true, value } | { ok: false, error }`) instead of throwing. Each server
-failure maps to one status and safe message in `http/errors.ts`; anything unexpected becomes a
+plan or place-search failure maps to one status and safe message in `http/errors.ts`;
+validation (400), body size (413), rate limits (429) and unknown routes (404) answer from their
+middleware, and anything unexpected becomes a
 logged 500 with the body `{ "error": "Internal error" }`. The UI shows its own message for each
 status, in the interface language.
 

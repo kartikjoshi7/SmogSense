@@ -1,15 +1,13 @@
 import { z } from 'zod';
 import { uiLanguageSchema } from '../../shared/languages.js';
+import { MEMBER_NAME_CHARS, PLACE_LABEL_CHARS } from '../../shared/limits.js';
 import { coordinatesSchema } from '../../shared/primitives.js';
 import { profileSchema } from '../../shared/profile.js';
 
 const STORAGE_KEY = 'smogsense:v1';
 
-/** Longest display name a member can be given (names stay on this device). */
-export const MEMBER_NAME_CHARS = 40;
-
 const savedLocationSchema = coordinatesSchema.extend({
-  label: z.string().min(1).max(120),
+  label: z.string().min(1).max(PLACE_LABEL_CHARS),
 });
 export type SavedLocation = z.infer<typeof savedLocationSchema>;
 

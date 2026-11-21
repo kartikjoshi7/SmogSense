@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import { createRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { checkA11y } from '../../test/axe.js';
 import { fakeApi } from '../../test/fake-api.js';
 import { renderInApp } from '../../test/render.js';
 import { DEMO_HOUSEHOLD, DEMO_LOCATION } from '../setup/defaults.js';
@@ -24,10 +25,11 @@ describe('Dashboard errors', () => {
     [500, /Your plan could not be loaded/],
   ])('explains a %i from the plan route in the interface language', async (status, text) => {
     fakeApi({ failures: { plan: { status, error: 'Server text, never shown' } } });
-    showDashboard();
+    const view = showDashboard();
 
     expect(await screen.findByRole('alert')).toHaveTextContent(text);
     expect(screen.queryByText('Server text, never shown')).not.toBeInTheDocument();
+    expect(await checkA11y(view.container)).toEqual([]);
   });
 
   it('gives the general message when there is no answer at all', async () => {

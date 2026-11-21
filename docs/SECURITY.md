@@ -25,8 +25,8 @@ implements it and the test that checks it.
 
 ## Rate limits, caches and budgets
 
-- `GET /api/geocode` and `POST /api/plan` allow 60 requests a minute per client IP; the three AI
-  routes allow 10. Over the limit the API answers 429 with `Retry-After`
+- `GET /api/geocode` and `POST /api/plan` share an allowance of 60 requests a minute per client
+  IP; the three AI routes share one of 10. Over the limit the API answers 429 with `Retry-After`
   (`middleware/rate-limit.ts`, tested in `rate-limit.test.ts` and `app.test.ts`).
 - The client IP is the first `x-forwarded-for` entry, which Vercel's proxy sets.
 - **The rate limits, the caches and the Gemini daily budget are kept in memory, per serverless
@@ -79,7 +79,7 @@ implements it and the test that checks it.
   (`air/air-service.ts`, `air-service.test.ts`).
 - Logs go through `logger.ts` only, and only failures are logged: upstream failures with the host
   name (never the query string), Gemini failures with the model, and unexpected errors with the
-  method and path. Request bodies are never logged.
+  method, the path and the error's class name. Request bodies are never logged.
 
 ## Outbound requests
 

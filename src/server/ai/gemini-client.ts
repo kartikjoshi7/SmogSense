@@ -144,8 +144,12 @@ export function createGeminiClient(options: GeminiOptions): AiClient {
     request: AiRequest<T>,
   ): Promise<Result<T, AiFailure>> {
     const ready = options.models.filter((m) => (coolingUntil.get(m) ?? 0) <= options.now());
+    if (ready.length === 0) {
+      logger.warn('Gemini skipped', { reason: 'all_cooling_down' });
+    }
     for (const model of ready) {
       if (!takeBudget()) {
+        logger.warn('Gemini skipped', { reason: 'budget_spent' });
         break;
       }
       const reply = await callModel(generate, model, request, options.thinkingLevel);
@@ -162,9 +166,11 @@ export function createGeminiClient(options: GeminiOptions): AiClient {
   return {
     generate(request) {
       const { generate } = options;
-      return generate === null
-        ? Promise.resolve(fail('unavailable'))
-        : tryModels(generate, request);
+      if (generate === null) {
+        logger.warn('Gemini skipped', { reason: 'no_key' });
+        return Promise.resolve(fail('unavailable'));
+      }
+      return tryModels(generate, request);
     },
   };
 }

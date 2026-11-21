@@ -1,4 +1,5 @@
 import { createMiddleware } from 'hono/factory';
+import { TtlCache } from '../cache.js';
 import { API_STATUS } from '../../shared/api.js';
 import { SECOND_MS } from '../config.js';
 
@@ -22,12 +23,16 @@ function clientKey(forwardedFor: string | undefined): string {
  * State is in memory, so each serverless instance counts separately (see docs/SECURITY.md).
  */
 export function rateLimit(options: RateLimitOptions) {
-  const hits = new Map<string, number[]>();
+  // Each client's recent hits; the least recently seen clients are forgotten first.
+  const hits = new TtlCache<number[]>({
+    maxEntries: options.maxClients,
+    ttlMs: options.windowMs,
+    now: options.now,
+  });
   return createMiddleware(async (c, next) => {
     const key = clientKey(c.req.header('x-forwarded-for'));
     const now = options.now();
     const recent = (hits.get(key) ?? []).filter((t) => t > now - options.windowMs);
-    hits.delete(key);
     if (recent.length >= options.limit) {
       hits.set(key, recent);
       const oldest = recent[0] ?? now;
@@ -38,10 +43,6 @@ export function rateLimit(options: RateLimitOptions) {
       );
     }
     hits.set(key, [...recent, now]);
-    const leastRecent = hits.keys().next();
-    if (hits.size > options.maxClients && leastRecent.done !== true) {
-      hits.delete(leastRecent.value);
-    }
     await next();
     return undefined;
   });

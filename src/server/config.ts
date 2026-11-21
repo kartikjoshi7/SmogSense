@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { HOURS_PER_DAY, MINUTES_PER_HOUR, SECONDS_PER_MINUTE } from '../shared/limits.js';
 
 const emptyToUndefined = (value: unknown): unknown => (value === '' ? undefined : value);
 
@@ -11,7 +12,8 @@ const envSchema = z.object({
         .split(',')
         .map((model) => model.trim())
         .filter(Boolean),
-    ),
+    )
+    .pipe(z.array(z.string()).min(1, 'GEMINI_MODELS needs at least one model id')),
   GEMINI_DAILY_BUDGET: z.preprocess(emptyToUndefined, z.coerce.number().int().min(0).default(200)),
   GEMINI_THINKING_LEVEL: z.preprocess(
     emptyToUndefined,
@@ -33,8 +35,8 @@ export function parseConfig(raw: Record<string, unknown>): EnvConfig {
 }
 
 export const SECOND_MS = 1000;
-const MINUTE_MS = 60 * SECOND_MS;
-const DAY_SECONDS = 24 * 60 * 60;
+const MINUTE_MS = SECONDS_PER_MINUTE * SECOND_MS;
+const DAY_SECONDS = HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE;
 
 /** Runtime limits and timings — every operational number lives here. */
 export const SETTINGS = {
