@@ -16,14 +16,15 @@ CI (`.github/workflows/ci.yml`) runs all three on every push and pull request, p
 | Layer                                  | Files  | Tests   | Environment                        |
 | -------------------------------------- | ------ | ------- | ---------------------------------- |
 | `src/core` (engine)                    | 12     | 184     | Node                               |
-| `src/shared` (schemas)                 | 2      | 13      | Node                               |
-| `src/server` (API, Open-Meteo, Gemini) | 14     | 91      | Node                               |
+| `src/shared` (schemas)                 | 3      | 15      | Node                               |
+| `src/server` (API, Open-Meteo, Gemini) | 14     | 93      | Node                               |
 | `api` (Vercel entry)                   | 1      | 3       | Node                               |
-| `src/ui` (React)                       | 11     | 84      | jsdom + Testing Library + axe-core |
-| **Vitest total**                       | **40** | **375** |                                    |
-| `e2e` (Playwright)                     | 4      | 17      | Chromium, production build         |
+| `src/ui` (React)                       | 15     | 102     | jsdom + Testing Library + axe-core |
+| **Vitest total**                       | **45** | **397** |                                    |
+| `e2e` (Playwright)                     | 4      | 19      | Chromium, production build         |
 
-**Engine.** Every AQI breakpoint edge on both scales, the most-sensitive-member rule, severity
+**Engine.** Every AQI breakpoint edge on both scales (through `computeIndex`, so float error in
+the 24-hour mean is covered too), the most-sensitive-member rule, severity
 modes, window search with missing hours and no daylight, the indoor model, emissions, ranking,
 and golden scenarios built on a Delhi forecast shaped like real data: the Sharma family on Severe,
 Very Poor and Moderate days, a healthy couple, a homebound senior, a London household on the US
@@ -36,17 +37,22 @@ and both rate limits. The Open-Meteo client runs against recorded responses
 (`src/server/air/fixtures`), and the fetch wrapper is tested for retries on 5xx and network errors,
 no retry on 4xx or timeouts, and malformed bodies. The Gemini client is tested with an injected SDK
 call: a valid reply, the request settings (schema, system rules, thinking level), the 10-minute
-skip after a 429, falling through to the next model, no key, and the daily budget. The grounding
-check is tested with invented numbers, rounding, clock times and Devanagari digits.
+skip after a 429, falling through to the next model, no key, the daily budget, and a log line for
+each rejected reply. The grounding check is tested with invented numbers, rounding, clock times,
+units and Devanagari digits, and the AI service logs the text it drops. The explanation cache is
+tested to tell plans apart that differ only below the items the model sees.
 
 **UI.** Tests query by role and label, and the main screens and both dialogs are also checked with
 axe (jsdom cannot measure colour contrast; the end-to-end axe run does). They cover the setup form
-(search, GPS allowed and denied, validation messages linked to fields, adding and removing
-members), every lifestyle field, the plan (tabs with arrow keys, table view, what-if slider, retry
-after an error), language switching, saving and restoring the household, both dialogs (focus
-trap, Esc, focus return, errors, AI and standard answers, sharing), read-aloud with a stubbed
-speech API, and both message catalogues (same keys, every template uses its arguments, nothing
-left untranslated except names and units).
+(search, a failed search, short queries, GPS allowed and denied, validation messages linked to
+fields, adding and removing members), every lifestyle field, the plan (tabs with arrow keys, an
+empty category, table view, missing forecast hours, retry after an error, a message for each
+error status), the what-if slider (its doses equal the plan's own exercise advice; a session past
+the forecast says so), language switching, saving and restoring the household, both dialogs
+(focus trap, Esc, focus return, the first answer announced, focus kept after a suggestion,
+errors, AI and standard answers, the notice's `lang`, copy and share failures), read-aloud with a
+stubbed speech API, and both message catalogues (same keys, every template uses its arguments,
+nothing left untranslated except names and units).
 
 **End to end.** Playwright runs `vite build && vite preview`, which sends the same headers as
 Vercel, and answers `/api/*` in the page with `src/ui/test/fake-server.ts`: the real Hono app from
@@ -60,7 +66,8 @@ error or CSP violation fails the test. It covers:
 - a keyboard-only flow: skip link, setup, tabs with arrow keys, the chat dialog, Esc and focus return,
   with a visible focus outline at each step;
 - axe (WCAG 2.2 A and AA, including colour contrast) on every screen and dialog, in light and dark;
-- a 390×844 phone: no sideways scrolling and every control at least 44 × 44 px;
+- 375 × 812 and 390 × 844 phones: no sideways scrolling and every control and standalone link at
+  least 44 × 44 px;
 - the AI-unavailable path: every card, answer and notice says "Standard guidance".
 
 ## Coverage
@@ -70,10 +77,10 @@ and 90% for the whole project. `npm run coverage`, and with it `npm run check` a
 below them. From the last run:
 
 ```
-Statements   : 98.91% ( 1368/1383 )
-Branches     : 95.05% ( 692/728 )
-Functions    : 98.31% ( 524/533 )
-Lines        : 99.15% ( 1294/1305 )
+Statements   : 99.11% ( 1452/1465 )
+Branches     : 96.92% ( 724/747 )
+Functions    : 98.58% ( 557/565 )
+Lines        : 99.28% ( 1381/1391 )
 ```
 
 `src/core` is at 100% on all four. Test helpers, fixtures and `src/ui/main.tsx` (four lines that
