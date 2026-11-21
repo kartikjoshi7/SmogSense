@@ -1,9 +1,37 @@
 import { categoryLabel } from '../../../core/explain/index.js';
-import type { Plan } from '../../../shared/plan.js';
+import type { Plan, Pollutants } from '../../../shared/plan.js';
 import { useAppState, useMessages } from '../../state/app-context.js';
 
 /** One symbol per band so the level is never shown by colour alone. */
 const BAND_ICON = ['☺', '◔', '◑', '◕', '●', '⚠'] as const;
+
+/** Each pollutant with its chemical symbol, which reads the same in every language. */
+const POLLUTANTS: readonly (readonly [keyof Pollutants, string])[] = [
+  ['pm25', 'PM2.5'],
+  ['pm10', 'PM10'],
+  ['no2', 'NO₂'],
+  ['o3', 'O₃'],
+  ['co', 'CO'],
+  ['so2', 'SO₂'],
+];
+
+/** Every pollutant measured this hour, so the index is not the only number shown. */
+function CurrentPollutants({ current }: { readonly current: Pollutants }) {
+  const t = useMessages();
+  return (
+    <div className="mt-3">
+      <p className="text-sm font-semibold">{t.dashboard.now}</p>
+      <dl className="mt-1 grid grid-cols-3 gap-x-4 gap-y-1 text-sm sm:grid-cols-6">
+        {POLLUTANTS.map(([key, symbol]) => (
+          <div key={key}>
+            <dt className="font-semibold">{symbol}</dt>
+            <dd>{current[key] ?? t.forecast.missing}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
 
 /** The headline reading: index, category in words, what it means today, and how to react. */
 export function AqiCard({
@@ -38,6 +66,7 @@ export function AqiCard({
       <p className="mt-1">{summary}</p>
       <p className="mt-2 font-semibold">{t.dashboard.advice[plan.outdoorAdvice]}</p>
       <p className="mt-1 text-sm">{t.dashboard.mean(index.pm25Mean24h)}</p>
+      <CurrentPollutants current={plan.current} />
     </section>
   );
 }

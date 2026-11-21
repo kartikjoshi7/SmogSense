@@ -141,6 +141,7 @@ export const hi: Messages = {
       emergency: 'धुंध आपातकाल: पहले बचाव के कदम उठाएँ',
     },
     mean: (pm25) => `24 घंटे का औसत PM2.5: ${pm25} µg/m³`,
+    now: 'अभी (µg/m³)',
   },
   forecast: {
     title: 'अगले 24 घंटों में PM2.5',

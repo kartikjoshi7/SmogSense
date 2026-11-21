@@ -49,6 +49,7 @@ function facts(
 ): string {
   return JSON.stringify({
     index: plan.index,
+    current: plan.current,
     severity: plan.severity,
     outdoorAdvice: plan.outdoorAdvice,
     inversion: plan.inversion,

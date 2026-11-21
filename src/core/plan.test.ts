@@ -4,7 +4,7 @@ import { planSchema, type Plan, type RecommendationId } from '../shared/plan.js'
 import type { Profile } from '../shared/profile.js';
 import { makeAir } from './fixtures/air.js';
 import { HEALTHY_COUPLE, HOMEBOUND_SENIOR, SHARMA_FAMILY } from './fixtures/profiles.js';
-import { buildPlan } from './plan.js';
+import { buildPlan, pollutantsAt } from './plan.js';
 
 const SEVERE = 2.4;
 const POOR = 0.8;
@@ -38,6 +38,7 @@ describe('buildPlan — the Sharma family in Delhi', () => {
       outdoorAdvice: 'stay_indoors',
     });
     expect(ids(p).slice(0, 3)).toEqual(['run_purifier', 'n95_outdoors', 'exercise_indoors']);
+    expect(p.current.pm25).toBe(p.forecast[0]?.pm25);
     expect(ids(p)).toEqual(expect.arrayContaining(['check_on_neighbours', 'ncr_grap_check']));
     expect(ids(p)).not.toContain('exercise_window');
   });
@@ -174,6 +175,33 @@ describe('buildPlan — other households and places', () => {
       facts: { hasExhaust: 'no' },
     });
     expect(find(plan(withExhaust, makeAir()), 'cooking_ventilation')?.facts.hasExhaust).toBe('yes');
+  });
+});
+
+describe('pollutantsAt', () => {
+  it('reads every pollutant at the hour asked for', () => {
+    const hourly = makeAir({ pm10Day: Array.from({ length: 24 }, () => 210) }).hourly;
+    const [first] = hourly;
+
+    expect(pollutantsAt(hourly, 0)).toEqual({
+      pm25: first?.pm25,
+      pm10: 210,
+      no2: null,
+      o3: null,
+      co: null,
+      so2: null,
+    });
+  });
+
+  it('reports no readings for an hour outside the data', () => {
+    expect(pollutantsAt([], 3)).toEqual({
+      pm25: null,
+      pm10: null,
+      no2: null,
+      o3: null,
+      co: null,
+      so2: null,
+    });
   });
 });
 

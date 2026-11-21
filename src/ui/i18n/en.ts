@@ -167,6 +167,7 @@ export const en = {
       emergency: 'Smog emergency: protective actions come first',
     } satisfies Labels<Severity>,
     mean: (pm25: number) => `24-hour average PM2.5: ${pm25} µg/m³`,
+    now: 'Right now (µg/m³)',
   },
   forecast: {
     title: 'PM2.5 over the next 24 hours',

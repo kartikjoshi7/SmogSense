@@ -1,5 +1,5 @@
 import type { AirData, HourlyReading } from '../shared/air.js';
-import type { IndexReading, Plan, TimelineEntry } from '../shared/plan.js';
+import type { IndexReading, Plan, Pollutants, TimelineEntry } from '../shared/plan.js';
 import type { Profile } from '../shared/profile.js';
 import { computeIndex } from './aqi.js';
 import { PLAN_HORIZON_HOURS } from './constants.js';
@@ -16,6 +16,18 @@ import { analyzeInversion } from './inversion.js';
 import { bestActivityWindow, ventilationHour } from './windows.js';
 
 export type PlanResult = { ok: true; value: Plan } | { ok: false; error: 'insufficient_data' };
+
+const NO_READING: Pollutants = { pm25: null, pm10: null, no2: null, o3: null, co: null, so2: null };
+
+/** Every pollutant's concentration at one hour of the data, or all null when that hour is missing. */
+export function pollutantsAt(hourly: readonly HourlyReading[], index: number): Pollutants {
+  const reading = hourly[index];
+  if (reading === undefined) {
+    return NO_READING;
+  }
+  const { pm25, pm10, no2, o3, co, so2 } = reading;
+  return { pm25, pm10, no2, o3, co, so2 };
+}
 
 function buildContext(profile: Profile, air: AirData, index: IndexReading): PlanContext {
   const sensitivity = householdSensitivity(profile.members);
@@ -84,6 +96,7 @@ export function buildPlan(profile: Profile, air: AirData): PlanResult {
     ok: true,
     value: {
       index: ctx.index,
+      current: pollutantsAt(air.hourly, air.nowIndex),
       severity: ctx.severity,
       householdSensitivity: ctx.sensitivity,
       outdoorAdvice: ctx.advice,

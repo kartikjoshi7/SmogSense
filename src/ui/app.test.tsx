@@ -41,6 +41,9 @@ describe('the plan', () => {
 
     expect(await screen.findByText('AI headline: stay in today')).toBeInTheDocument();
     expect(screen.getByText('Severe')).toBeInTheDocument();
+    expect(screen.getByText('Right now (µg/m³)')).toBeInTheDocument();
+    expect(screen.getByText('PM2.5').nextElementSibling).toHaveTextContent('316.8');
+    expect(screen.getByText('SO₂').nextElementSibling).toHaveTextContent('No data');
     expect(screen.getByText(/Smog emergency: protective actions come first/)).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /Low-emission routines/ })).toHaveAttribute(
       'aria-selected',

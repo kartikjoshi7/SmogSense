@@ -138,9 +138,23 @@ const cleanestHourSchema = z.object({
   pm25: z.number().min(0),
 });
 
+const concentrationSchema = z.number().min(0).nullable();
+
+/** Pollutant concentrations in µg/m³ at the current hour; null where the forecast has none. */
+const pollutantsSchema = z.object({
+  pm25: concentrationSchema,
+  pm10: concentrationSchema,
+  no2: concentrationSchema,
+  o3: concentrationSchema,
+  co: concentrationSchema,
+  so2: concentrationSchema,
+});
+export type Pollutants = z.infer<typeof pollutantsSchema>;
+
 /** The engine's complete output for one household, location and hour. */
 export const planSchema = z.object({
   index: indexReadingSchema,
+  current: pollutantsSchema,
   severity: severitySchema,
   householdSensitivity: sensitivitySchema,
   outdoorAdvice: outdoorAdviceSchema,

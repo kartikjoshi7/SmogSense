@@ -35,6 +35,12 @@ describe('isGrounded', () => {
     expect(isGrounded('दादाजी के लिए २०१ से २८।', allowed)).toBe(true);
   });
 
+  it('accepts the pollutant readings for the current hour', () => {
+    const plan = severePlan();
+
+    expect(isGrounded(`PM2.5 is ${plan.current.pm25 ?? 0} right now.`, allowed)).toBe(true);
+  });
+
   it('rejects numbers the plan does not support', () => {
     expect(isGrounded('PM2.5 will fall by 73% tomorrow.', allowed)).toBe(false);
     expect(isGrounded('The index is 999.', allowed)).toBe(false);

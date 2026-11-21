@@ -28,10 +28,11 @@ function addNumbers(target: Set<number>, values: readonly unknown[]): void {
   }
 }
 
-/** Every number the plan supports: the reading, timing, forecast and each recommendation's facts. */
+/** Every number the plan supports: the readings, timing, forecast and each recommendation's facts. */
 export function allowedNumbers(plan: Plan): ReadonlySet<number> {
   const allowed = new Set(ALWAYS_ALLOWED);
   addNumbers(allowed, [plan.index.value, plan.index.pm25Mean24h]);
+  addNumbers(allowed, Object.values(plan.current));
   addNumbers(allowed, Object.values(plan.inversion));
   addNumbers(allowed, [plan.cleanestHour?.hour, plan.cleanestHour?.pm25]);
   addNumbers(

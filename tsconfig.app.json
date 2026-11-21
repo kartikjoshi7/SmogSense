@@ -4,5 +4,6 @@
     "lib": ["DOM", "DOM.Iterable", "ES2023"],
     "jsx": "react-jsx"
   },
-  "include": ["src/ui", "src/core", "src/shared"]
+  "include": ["src/ui", "src/core", "src/shared"],
+  "exclude": ["src/core/**/*.test.ts"]
 }
