@@ -88,7 +88,7 @@ How `buildPlan(profile, air)` in `src/core/plan.ts` decides:
 | ---------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Plan narrator    | `POST /api/explain`   | The top 8 recommendations with their numbers, the household's member ids and age groups (never names or health conditions), the language → JSON headline, summary, and `why` + `steps` per item |
 | Ask SmogSense    | `POST /api/chat`      | The same facts, the answer language, up to 6 earlier turns and the question inside `<user_question>` delimiters → JSON answer                                                                   |
-| Community notice | `POST /api/community` | The plan's facts without any member ids, the audience and language → JSON notice                                                                                                                |
+| Community notice | `POST /api/community` | The day's facts as they apply to everyone nearby (nothing about the household), the audience and language → JSON notice                                                                         |
 
 Every reply must match a JSON schema and pass the numeric grounding check
 ([Security › AI safety](docs/SECURITY.md#ai-safety)). Anything that fails, times out or cannot be

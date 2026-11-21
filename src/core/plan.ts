@@ -1,5 +1,5 @@
 import type { AirData, HourlyReading, Pollutants } from '../shared/air.js';
-import type { IndexReading, Plan, TimelineEntry } from '../shared/plan.js';
+import type { IndexReading, Plan, RecommendationId, TimelineEntry } from '../shared/plan.js';
 import type { Profile } from '../shared/profile.js';
 import { computeIndex } from './aqi.js';
 import { PLAN_HORIZON_HOURS } from './constants.js';
@@ -15,6 +15,14 @@ import { highRiskMemberIds, householdSensitivity, outdoorAdvice } from './risk.j
 import { severityMode } from './severity.js';
 import { analyzeInversion } from './inversion.js';
 import { bestActivityWindow, ventilationHour } from './windows.js';
+
+/** Recommendations that depend only on the air and the place, not on the household, in order. */
+const FOR_EVERYONE: readonly RecommendationId[] = [
+  'ncr_grap_check',
+  'check_on_neighbours',
+  'report_open_burning',
+  'share_notice',
+];
 
 const NO_READING: Pollutants = { pm25: null, pm10: null, no2: null, o3: null, co: null, so2: null };
 
@@ -106,4 +114,22 @@ export function buildPlan(profile: Profile, air: AirData): Result<Plan, 'insuffi
     ),
     timeline: timeline(candidates, horizon),
   });
+}
+
+/**
+ * The plan as it applies to everyone nearby, for a community notice: the day judged for people of
+ * normal sensitivity, with only the recommendations that do not depend on the household (in a
+ * fixed order) and no household timeline. Every family at the same place and hour gets the same.
+ */
+export function communityPlan(plan: Plan): Plan {
+  return {
+    ...plan,
+    householdSensitivity: 'normal',
+    severity: severityMode(plan.index.band, 'normal'),
+    outdoorAdvice: outdoorAdvice(plan.index.band, 'normal'),
+    recommendations: FOR_EVERYONE.flatMap((id) =>
+      plan.recommendations.filter((r) => r.id === id),
+    ).map((rec, position) => ({ ...rec, priority: position + 1 })),
+    timeline: [],
+  };
 }

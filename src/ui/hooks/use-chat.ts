@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { replyLanguage } from '../../core/explain/index.js';
-import type { PlanRequest, TextSource } from '../../shared/api.js';
+import { API_STATUS, type PlanRequest, type TextSource } from '../../shared/api.js';
 import type { Language } from '../../shared/languages.js';
 import { CHAT_LIMITS } from '../../shared/limits.js';
 import { api } from '../api/client.js';
@@ -16,7 +16,8 @@ export type ChatMessage =
       readonly lang: Language;
     };
 
-export type ChatStatus = 'idle' | 'sending' | 'error';
+/** "busy" when the server's AI rate limit was reached, "error" for any other failure. */
+export type ChatStatus = 'idle' | 'sending' | 'error' | 'busy';
 
 /** The conversation so far and a way to ask the next question; resolves true once answered. */
 export function useChat(request: PlanRequest) {
@@ -30,7 +31,7 @@ export function useChat(request: PlanRequest) {
       .map(({ role, text }) => ({ role, text }));
     const result = await api.chat({ ...request, lang, question, history });
     if (!result.ok) {
-      setStatus('error');
+      setStatus(result.error.status === API_STATUS.tooManyRequests ? 'busy' : 'error');
       return false;
     }
     const { answer, source } = result.value;

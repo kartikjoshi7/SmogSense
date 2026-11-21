@@ -109,15 +109,15 @@ export function chatPrompt({ plan, profile, lang, question, history }: ChatInput
   ].join('\n');
 }
 
-/** Ask for a short notice a housing society, school or office can share. */
+/**
+ * Ask for a short notice a housing society, school or office can share, from a plan that is
+ * the same for every family nearby (`communityPlan`).
+ */
 export function communityPrompt({ plan, audience, lang }: NoticeInput): string {
-  const shared = plan.recommendations.filter(
-    (r) => r.category === 'protection' || r.category === 'community',
-  );
   return [
     `LANGUAGE: ${ENGLISH_NAMES[lang]}`,
     `AUDIENCE: ${AUDIENCE_NAMES[audience]}`,
-    `FACTS: ${facts(plan, shared, false)}`,
+    `FACTS: ${facts(plan, plan.recommendations, false)}`,
     `TASK: Write a notice of at most ${SETTINGS.aiNoticeWords} words for a messaging group: the air today, when it is cleanest, and three things everyone should do. Do not mention any household.`,
   ].join('\n');
 }

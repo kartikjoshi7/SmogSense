@@ -76,6 +76,7 @@ export function CommunityDialog({
         </button>
         <div aria-live="polite" className="grid gap-2">
           {state.status === 'error' ? <p className="field-error">{t.community.error}</p> : null}
+          {state.status === 'busy' ? <p className="field-error">{t.community.busy}</p> : null}
           {state.status === 'ready' ? (
             <>
               <p className="card whitespace-pre-line" lang={state.lang}>

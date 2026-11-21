@@ -1,4 +1,3 @@
-import type { OutdoorAdvice } from '../../shared/plan.js';
 import {
   ACTION_BAND,
   COMMUTE_MODES,
@@ -8,9 +7,8 @@ import {
 import { commutes, dailyCommuteDoseUg } from '../emissions.js';
 import { exerciseDoseUg, reduction } from '../exposure.js';
 import { currentRoom, indoorPm25 } from '../indoor.js';
+import { outdoorExertionUnsafe } from '../risk.js';
 import { candidate, type Candidate, type PlanContext } from './context.js';
-
-const MOVE_INDOORS: ReadonlySet<OutdoorAdvice> = new Set(['avoid', 'stay_indoors']);
 
 function exerciserIds(ctx: PlanContext): string[] {
   const id = ctx.profile.exercise.memberId;
@@ -88,7 +86,7 @@ function exercise(ctx: PlanContext): Candidate[] {
   if (ctx.profile.exercise.activity === 'none') {
     return [];
   }
-  if (MOVE_INDOORS.has(ctx.advice) || ctx.severity === 'emergency') {
+  if (outdoorExertionUnsafe(ctx.advice, ctx.severity)) {
     return [exerciseIndoors(ctx)];
   }
   return exerciseAtCleanWindow(ctx);

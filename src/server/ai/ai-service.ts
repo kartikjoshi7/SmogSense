@@ -13,6 +13,7 @@ import type {
   ExplainResponse,
   TextSource,
 } from '../../shared/api.js';
+import { communityPlan } from '../../core/plan.js';
 import type { Language } from '../../shared/languages.js';
 import { CHAT_LIMITS } from '../../shared/limits.js';
 import type { Plan, Recommendation } from '../../shared/plan.js';
@@ -227,8 +228,9 @@ export function createAiService(deps: {
       return answers.getOrLoad(cacheKey('chat', prompt), load, hasAiText);
     },
     communityNotice(input) {
-      const prompt = communityPrompt(input);
-      const load = () => writeNotice(deps.client, input, prompt);
+      const everyone = { ...input, plan: communityPlan(input.plan) };
+      const prompt = communityPrompt(everyone);
+      const load = () => writeNotice(deps.client, everyone, prompt);
       return notices.getOrLoad(cacheKey('notice', prompt), load, hasAiText);
     },
   };

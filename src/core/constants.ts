@@ -8,6 +8,7 @@ import type { AqiCategory, AqiScale, Level, Sensitivity } from '../shared/plan.j
 import type {
   AgeGroup,
   Airtightness,
+  CommuteAlternative,
   CommuteMode,
   CookingFuel,
   ExerciseActivity,
@@ -247,6 +248,9 @@ export const CARPOOL_OCCUPANTS = 3;
 /** Longest one-way distance (km) suggested for cycling and walking commutes (estimate). */
 export const MAX_CYCLE_KM = 8;
 export const MAX_WALK_KM = 2;
+
+/** Swaps that mean exertion outdoors, so they are not suggested when that is unsafe. */
+export const ACTIVE_ALTERNATIVES: readonly CommuteAlternative[] = ['cycle', 'walk'];
 
 // ---------------------------------------------------------------- Indoor air (mass-balance model)
 

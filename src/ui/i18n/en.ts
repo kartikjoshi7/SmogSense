@@ -250,6 +250,7 @@ export const en = {
     assistant: 'SmogSense',
     conversation: 'Conversation',
     error: 'The assistant could not answer. Please try again.',
+    busy: 'Too many questions just now. Wait a minute and ask again.',
     suggestions: [
       'Can the children play outside at 4 pm?',
       'Is it safe to open the windows today?',
@@ -270,6 +271,7 @@ export const en = {
     share: 'Share',
     shareFailed: 'Sharing did not work. Copy the notice instead.',
     error: 'The notice could not be created. Please try again.',
+    busy: 'Too many requests just now. Wait a minute and try again.',
   },
 };
 

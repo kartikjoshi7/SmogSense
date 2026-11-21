@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeAir } from '../../core/fixtures/air.js';
 import { SHARMA_FAMILY } from '../../core/fixtures/profiles.js';
-import { buildPlan } from '../../core/plan.js';
+import { buildPlan, communityPlan } from '../../core/plan.js';
 import { SYSTEM_INSTRUCTION, chatPrompt, communityPrompt, explainPrompt } from './prompts.js';
 
 function severePlan() {
@@ -67,7 +67,11 @@ describe('prompts', () => {
   });
 
   it('writes community notices from shared actions only', () => {
-    const prompt = communityPrompt({ plan: severePlan(), audience: 'school', lang: 'en' });
+    const prompt = communityPrompt({
+      plan: communityPlan(severePlan()),
+      audience: 'school',
+      lang: 'en',
+    });
 
     expect(prompt).toContain('AUDIENCE: parents and staff of a school');
     expect(prompt).toContain('check_on_neighbours');

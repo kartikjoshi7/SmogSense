@@ -15,6 +15,15 @@ describe('analyzeInversion', () => {
     });
   });
 
+  it('calls a very low boundary layer trapped even with a breeze or no wind data', () => {
+    const air = makeAir({ nowHour: 6 });
+    const breezy = air.hourly.map((h) => ({ ...h, windKmh: 8 }));
+    const noWind = air.hourly.map((h) => ({ ...h, windKmh: null }));
+
+    expect(analyzeInversion(breezy, air.nowIndex).trappedNow).toBe(true);
+    expect(analyzeInversion(noWind, air.nowIndex).trappedNow).toBe(true);
+  });
+
   it('is not trapped once the boundary layer has risen', () => {
     const air = makeAir({ nowHour: 14 });
 

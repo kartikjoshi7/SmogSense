@@ -55,6 +55,7 @@ const ASSUMPTIONS: readonly (readonly [string, string])[] = [
   ['TRIPS_PER_COMMUTE_DAY', `${C.TRIPS_PER_COMMUTE_DAY} trips`],
   ['CARPOOL_OCCUPANTS', `${C.CARPOOL_OCCUPANTS} people`],
   ['MAX_CYCLE_KM, MAX_WALK_KM', `${C.MAX_CYCLE_KM} km, ${C.MAX_WALK_KM} km`],
+  ['ACTIVE_ALTERNATIVES', C.ACTIVE_ALTERNATIVES.join(', ')],
   ['INDOOR_PENETRATION', `${C.INDOOR_PENETRATION}`],
   ['INDOOR_DEPOSITION_PER_H', `${C.INDOOR_DEPOSITION_PER_H} per hour`],
   ['AIR_CHANGES_PER_H', `${pairs(C.AIR_CHANGES_PER_H)} (per hour)`],

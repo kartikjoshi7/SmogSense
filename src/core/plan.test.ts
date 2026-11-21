@@ -6,7 +6,7 @@ import { makeAir } from './fixtures/air.js';
 import { HEALTHY_COUPLE, HOMEBOUND_SENIOR, SHARMA_FAMILY } from './fixtures/profiles.js';
 import { findRecommendation as find } from './fixtures/recommendations.js';
 import { planHeadline } from './explain/index.js';
-import { buildPlan } from './plan.js';
+import { buildPlan, communityPlan } from './plan.js';
 
 const SEVERE = 2.4;
 const POOR = 0.8;
@@ -123,6 +123,29 @@ describe('buildPlan — other households and places', () => {
     const p = plan(HEALTHY_COUPLE, makeAir({ scale: SEVERE }));
 
     expect(find(p, 'exercise_indoors')?.effort).toBe('medium');
+  });
+
+  it('suggests walking to work on a moderate day but not when exertion outdoors is unsafe', () => {
+    const shortDrive: Profile = {
+      ...SHARMA_FAMILY,
+      commute: { ...SHARMA_FAMILY.commute, oneWayKm: 2, alternatives: ['walk', 'cycle', 'metro'] },
+    };
+
+    expect(ids(plan(shortDrive, makeAir({ scale: MODERATE })))).toContain('switch_to_walk');
+    const severe = ids(plan(shortDrive, makeAir({ scale: SEVERE })));
+    expect(severe).not.toContain('switch_to_walk');
+    expect(severe).not.toContain('switch_to_cycle');
+    expect(severe).toContain('switch_to_metro');
+  });
+
+  it('gives every family the same plan for a community notice', () => {
+    const air = makeAir({ scale: 1.5 });
+    const sharma = communityPlan(plan(SHARMA_FAMILY, air));
+    const couple = communityPlan(plan(HEALTHY_COUPLE, air));
+
+    expect(plan(SHARMA_FAMILY, air).severity).not.toBe(plan(HEALTHY_COUPLE, air).severity);
+    expect(sharma).toEqual(couple);
+    expect(ids(sharma)).not.toContain('sensitive_members');
   });
 
   it('uses the US AQI in London and keeps a moderate day calm', () => {

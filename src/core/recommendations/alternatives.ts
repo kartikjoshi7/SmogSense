@@ -1,7 +1,8 @@
 import type { Level, RecommendationId } from '../../shared/plan.js';
 import type { CommuteAlternative } from '../../shared/profile.js';
-import { SMOKY_FUELS } from '../constants.js';
+import { ACTIVE_ALTERNATIVES, SMOKY_FUELS } from '../constants.js';
 import { commuteSwaps, type CommuteSwap } from '../emissions.js';
+import { outdoorExertionUnsafe } from '../risk.js';
 import { candidate, type Candidate, type PlanContext } from './context.js';
 
 const SWAP_ID = {
@@ -55,10 +56,14 @@ function cleanCookingFuel(ctx: PlanContext): Candidate[] {
   ];
 }
 
-/** Sustainable alternatives: commute swaps the household can make and cleaner cooking fuel. */
+/**
+ * Sustainable alternatives: commute swaps the household can make and cleaner cooking fuel.
+ * Walking and cycling are left out on days when exertion outdoors is unsafe.
+ */
 export function alternativeCandidates(ctx: PlanContext): Candidate[] {
-  const swaps = commuteSwaps(ctx.profile.commute, ctx.ambientPm25).map((s) =>
-    swapCandidate(ctx, s),
-  );
+  const unsafe = outdoorExertionUnsafe(ctx.advice, ctx.severity);
+  const swaps = commuteSwaps(ctx.profile.commute, ctx.ambientPm25)
+    .filter((s) => !(unsafe && ACTIVE_ALTERNATIVES.includes(s.alternative)))
+    .map((s) => swapCandidate(ctx, s));
   return [...swaps, ...cleanCookingFuel(ctx)];
 }

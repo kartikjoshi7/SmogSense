@@ -100,9 +100,10 @@ function ChatForm({
           {t.counter(question.length, CHAT_LIMITS.questionChars)}
         </p>
       </div>
-      <p role="status" className={status === 'error' ? 'field-error' : 'muted'}>
+      <p role="status" className={status === 'sending' ? 'muted' : 'field-error'}>
         {status === 'sending' ? t.sending : ''}
         {status === 'error' ? t.error : ''}
+        {status === 'busy' ? t.busy : ''}
       </p>
       <button
         type="submit"
