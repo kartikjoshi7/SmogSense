@@ -8,8 +8,19 @@ routines, indoor air hacks, sustainable alternatives) and shows the impact of ev
 numbers. Gemini explains the plan in English or Hindi, answers questions and writes community
 notices in ten languages, and it may only use the numbers the engine computed.
 
-**Live:** https://smog-sense-sigma.vercel.app · More detail: [Architecture](docs/ARCHITECTURE.md) ·
-[Security](docs/SECURITY.md) · [Testing](docs/TESTING.md) · [Accessibility](docs/ACCESSIBILITY.md)
+**Live:** https://smog-sense-sigma.vercel.app · [Architecture](docs/ARCHITECTURE.md)
+
+**Evidence for each judging area**
+
+| Area                         | In short                                                                                                                | Details                                |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Code quality                 | Strict TypeScript, strict ESLint with layer rules, Prettier and knip as gates; no `any`, no type assertions             | [Code quality](docs/CODE_QUALITY.md)   |
+| Security                     | Server-only key, Zod on every input, rate limits, strict CSP; every AI number checked; no names or conditions to the AI | [Security](docs/SECURITY.md)           |
+| Efficiency                   | The plan never waits for the AI; cached, shared upstream calls; small prompts; lazy dialogs; no chart library           | [Efficiency](docs/EFFICIENCY.md)       |
+| Testing                      | Unit, integration and Playwright end-to-end tests with axe; 100% coverage of the engine                                 | [Testing](docs/TESTING.md)             |
+| Accessibility                | WCAG 2.2 AA checked by axe in light and dark, keyboard-only flow, 44 px targets, English and Hindi, read-aloud          | [Accessibility](docs/ACCESSIBILITY.md) |
+| Problem statement alignment  | Each requirement of the brief traced to code and tests; real Open-Meteo data; works without the AI                      | [Alignment](docs/ALIGNMENT.md)         |
+| Design decisions (all areas) | Ten records: why each choice was made, what was turned down, what it costs, and the tests that hold it                  | [Decisions](docs/DECISIONS.md)         |
 
 ## Chosen vertical
 
@@ -48,23 +59,20 @@ How `buildPlan(profile, air)` in `src/core/plan.ts` decides:
 6. **Ranking** (`recommendations/rank.ts`): health benefit × how bad the air is × household
    sensitivity, plus CO₂ avoided, minus effort. In an emergency, protective actions come first.
 
-**Requirement traceability**
-
-| Requirement in the brief      | What SmogSense does                                                                                                                                                                                                 | Code                                                   | Tests                                         |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------- |
-| GenAI-powered assistant       | Gemini writes the plan's explanations, answers questions and writes community notices                                                                                                                               | `src/server/ai/*`                                      | `ai-service.test.ts`, `gemini-client.test.ts` |
-| Families                      | Several members with age group and conditions; the plan adapts to the most sensitive one and names who each action is for                                                                                           | `core/risk.ts`, `core/severity.ts`                     | `risk.test.ts`, `plan.test.ts`                |
-| Communities                   | Notices for a housing society, school or workplace in 10 languages; actions such as checking on neighbours and reporting open burning                                                                               | `routes/ai.ts`, `recommendations/community.ts`         | `app.test.ts`, `community-dialog.test.tsx`    |
-| Severe winter smog            | Smog-emergency mode and an inversion explainer ("trapped until about 11:00")                                                                                                                                        | `core/severity.ts`, `core/inversion.ts`                | `severity.test.ts`, `inversion.test.ts`       |
-| Urban air pollution           | This hour's PM2.5, PM10, NO₂, O₃, CO and SO₂ and a 24-hour PM2.5 forecast for the chosen place                                                                                                                      | `server/air/open-meteo.ts`, `core/plan.ts`             | `open-meteo.test.ts`, `plan.test.ts`          |
-| Low-emission daily routines   | Cleanest exercise window, commute protection, a brief airing time and a timeline for the day                                                                                                                        | `recommendations/routine.ts`, `core/windows.ts`        | `windows.test.ts`, `plan.test.ts`             |
-| Indoor air quality hacks      | Purifier, sealing gaps, closed windows, cooking ventilation, no incense or smoking, with indoor µg/m³ before and after                                                                                              | `core/indoor.ts`, `recommendations/indoor-air.ts`      | `indoor.test.ts`                              |
-| Sustainable alternatives      | Metro, bus, carpool, cycling, walking, working from home, cleaner cooking fuel, with kg CO₂ saved per week                                                                                                          | `core/emissions.ts`, `recommendations/alternatives.ts` | `emissions.test.ts`                           |
-| Tailored to location          | GPS or city search; NAQI in India, US AQI elsewhere; the NCR-only GRAP check                                                                                                                                        | `core/aqi.ts`, `server/air/geocode.ts`                 | `aqi.test.ts`, `geocode.test.ts`              |
-| Tailored to lifestyle         | Commute mode, distance and days, exercise habit, home, cooking fuel, incense, smoking, mask                                                                                                                         | `shared/profile.ts`                                    | `profile.test.ts`                             |
-| Clearly explaining the impact | Every measurable card shows the engine's numbers and the rest a benefit level; AI text with a number the grounding check cannot match to the plan is replaced by standard guidance, and every text says which it is | `server/ai/grounding.ts`, `core/explain/*`             | `grounding.test.ts`, `e2e/flow.spec.ts`       |
+Every requirement in the brief is traced to the code and tests that cover it in
+[Problem statement alignment](docs/ALIGNMENT.md#requirement-traceability).
 
 ## How the solution works
+
+```mermaid
+flowchart LR
+  UI["React app<br/>setup, plan, chat, notice"] -->|"POST /api/plan"| API["Hono API on Vercel"]
+  UI -->|"POST /api/explain, /chat, /community"| API
+  API --> AIR["Air service<br/>rounding, cache"] --> OM[("Open-Meteo<br/>air quality and weather")]
+  API --> ENG["Decision engine<br/>src/core, pure functions"]
+  API --> AI["AI service<br/>prompts, grounding check, cache"] --> GEM[("Gemini")]
+  UI -.->|"standard text, what-if"| ENG
+```
 
 1. **Set up (no sign-up).** Choose a place by GPS or city search, add family members (their names
    stay on the device) and describe the commute, exercise and home. The Delhi example family fills
@@ -95,17 +103,8 @@ Every reply must match a JSON schema and pass the numeric grounding check
 reached is replaced by standard guidance from `src/core/explain`, and each piece of text carries
 an `ai` or `fallback` label that the UI shows next to it.
 
-**Free-tier strategy.** The app is built to run on a free AI Studio key:
-
-- `gemini-3.5-flash-lite` first, then `gemini-3.8-flash` (`GEMINI_MODELS`), with minimal thinking
-  and capped output tokens (900 for a plan, 400 for chat and notices).
-- One call explains the whole plan, and the explain and chat prompts carry only its 8
-  highest-priority items.
-- AI answers are cached ([Architecture](docs/ARCHITECTURE.md#request-flow) has the times);
-  a response with no AI text is never cached, so the next request can reach the model again.
-- A model that answers 429 is skipped for 10 minutes, and a daily budget (`GEMINI_DAILY_BUDGET`,
-  200 by default) stops calls before the quota does. Rate limits are in [Security](docs/SECURITY.md).
-- The plan itself never waits for the AI: `/api/plan` makes no model call.
+**Free-tier strategy.** The app runs on a free AI Studio key: small prompts, capped tokens,
+caching, a cool-down after a 429 and a daily budget ([Efficiency](docs/EFFICIENCY.md#gemini-on-the-free-tier)).
 
 **Run it locally** (Node 22+):
 
@@ -115,7 +114,8 @@ cp .env.example .env.local   # add GEMINI_API_KEY; without it the app uses stand
 npm run dev                  # UI and API on http://localhost:5173
 ```
 
-The quality gates and test suites are described in [Testing](docs/TESTING.md).
+The quality gates are listed in [Code quality](docs/CODE_QUALITY.md#gates-that-fail-the-build)
+and the test suites in [Testing](docs/TESTING.md).
 
 ## Assumptions
 

@@ -62,7 +62,8 @@ Dependencies point one way: `ui → shared, core` · `server → shared, core` �
 ## Docs rules
 
 - Only claim what the code or tests prove. No hand-made badges, no line-count claims, no buzzwords ("enterprise", "neurosymbolic", "triple-redundant"). Update docs in the same change as the code.
-- One `README.md` plus `docs/ARCHITECTURE.md`, `docs/SECURITY.md`, `docs/TESTING.md`, `docs/ACCESSIBILITY.md`, with nothing duplicated.
+- One `README.md` plus `docs/ARCHITECTURE.md`, `docs/DECISIONS.md` and one doc per judging area (`docs/CODE_QUALITY.md`, `docs/SECURITY.md`, `docs/EFFICIENCY.md`, `docs/TESTING.md`, `docs/ACCESSIBILITY.md`, `docs/ALIGNMENT.md`), with nothing duplicated: each fact lives in one doc and the others link to it.
+- A choice that shapes the code (a layer rule, a library, a data source, a trade-off) gets a record in `docs/DECISIONS.md`: context, decision, what was turned down, what it costs, and the code and tests that carry it.
 
 ## Workflow
 

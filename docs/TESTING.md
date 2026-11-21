@@ -3,13 +3,13 @@
 ## How to run
 
 ```bash
-npm run check      # typecheck, lint, format check, knip, unit tests with coverage, build
+npm run coverage   # Vitest: every unit and integration test, with the coverage thresholds
 npm run test:e2e   # Playwright (Chromium) against the production build
-npm run check:repo # one branch, tracked files under 9 MB, no .env files
 ```
 
-CI (`.github/workflows/ci.yml`) runs all three on every push and pull request, plus
-`npm audit --audit-level=high`, in two jobs: `check` and `e2e`.
+CI (`.github/workflows/ci.yml`) runs both on every push and pull request, in two jobs: `check`,
+which also runs the other gates in [Code quality](CODE_QUALITY.md#gates-that-fail-the-build), and
+`e2e`.
 
 ## What is tested
 
@@ -81,10 +81,10 @@ and 90% for the whole project. `npm run coverage`, and with it `npm run check` a
 below them. From the last run:
 
 ```
-Statements   : 99.15% ( 1518/1531 )
+Statements   : 99.15% ( 1524/1537 )
 Branches     : 96.64% ( 720/745 )
 Functions    : 98.79% ( 573/580 )
-Lines        : 99.31% ( 1445/1455 )
+Lines        : 99.31% ( 1451/1461 )
 ```
 
 `src/core` is at 100% on all four. Test helpers, fixtures and `src/ui/main.tsx` (the file that

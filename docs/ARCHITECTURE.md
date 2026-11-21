@@ -17,9 +17,8 @@ e2e/              Playwright tests against the production build
 
 Dependencies point one way: `ui → shared, core`, `server → shared, core`, `core → shared`
 (types only, plus the bounds and time units in `shared/limits.ts`, which imports nothing). ESLint
-enforces it: `src/core` may not import a package, a value from the rest of `shared`, or anything
-from `ui` or `server`; `src/ui` may not import `server` (only its test harness runs the real app);
-and `import-x/no-cycle` rejects import cycles anywhere.
+enforces the direction and rejects import cycles
+([Code quality › Layers](CODE_QUALITY.md#layers-enforced-by-the-linter)).
 
 ## The engine (`src/core`)
 
@@ -115,17 +114,18 @@ through the same `fetchJson` wrapper (place names come back in that language) an
 CDN cache header. The rate limits and the location rounding are described in
 [Security](SECURITY.md).
 
-**Errors.** The engine, the services and the UI's API client share one `Result` type
-(`core/result.ts`: `{ ok: true, value } | { ok: false, error }`) instead of throwing. Each server
-plan or place-search failure maps to one status and safe message in `http/errors.ts`;
+**Errors.** Expected failures travel as `Result` values (`core/result.ts`:
+`{ ok: true, value } | { ok: false, error }`), not exceptions. Each server plan or place-search
+failure maps to one status and safe message in `http/errors.ts`;
 validation (400), body size (413), rate limits (429) and unknown routes (404) answer from their
 middleware, and anything unexpected becomes a
 logged 500 with the body `{ "error": "Internal error" }`. The UI shows its own message for each
 status, in the interface language.
 
 **Dependency injection.** `src/server/main.ts` is the only place real dependencies are created
-(`fetch`, the clock, the Gemini SDK call). Tests pass fakes to `createApp`, `createAirService`,
-`createAiService` and `createGeminiClient`; production code has no test-only branches.
+(`fetch`, the clock, the Gemini SDK call); `createApp`, `createAirService`, `createAiService` and
+`createGeminiClient` receive them as arguments. What the tests pass instead is listed in
+[Testing › Test doubles](TESTING.md#test-doubles).
 
 ## The UI (`src/ui`)
 
@@ -142,25 +142,18 @@ status, in the interface language.
   validates every response against the shared schemas. Browser-side timings live in
   `settings.ts`.
 - **Screens:** `SetupForm` and `Dashboard`; `App` moves focus to the new screen's heading when one
-  replaces the other. The chat and community dialogs are loaded with `React.lazy` when first
-  opened, and share one `Dialog` component.
-- **Instant text:** the plan renders with standard guidance from `src/core/explain` as soon as
-  `/api/plan` answers; AI wording replaces it item by item when `/api/explain` arrives.
+  replaces the other. The chat and community dialogs are split out with `React.lazy` and share
+  one `Dialog` component.
+- **Instant text:** the plan first renders with standard guidance from `src/core/explain`, then
+  AI wording replaces it item by item ([Efficiency](EFFICIENCY.md#the-plan-never-waits-for-the-ai)
+  explains why).
 - **What-if:** the slider calls the engine's own `activityMeanPm25` and `exerciseDoseUg`, so its
-  doses match the plan's exercise advice exactly, with no network call.
+  doses match the plan's exercise advice exactly.
 
 ## Build and deploy
 
-- `vite build` produces static files in `dist/`. Gzip sizes from the last build: main bundle
-  123.0 kB, CSS 5.2 kB, and lazy chunks of 1.3 kB (chat), 1.1 kB (community) and 0.8 kB (dialog).
-- What the main bundle holds, measured by splitting a build by origin (gzip): React and React DOM
-  67.5 kB, Zod with the shared schemas 28.5 kB, the engine with its English and Hindi text
-  18.1 kB (the Hindi text alone 4.5 kB) and the rest of the UI 10.5 kB. Zod stays in the browser
-  because every response and the saved household are validated there, with the same schemas the
-  server uses; `zod/mini` would be smaller, but every shared schema would have to be rewritten in
-  its functional style, and one schema style for server and browser was the better trade. Hindi
-  stays in the main bundle: loading it separately would save about 4 kB but make the first switch
-  to Hindi wait on the network.
+- `vite build` produces static files in `dist/`; their sizes are in
+  [Efficiency](EFFICIENCY.md#what-the-browser-downloads).
 - Vercel serves `dist/` and runs `api/index.ts` in the Mumbai region (`bom1`). `vercel.json`
   rewrites `/api/*` to the function and sets the security headers for every page.
 - `npm run dev` serves the UI and the same Hono app on one port through a small Vite plugin
