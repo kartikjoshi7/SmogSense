@@ -67,6 +67,10 @@ export default tseslint.config(
     rules: {
       complexity: ['error', 10],
       'max-lines-per-function': ['error', { max: 60, skipBlankLines: true, skipComments: true }],
+      // 250 lines of code per file (tests included) keeps a module to one topic that reads in one
+      // sitting; the only two files that ever exceeded it were message catalogues, split by topic.
+      // Blank lines and comments do not count, so the limit never pays for deleting documentation.
+      'max-lines': ['error', { max: 250, skipBlankLines: true, skipComments: true }],
       'max-depth': ['error', 3],
       'max-params': ['error', 4],
       'no-nested-ternary': 'error',

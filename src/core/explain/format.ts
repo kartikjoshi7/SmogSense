@@ -50,8 +50,8 @@ export function pct(rec: { readonly impact: Impact }): number {
   return impact(rec, 'exposureReductionPct');
 }
 
-/** The sentences each language supplies for the template shapes every pack shares. */
-export interface Phrases {
+/** The sentences each language supplies for the recommendation shapes every pack shares. */
+export interface ImpactPhrases {
   /** Indoor PM2.5 before and after, in µg/m³, and the percentage cut. */
   readonly indoorChange: (before: number, after: number, percent: number) => string;
   /** Weekly CO₂ saved by a commute swap, followed by the exposure clause (may be empty). */
@@ -60,6 +60,10 @@ export interface Phrases {
   readonly exposureDown: (percent: number) => string;
   /** Clause for a swap that raises in-transit exposure, by `percent`. */
   readonly exposureUp: (percent: number) => string;
+}
+
+/** The sentences each language supplies for the one-line summary of the day. */
+export interface DayPhrases {
   /** The index reading: scale name, value and category name. */
   readonly reading: (scale: string, value: number, category: string) => string;
   /** Pollution trapped near the ground until a clock time. */
@@ -69,7 +73,7 @@ export interface Phrases {
 }
 
 /** Template builders for the shapes every language shares, worded with that language's phrases. */
-export function templateKit(phrases: Phrases) {
+export function templateKit(phrases: ImpactPhrases) {
   const exposureClause = (rec: { readonly impact: Impact }): string => {
     const change = pct(rec);
     if (change > 0) {
@@ -105,7 +109,7 @@ export function templateKit(phrases: Phrases) {
 export function daySummary(
   plan: Plan,
   labels: Pick<LanguagePack, 'scales' | 'categories'>,
-  phrases: Phrases,
+  phrases: DayPhrases,
 ): string {
   const { index, inversion, cleanestHour } = plan;
   const reading = phrases.reading(

@@ -1,7 +1,7 @@
 import { useId, type ReactNode } from 'react';
 import { clock } from '../../../core/explain/format.js';
 import { CLOCK_HOURS, type Range } from '../../../shared/limits.js';
-import type { Labels } from '../../i18n/en.js';
+import type { Labels } from '../../i18n/labels.js';
 
 /** Each option's key and text, in the order the table lists them. */
 function entries<K extends string>(labels: Labels<K>): [K, string][] {
