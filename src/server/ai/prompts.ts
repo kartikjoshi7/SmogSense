@@ -2,6 +2,27 @@ import type { Audience, ChatTurn } from '../../shared/api.js';
 import { ENGLISH_NAMES, type Language } from '../../shared/languages.js';
 import type { Plan, Recommendation } from '../../shared/plan.js';
 import type { Profile } from '../../shared/profile.js';
+import { SETTINGS } from '../config.js';
+
+/** What an explanation is written from: the household's plan, in one language. */
+export interface ExplainInput {
+  readonly plan: Plan;
+  readonly profile: Profile;
+  readonly lang: Language;
+}
+
+/** What a chat answer is written from: the plan, the conversation so far and the question. */
+export interface ChatInput extends ExplainInput {
+  readonly question: string;
+  readonly history: readonly ChatTurn[];
+}
+
+/** What a community notice is written from: the plan and who the notice is for. */
+export interface NoticeInput {
+  readonly plan: Plan;
+  readonly audience: Audience;
+  readonly lang: Language;
+}
 
 /** Rules every Gemini call follows. User text is always data, never instructions. */
 export const SYSTEM_INSTRUCTION = [
@@ -54,17 +75,17 @@ function facts(
   });
 }
 
-/** Ask for a headline, summary and one explanation per recommendation. */
-export function explainPrompt(
-  plan: Plan,
-  profile: Profile,
-  lang: Language,
-  recommendations: readonly Recommendation[],
-): string {
+/** The recommendations a household prompt carries: only the top ones, to save tokens. */
+function topRecommendations(plan: Plan): readonly Recommendation[] {
+  return plan.recommendations.slice(0, SETTINGS.aiPromptTopN);
+}
+
+/** Ask for a headline, summary and one explanation per top recommendation. */
+export function explainPrompt({ plan, profile, lang }: ExplainInput): string {
   return [
     `LANGUAGE: ${ENGLISH_NAMES[lang]}`,
     `HOUSEHOLD: ${household(profile)}`,
-    `FACTS: ${facts(plan, recommendations, true)}`,
+    `FACTS: ${facts(plan, topRecommendations(plan), true)}`,
     'TASK: Write a headline (under 90 characters) and a two-sentence summary of today for this household.',
     'Then, for every recommendation id in FACTS, write "why" (at most two sentences that use its impact numbers) and up to three short "steps".',
   ].join('\n');
@@ -76,25 +97,20 @@ function asData(text: string): string {
 }
 
 /** Ask a free-form question about today's plan. */
-export function chatPrompt(
-  plan: Plan,
-  profile: Profile,
-  lang: Language,
-  turns: { readonly question: string; readonly history: readonly ChatTurn[] },
-): string {
-  const history = turns.history.map((turn) => `${turn.role}: ${asData(turn.text)}`).join('\n');
+export function chatPrompt({ plan, profile, lang, question, history }: ChatInput): string {
+  const turns = history.map((turn) => `${turn.role}: ${asData(turn.text)}`).join('\n');
   return [
     `LANGUAGE: ${ENGLISH_NAMES[lang]}`,
     `HOUSEHOLD: ${household(profile)}`,
-    `FACTS: ${facts(plan, plan.recommendations, true)}`,
-    `<conversation>\n${history === '' ? '(none)' : history}\n</conversation>`,
-    `<user_question>${asData(turns.question)}</user_question>`,
+    `FACTS: ${facts(plan, topRecommendations(plan), true)}`,
+    `<conversation>\n${turns === '' ? '(none)' : turns}\n</conversation>`,
+    `<user_question>${asData(question)}</user_question>`,
     'TASK: Answer the question in at most four sentences, using the FACTS.',
   ].join('\n');
 }
 
 /** Ask for a short notice a housing society, school or office can share. */
-export function communityPrompt(plan: Plan, audience: Audience, lang: Language): string {
+export function communityPrompt({ plan, audience, lang }: NoticeInput): string {
   const shared = plan.recommendations.filter(
     (r) => r.category === 'protection' || r.category === 'community',
   );

@@ -21,7 +21,7 @@ export function aiRoutes(air: AirService, ai: AiService) {
       const { profile, location, lang } = c.req.valid('json');
       const plan = await loadPlan(air, profile, location);
       return plan.ok
-        ? c.json(await ai.explain(plan.value, profile, lang))
+        ? c.json(await ai.explain({ plan: plan.value, profile, lang }))
         : planFailureResponse(c, plan.error);
     })
     .post('/chat', jsonBody(chatRequestSchema), async (c) => {
@@ -35,7 +35,7 @@ export function aiRoutes(air: AirService, ai: AiService) {
       const { profile, location, lang, audience } = c.req.valid('json');
       const plan = await loadPlan(air, profile, location);
       return plan.ok
-        ? c.json(await ai.communityNotice(plan.value, audience, lang))
+        ? c.json(await ai.communityNotice({ plan: plan.value, audience, lang }))
         : planFailureResponse(c, plan.error);
     });
 }

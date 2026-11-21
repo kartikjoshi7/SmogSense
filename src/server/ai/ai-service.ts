@@ -7,54 +7,54 @@ import {
   planHeadline,
   planSummary,
 } from '../../core/explain/index.js';
-import {
-  type Audience,
-  type ChatResponse,
-  type ChatTurn,
-  type CommunityResponse,
-  type ExplainResponse,
-  type TextSource,
+import type {
+  ChatResponse,
+  CommunityResponse,
+  ExplainResponse,
+  TextSource,
 } from '../../shared/api.js';
-import { CHAT_LIMITS } from '../../shared/limits.js';
 import type { Language } from '../../shared/languages.js';
+import { CHAT_LIMITS } from '../../shared/limits.js';
 import type { Plan, Recommendation } from '../../shared/plan.js';
-import type { Profile } from '../../shared/profile.js';
 import { TtlCache } from '../cache.js';
 import { SETTINGS } from '../config.js';
 import * as logger from '../logger.js';
 import type { AiClient } from './gemini-client.js';
 import { allowedNumbers, isGrounded } from './grounding.js';
-import { SYSTEM_INSTRUCTION, chatPrompt, communityPrompt, explainPrompt } from './prompts.js';
+import {
+  SYSTEM_INSTRUCTION,
+  chatPrompt,
+  communityPrompt,
+  explainPrompt,
+  type ChatInput,
+  type ExplainInput,
+  type NoticeInput,
+} from './prompts.js';
+
+const LIMITS = SETTINGS.aiReplyChars;
 
 const explanationReply = z.object({
-  headline: z.string().min(1).max(160),
-  summary: z.string().min(1).max(600),
+  headline: z.string().min(1).max(LIMITS.headline),
+  summary: z.string().min(1).max(LIMITS.summary),
   items: z.array(
     z.object({
       id: z.string(),
-      why: z.string().min(1).max(600),
-      steps: z.array(z.string().min(1).max(200)).max(3),
+      why: z.string().min(1).max(LIMITS.why),
+      steps: z.array(z.string().min(1).max(LIMITS.step)).max(SETTINGS.aiMaxSteps),
     }),
   ),
 });
 type ExplanationReply = z.infer<typeof explanationReply>;
 
+/** An answer may be sent back as chat history, so it is no longer than a history turn. */
 const chatReply = z.object({ answer: z.string().min(1).max(CHAT_LIMITS.turnChars) });
-const noticeReply = z.object({ notice: z.string().min(1).max(CHAT_LIMITS.turnChars) });
-
-interface ChatInput {
-  readonly plan: Plan;
-  readonly profile: Profile;
-  readonly lang: Language;
-  readonly question: string;
-  readonly history: readonly ChatTurn[];
-}
+const noticeReply = z.object({ notice: z.string().min(1).max(LIMITS.notice) });
 
 /** Gemini-written explanations, answers and notices, always backed by standard guidance. */
 export interface AiService {
-  explain(plan: Plan, profile: Profile, lang: Language): Promise<ExplainResponse>;
+  explain(input: ExplainInput): Promise<ExplainResponse>;
   chat(input: ChatInput): Promise<ChatResponse>;
-  communityNotice(plan: Plan, audience: Audience, lang: Language): Promise<CommunityResponse>;
+  communityNotice(input: NoticeInput): Promise<CommunityResponse>;
 }
 
 /** Record AI text that was dropped for quoting numbers the plan does not contain. */
@@ -86,24 +86,13 @@ function cacheKey(...parts: readonly unknown[]): string {
 }
 
 /**
- * Return a cached response or produce a new one. Only AI-written responses are cached:
- * fallbacks are free to rebuild, and the next request may reach the model again.
+ * Only responses with AI-written text are cached: fallbacks are free to rebuild, and the next
+ * request may reach the model again.
  */
-async function memo<R extends { readonly source: string }>(
-  cache: TtlCache<R>,
-  key: string,
-  produce: () => Promise<R>,
-): Promise<R> {
-  const hit = cache.get(key);
-  if (hit !== undefined) {
-    return hit;
-  }
-  const response = await produce();
-  if (response.source !== 'fallback') {
-    cache.set(key, response);
-  }
-  return response;
-}
+const hasAiText = (response: { readonly source: TextSource }): boolean => response.source === 'ai';
+
+const explanationHasAiText = (response: ExplainResponse): boolean =>
+  response.introSource === 'ai' || response.items.some(hasAiText);
 
 function explainItem(
   rec: Recommendation,
@@ -115,15 +104,6 @@ function explainItem(
   return written !== undefined && isGrounded([written.why, ...written.steps].join(' '), ai.allowed)
     ? { id: rec.id, title: standard.title, why: written.why, steps: written.steps, source: 'ai' }
     : { id: rec.id, ...standard, steps: [...standard.steps], source: 'fallback' };
-}
-
-/** "ai" when every part (headline and items) is AI-written, "fallback" when none is, else "mixed". */
-function overallSource(parts: readonly TextSource[]): ExplainResponse['source'] {
-  const aiCount = parts.filter((source) => source === 'ai').length;
-  if (aiCount === 0) {
-    return 'fallback';
-  }
-  return aiCount === parts.length ? 'ai' : 'mixed';
 }
 
 /** How many parts of a reply were written but dropped by the grounding check. */
@@ -157,8 +137,55 @@ function composeExplanation(
     summary: intro?.summary ?? planSummary(plan, lang),
     introSource,
     items,
-    source: overallSource([introSource, ...items.map((item) => item.source)]),
   };
+}
+
+/** The explanation of a plan: Gemini's wording where it is grounded, standard guidance elsewhere. */
+async function writeExplanation(client: AiClient, input: ExplainInput): Promise<ExplainResponse> {
+  const reply = await client.generate({
+    system: SYSTEM_INSTRUCTION,
+    prompt: explainPrompt(input),
+    schema: explanationReply,
+    maxOutputTokens: SETTINGS.aiMaxOutputTokens.explain,
+  });
+  return composeExplanation(input.plan, input.lang, reply.ok ? reply.value : null);
+}
+
+/** A grounded answer to a chat question, or the day's top actions when there is none. */
+async function writeAnswer(client: AiClient, input: ChatInput, prompt: string) {
+  const reply = await client.generate({
+    system: SYSTEM_INSTRUCTION,
+    prompt,
+    schema: chatReply,
+    maxOutputTokens: SETTINGS.aiMaxOutputTokens.chat,
+  });
+  const allowed = allowedNumbers(input.plan);
+  const answer = groundedText('chat', reply.ok ? reply.value.answer : null, allowed);
+  const response: ChatResponse =
+    answer === null
+      ? { answer: fallbackChatAnswer(input.plan, input.lang), source: 'fallback' }
+      : { answer, source: 'ai' };
+  return response;
+}
+
+/** A grounded community notice, or the standard notice when there is none. */
+async function writeNotice(client: AiClient, input: NoticeInput, prompt: string) {
+  const reply = await client.generate({
+    system: SYSTEM_INSTRUCTION,
+    prompt,
+    schema: noticeReply,
+    maxOutputTokens: SETTINGS.aiMaxOutputTokens.notice,
+  });
+  const allowed = allowedNumbers(input.plan);
+  const notice = groundedText('notice', reply.ok ? reply.value.notice : null, allowed);
+  const response: CommunityResponse =
+    notice === null
+      ? {
+          notice: fallbackCommunityNotice(input.plan, input.audience, input.lang),
+          source: 'fallback',
+        }
+      : { notice, source: 'ai' };
+  return response;
 }
 
 /** Create the AI service with response caches; the Gemini client is injected. */
@@ -172,53 +199,25 @@ export function createAiService(deps: {
   const answers = new TtlCache<ChatResponse>({ ...options, ttlMs: SETTINGS.chatCacheTtlMs });
 
   return {
-    explain(plan, profile, lang) {
+    explain(input) {
       // The response carries standard text for every recommendation, so it is keyed on the
       // whole plan, not only on the part the model sees.
-      return memo(explanations, cacheKey('explain', lang, plan, profile.members), async () => {
-        const top = plan.recommendations.slice(0, SETTINGS.aiExplainTopN);
-        const reply = await deps.client.generate({
-          system: SYSTEM_INSTRUCTION,
-          prompt: explainPrompt(plan, profile, lang, top),
-          schema: explanationReply,
-          maxOutputTokens: SETTINGS.aiMaxOutputTokens.explain,
-        });
-        return composeExplanation(plan, lang, reply.ok ? reply.value : null);
-      });
+      const key = cacheKey('explain', input.lang, input.plan, input.profile.members);
+      return explanations.getOrLoad(
+        key,
+        () => writeExplanation(deps.client, input),
+        explanationHasAiText,
+      );
     },
-
     chat(input) {
-      const prompt = chatPrompt(input.plan, input.profile, input.lang, input);
-      return memo(answers, cacheKey('chat', prompt), async () => {
-        const reply = await deps.client.generate({
-          system: SYSTEM_INSTRUCTION,
-          prompt,
-          schema: chatReply,
-          maxOutputTokens: SETTINGS.aiMaxOutputTokens.chat,
-        });
-        const allowed = allowedNumbers(input.plan);
-        const answer = groundedText('chat', reply.ok ? reply.value.answer : null, allowed);
-        return answer === null
-          ? { answer: fallbackChatAnswer(input.plan, input.lang), source: 'fallback' }
-          : { answer, source: 'ai' };
-      });
+      const prompt = chatPrompt(input);
+      const load = () => writeAnswer(deps.client, input, prompt);
+      return answers.getOrLoad(cacheKey('chat', prompt), load, hasAiText);
     },
-
-    communityNotice(plan, audience, lang) {
-      const prompt = communityPrompt(plan, audience, lang);
-      return memo(notices, cacheKey('notice', prompt), async () => {
-        const reply = await deps.client.generate({
-          system: SYSTEM_INSTRUCTION,
-          prompt,
-          schema: noticeReply,
-          maxOutputTokens: SETTINGS.aiMaxOutputTokens.notice,
-        });
-        const allowed = allowedNumbers(plan);
-        const notice = groundedText('notice', reply.ok ? reply.value.notice : null, allowed);
-        return notice === null
-          ? { notice: fallbackCommunityNotice(plan, audience, lang), source: 'fallback' }
-          : { notice, source: 'ai' };
-      });
+    communityNotice(input) {
+      const prompt = communityPrompt(input);
+      const load = () => writeNotice(deps.client, input, prompt);
+      return notices.getOrLoad(cacheKey('notice', prompt), load, hasAiText);
     },
   };
 }

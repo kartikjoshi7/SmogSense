@@ -1,4 +1,6 @@
 import { createMiddleware } from 'hono/factory';
+import { API_STATUS } from '../../shared/api.js';
+import { SECOND_MS } from '../config.js';
 
 export interface RateLimitOptions {
   /** Requests allowed per client within the window. */
@@ -29,8 +31,11 @@ export function rateLimit(options: RateLimitOptions) {
     if (recent.length >= options.limit) {
       hits.set(key, recent);
       const oldest = recent[0] ?? now;
-      c.header('Retry-After', String(Math.ceil((oldest + options.windowMs - now) / 1000)));
-      return c.json({ error: 'Too many requests. Please wait a moment and try again.' }, 429);
+      c.header('Retry-After', String(Math.ceil((oldest + options.windowMs - now) / SECOND_MS)));
+      return c.json(
+        { error: 'Too many requests. Please wait a moment and try again.' },
+        API_STATUS.tooManyRequests,
+      );
     }
     hits.set(key, [...recent, now]);
     const leastRecent = hits.keys().next();

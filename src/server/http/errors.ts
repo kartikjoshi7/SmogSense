@@ -1,16 +1,20 @@
 import type { Context } from 'hono';
-import type { AirFailure } from '../air/open-meteo.js';
-
-/** Every way loading a plan can fail before any AI is involved. */
-export type PlanFailure = AirFailure | 'insufficient_data';
+import { API_STATUS } from '../../shared/api.js';
+import type { PlanFailure } from '../plan-service.js';
 
 const UPSTREAM = {
-  status: 502,
+  status: API_STATUS.upstreamFailed,
   message: 'Air-quality data is unavailable right now. Please try again shortly.',
 } as const;
 
 const RESPONSES: Readonly<
-  Record<PlanFailure, { readonly status: 502 | 503; readonly message: string }>
+  Record<
+    PlanFailure,
+    {
+      readonly status: typeof API_STATUS.upstreamFailed | typeof API_STATUS.noData;
+      readonly message: string;
+    }
+  >
 > = {
   timeout: UPSTREAM,
   network: UPSTREAM,
@@ -18,7 +22,7 @@ const RESPONSES: Readonly<
   invalid_response: UPSTREAM,
   stale: UPSTREAM,
   insufficient_data: {
-    status: 503,
+    status: API_STATUS.noData,
     message: 'There is not enough recent air-quality data for this location yet.',
   },
 };

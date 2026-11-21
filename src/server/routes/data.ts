@@ -13,7 +13,8 @@ const GEOCODE_CACHE_CONTROL = `public, s-maxage=${GEOCODE_MAX_AGE}, stale-while-
 export function dataRoutes(air: AirService) {
   return new Hono()
     .get('/geocode', queryParams(geocodeQuerySchema), async (c) => {
-      const result = await air.searchPlaces(c.req.valid('query').q);
+      const { q, lang } = c.req.valid('query');
+      const result = await air.searchPlaces(q, lang);
       if (!result.ok) {
         return geocodeFailureResponse(c);
       }

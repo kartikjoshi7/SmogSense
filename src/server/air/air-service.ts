@@ -3,14 +3,16 @@ import type { Location, Place } from '../../shared/api.js';
 import { TtlCache } from '../cache.js';
 import { SETTINGS } from '../config.js';
 import type { FetchFailure } from '../http/fetch-json.js';
-import { ok, type Result } from '../../core/result.js';
+import { roundTo } from '../../core/numbers.js';
+import type { Result } from '../../core/result.js';
+import type { UiLanguage } from '../../shared/languages.js';
 import { searchPlaces } from './geocode.js';
 import { fetchAirData, type AirFailure } from './open-meteo.js';
 
 /** Air data and place search, cached so repeated requests do not hit Open-Meteo. */
 export interface AirService {
   getAir(location: Location): Promise<Result<AirData, AirFailure>>;
-  searchPlaces(query: string): Promise<Result<Place[], FetchFailure>>;
+  searchPlaces(query: string, lang: UiLanguage): Promise<Result<Place[], FetchFailure>>;
 }
 
 export interface AirServiceDeps {
@@ -20,29 +22,14 @@ export interface AirServiceDeps {
 
 /** Round to 0.1° (about 11 km): enough for city-scale air data, and less precise than GPS. */
 function roundLocation(location: Location): Location {
-  const factor = 10 ** SETTINGS.coordinateDecimals;
   return {
-    lat: Math.round(location.lat * factor) / factor,
-    lon: Math.round(location.lon * factor) / factor,
+    lat: roundTo(location.lat, SETTINGS.coordinateDecimals),
+    lon: roundTo(location.lon, SETTINGS.coordinateDecimals),
   };
 }
 
-/** Run `load` on a cache miss and keep only successful results. */
-async function cached<T, E>(
-  cache: TtlCache<T>,
-  key: string,
-  load: () => Promise<Result<T, E>>,
-): Promise<Result<T, E>> {
-  const hit = cache.get(key);
-  if (hit !== undefined) {
-    return ok(hit);
-  }
-  const result = await load();
-  if (result.ok) {
-    cache.set(key, result.value);
-  }
-  return result;
-}
+/** Only successful lookups are cached; a failure is tried again on the next request. */
+const succeeded = (result: { readonly ok: boolean }): boolean => result.ok;
 
 /** Create the air service with its caches; dependencies are injected for testing. */
 export function createAirService(deps: AirServiceDeps): AirService {
@@ -52,12 +39,12 @@ export function createAirService(deps: AirServiceDeps): AirService {
     timeoutMs: SETTINGS.upstreamTimeoutMs,
     retries: SETTINGS.upstreamRetries,
   };
-  const airCache = new TtlCache<AirData>({
+  const airCache = new TtlCache<Result<AirData, AirFailure>>({
     maxEntries: SETTINGS.cacheMaxEntries,
     ttlMs: SETTINGS.airCacheTtlMs,
     now: clock,
   });
-  const placeCache = new TtlCache<Place[]>({
+  const placeCache = new TtlCache<Result<Place[], FetchFailure>>({
     maxEntries: SETTINGS.cacheMaxEntries,
     ttlMs: SETTINGS.geocodeCacheTtlMs,
     now: clock,
@@ -67,12 +54,18 @@ export function createAirService(deps: AirServiceDeps): AirService {
     getAir(location) {
       const rounded = roundLocation(location);
       const hour = deps.now().toISOString().slice(0, 13);
-      return cached(airCache, [rounded.lat, rounded.lon, hour].join(':'), () =>
-        fetchAirData(rounded, { ...http, now: deps.now }),
+      return airCache.getOrLoad(
+        [rounded.lat, rounded.lon, hour].join(':'),
+        () => fetchAirData(rounded, { ...http, now: deps.now }),
+        succeeded,
       );
     },
-    searchPlaces(query) {
-      return cached(placeCache, query.toLowerCase(), () => searchPlaces(query, http));
+    searchPlaces(query, lang) {
+      return placeCache.getOrLoad(
+        [lang, query.toLowerCase()].join(':'),
+        () => searchPlaces(query, lang, http),
+        succeeded,
+      );
     },
   };
 }

@@ -86,22 +86,22 @@ How `buildPlan(profile, air)` in `src/core/plan.ts` decides:
 | Use              | Route                 | What the model gets and returns                                                                                                                                                                 |
 | ---------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Plan narrator    | `POST /api/explain`   | The top 8 recommendations with their numbers, the household's member ids and age groups (never names or health conditions), the language → JSON headline, summary, and `why` + `steps` per item |
-| Ask SmogSense    | `POST /api/chat`      | The plan's facts, up to 6 earlier turns and the question inside `<user_question>` delimiters → JSON answer                                                                                      |
+| Ask SmogSense    | `POST /api/chat`      | The same facts, the answer language, up to 6 earlier turns and the question inside `<user_question>` delimiters → JSON answer                                                                   |
 | Community notice | `POST /api/community` | The plan's facts without any member ids, the audience and language → JSON notice                                                                                                                |
 
-Every reply must match a JSON schema (sent to the model and checked again with Zod) and pass the
-numeric grounding check in `grounding.ts`. Anything that fails, times out or cannot be reached is
-replaced by standard guidance from `src/core/explain` (English and Hindi), and the response says
-so: each item and the headline carry their own `ai` or `fallback` label, which the UI shows next to
-the text.
+Every reply must match a JSON schema and pass the numeric grounding check
+([Security › AI safety](docs/SECURITY.md#ai-safety)). Anything that fails, times out or cannot be
+reached is replaced by standard guidance from `src/core/explain`, and each piece of text carries
+an `ai` or `fallback` label that the UI shows next to it.
 
 **Free-tier strategy.** The app is built to run on a free AI Studio key:
 
 - `gemini-3.5-flash-lite` first, then `gemini-3.8-flash` (`GEMINI_MODELS`), with minimal thinking
   and capped output tokens (900 for a plan, 400 for chat and notices).
-- One call explains the whole plan, and only its 8 highest-priority items.
-- AI answers are cached (30 minutes for plans and notices, 10 for chat); fallbacks are never
-  cached, so the next request can reach the model again.
+- One call explains the whole plan, and the explain and chat prompts carry only its 8
+  highest-priority items.
+- AI answers are cached ([Architecture](docs/ARCHITECTURE.md#request-flow) has the times);
+  fallbacks are never cached, so the next request can reach the model again.
 - A model that answers 429 is skipped for 10 minutes, and a daily budget (`GEMINI_DAILY_BUDGET`,
   200 by default) stops calls before the quota does. Rate limits are in [Security](docs/SECURITY.md).
 - The plan itself never waits for the AI: `/api/plan` makes no model call.
@@ -122,7 +122,8 @@ The quality gates and test suites are described in [Testing](docs/TESTING.md).
   household planning. They are model estimates for a grid cell, not readings from a nearby monitor.
 - **Index.** The headline index uses the trailing 24-hour mean, as CPCB and the EPA do, so it barely
   moves within a day; clean windows are found from hourly PM2.5 instead.
-- **Privacy.** Locations are rounded to 0.1° (about 11 km) before any upstream call or cache.
+- **Privacy.** Locations are rounded before any upstream call or cache, and health conditions
+  never reach the AI ([Security › Privacy](docs/SECURITY.md#privacy)).
 - **Not medical advice.** Every figure is a planning estimate. The model is instructed not to
   diagnose and to send anyone with symptoms to a doctor, and the footer says the same.
 - **Languages.** The interface and the plan's explanations are in English and Hindi. Chat answers

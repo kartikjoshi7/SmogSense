@@ -1,13 +1,18 @@
 import { z } from 'zod';
 import { airDataSchema, type AirData, type HourlyReading } from '../../shared/air.js';
 import type { Location } from '../../shared/api.js';
+import { SECOND_MS, SETTINGS } from '../config.js';
 import { fetchJson, type FetchFailure, type HttpDeps } from '../http/fetch-json.js';
+import * as logger from '../logger.js';
 import { fail, ok, type Result } from '../../core/result.js';
 
 const AIR_QUALITY_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
-/** Yesterday (for the trailing 24-hour index) plus a two-day forecast. */
-const TIME_RANGE = { past_days: '1', forecast_days: '2', timezone: 'auto' } as const;
+const TIME_RANGE = {
+  past_days: String(SETTINGS.airPastDays),
+  forecast_days: String(SETTINGS.airForecastDays),
+  timezone: 'auto',
+} as const;
 
 const series = z.array(z.number().nullable());
 
@@ -35,6 +40,15 @@ const forecastResponseSchema = z.object({
   daily: z.object({ sunrise: z.array(z.string()), sunset: z.array(z.string()) }),
 });
 type ForecastResponse = z.infer<typeof forecastResponseSchema>;
+
+/**
+ * The weather to merge when the forecast call fails: no boundary-layer height, wind or daylight.
+ * The engine handles all three missing, so the plan still builds from the air-quality data.
+ */
+const NO_WEATHER: ForecastResponse = {
+  hourly: { time: [], boundary_layer_height: [], wind_speed_10m: [] },
+  daily: { sunrise: [], sunset: [] },
+};
 
 /** Why air data could not be produced: an upstream failure, or data that does not cover "now". */
 export type AirFailure = FetchFailure | 'stale';
@@ -79,7 +93,8 @@ function mergeHourly(aq: AirQualityResponse, forecast: ForecastResponse): Hourly
 
 /** `YYYY-MM-DDTHH:00` for the current hour at a UTC offset, in Open-Meteo's local-time format. */
 function localHourStamp(now: Date, utcOffsetSeconds: number): string {
-  return `${new Date(now.getTime() + utcOffsetSeconds * 1000).toISOString().slice(0, 13)}:00`;
+  const local = new Date(now.getTime() + utcOffsetSeconds * SECOND_MS);
+  return `${local.toISOString().slice(0, 13)}:00`;
 }
 
 /**
@@ -111,7 +126,10 @@ function normalizeAirData(
   return parsed.success ? ok(parsed.data) : fail('invalid_response');
 }
 
-/** Fetch air quality and weather for a location from Open-Meteo, in parallel. */
+/**
+ * Fetch air quality and weather for a location from Open-Meteo, in parallel. Air quality is
+ * required; without the weather forecast the plan is built with no inversion or daylight data.
+ */
 export async function fetchAirData(
   location: Location,
   deps: AirDeps,
@@ -137,7 +155,8 @@ export async function fetchAirData(
     return aq;
   }
   if (!forecast.ok) {
-    return forecast;
+    logger.warn('Weather forecast unavailable; planning without it', { reason: forecast.error });
   }
-  return normalizeAirData(aq.value, forecast.value, location, deps.now());
+  const weather = forecast.ok ? forecast.value : NO_WEATHER;
+  return normalizeAirData(aq.value, weather, location, deps.now());
 }

@@ -48,7 +48,7 @@ afterEach(() => {
 
 /** The explanation the service builds from this model reply for the severe-day plan. */
 function explainWith(reply: unknown) {
-  return service(reply).ai.explain(plan, SHARMA_FAMILY, 'en');
+  return service(reply).ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'en' });
 }
 
 describe('merging the model’s explanation with standard guidance', () => {
@@ -73,7 +73,6 @@ describe('merging the model’s explanation with standard guidance', () => {
       why: 'A purifier takes the room from 201 to 28 µg/m³.',
     });
     expect(response.items[1]?.source).toBe('fallback');
-    expect(response.source).toBe('mixed');
     expect(response.items[0]?.title).toBe('Use an air purifier');
     expect(logged()).toEqual([
       expect.objectContaining({
@@ -95,20 +94,21 @@ describe('merging the model’s explanation with standard guidance', () => {
     expect(response.headline).toBe(
       'Smog emergency: stay indoors and protect sensitive family members',
     );
-    expect(response.source).toBe('fallback');
+    expect(response.introSource).toBe('fallback');
     expect(logged()).toEqual([expect.objectContaining({ kind: 'explain', rejected: 1 })]);
   });
 
-  it('reports "ai" when every item is AI-written, and logs nothing', async () => {
+  it('words the top recommendations with AI text and the rest with standard guidance', async () => {
     const logged = warnings();
-    const items = plan.recommendations.map((rec) => ({
-      id: rec.id,
-      why: 'Do this today.',
-      steps: [],
-    }));
+    const top = plan.recommendations.slice(0, 8);
+    const items = top.map((rec) => ({ id: rec.id, why: 'Do this today.', steps: [] }));
 
-    expect((await explainWith({ headline: 'Today', summary: 'Stay in.', items })).source).toBe(
-      'ai',
+    const response = await explainWith({ headline: 'Today', summary: 'Stay in.', items });
+
+    expect(plan.recommendations.length).toBeGreaterThan(top.length);
+    expect(response.introSource).toBe('ai');
+    expect(response.items.map((item) => item.source)).toEqual(
+      plan.recommendations.map((_, i) => (i < top.length ? 'ai' : 'fallback')),
     );
     expect(logged()).toEqual([]);
   });
@@ -118,8 +118,8 @@ describe('createAiService', () => {
   it('explains a plan and caches AI answers', async () => {
     const { ai, generate } = service({ headline: 'Today', summary: 'Stay in.', items: [] });
 
-    await ai.explain(plan, SHARMA_FAMILY, 'en');
-    await ai.explain(plan, SHARMA_FAMILY, 'en');
+    await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'en' });
+    await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'en' });
 
     expect(generate).toHaveBeenCalledTimes(1);
   });
@@ -134,8 +134,8 @@ describe('createAiService', () => {
       ),
     };
 
-    await ai.explain(plan, SHARMA_FAMILY, 'en');
-    await ai.explain(changedBelowTop, SHARMA_FAMILY, 'en');
+    await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'en' });
+    await ai.explain({ plan: changedBelowTop, profile: SHARMA_FAMILY, lang: 'en' });
 
     expect(generate).toHaveBeenCalledTimes(2);
   });
@@ -143,10 +143,11 @@ describe('createAiService', () => {
   it('falls back to standard guidance without caching the fallback', async () => {
     const { ai, generate } = service(null);
 
-    const response = await ai.explain(plan, SHARMA_FAMILY, 'hi');
-    await ai.explain(plan, SHARMA_FAMILY, 'hi');
+    const response = await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'hi' });
+    await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'hi' });
 
-    expect(response.source).toBe('fallback');
+    expect(response.introSource).toBe('fallback');
+    expect(response.items.every((item) => item.source === 'fallback')).toBe(true);
     expect(response.items).toHaveLength(plan.recommendations.length);
     expect(generate).toHaveBeenCalledTimes(2);
   });
@@ -178,9 +179,11 @@ describe('createAiService', () => {
     const good = service({ notice: `Air quality index ${plan.index.value} today. Stay indoors.` });
     const down = service(null);
 
-    const fallback = await down.ai.communityNotice(plan, 'school', 'en');
+    const fallback = await down.ai.communityNotice({ plan, audience: 'school', lang: 'en' });
 
-    expect(await good.ai.communityNotice(plan, 'school', 'en')).toMatchObject({ source: 'ai' });
+    expect(await good.ai.communityNotice({ plan, audience: 'school', lang: 'en' })).toMatchObject({
+      source: 'ai',
+    });
     expect(fallback.source).toBe('fallback');
     expect(fallback.notice).toContain('Dear parents and staff');
   });

@@ -46,26 +46,28 @@ Hindi templates are typed per id, so a misspelt or missing fact fails the type c
 
 ```
 POST /api/plan  { profile, location }
-  secureHeaders → CORS → bodyLimit (16 KB) → rate limit (60/min) → Zod body validation
+  secureHeaders → CORS → bodyLimit (16 KB) → data rate limit → Zod body validation
   → loadPlan: AirService.getAir(location)
-      round to 0.1° → TtlCache (key: lat, lon, UTC hour; 15 min) → on a miss,
+      round the location → TtlCache (key: lat, lon, UTC hour; 15 min) → on a miss,
       Open-Meteo air quality + weather forecast in parallel (5 s timeout, 1 retry on 5xx)
-      → Zod-validated, merged by local hour
+      → Zod-validated, merged by local hour (without the forecast: no inversion or daylight data)
   → buildPlan(profile, air) → 200 { plan } | 502 data unavailable | 503 not enough data
 
 POST /api/explain  { profile, location, lang }
-  same middleware with the AI rate limit (10/min) → loadPlan
+  same middleware with the AI rate limit → loadPlan
   → AiService.explain: cache (SHA-256 of language, the whole plan and the members; 30 min)
   → GeminiClient.generate: each model in order, skipping cooled-down ones, within the daily budget,
     JSON schema in the request, Zod on the reply (a rejected reply is logged with its reason)
   → grounded AI text per item, standard guidance for the rest (dropped AI text is logged)
-  → 200 { headline, summary, introSource, items[], source }
+  → 200 { headline, summary, introSource, items[] }
 ```
 
 `/api/chat` and `/api/community` follow the same path as `/api/explain` with their own prompts;
-their caches are keyed on a SHA-256 of the exact prompt. `GET /api/geocode` validates the query,
-calls Open-Meteo's geocoding API through the same `fetchJson` wrapper and sets a one-day CDN cache
-header.
+their caches are keyed on a SHA-256 of the exact prompt and last 10 and 30 minutes. `GET
+/api/geocode` validates the query and the interface language, calls Open-Meteo's geocoding API
+through the same `fetchJson` wrapper (place names come back in that language) and sets a one-day
+CDN cache header. The rate limits and the location rounding are described in
+[Security](SECURITY.md).
 
 **Errors.** The engine, the services and the UI's API client share one `Result` type
 (`core/result.ts`: `{ ok: true, value } | { ok: false, error }`) instead of throwing. Each server

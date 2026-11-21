@@ -4,7 +4,7 @@ import { parseConfig } from './config.js';
 describe('parseConfig', () => {
   it('applies defaults when nothing is set, including empty strings', () => {
     const expected = {
-      NODE_ENV: 'development',
+      NODE_ENV: 'production',
       GEMINI_DAILY_BUDGET: 200,
       GEMINI_MODELS: ['gemini-3.5-flash-lite', 'gemini-3.8-flash'],
       GEMINI_THINKING_LEVEL: 'MINIMAL',

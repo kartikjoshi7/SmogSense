@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { TtlCache } from './cache.js';
 
 function cache(maxEntries = 3) {
@@ -21,6 +21,17 @@ describe('TtlCache', () => {
     expect(instance.get('a')).toBe('apple');
     advance(1);
     expect(instance.get('a')).toBeUndefined();
+  });
+
+  it('loads on a miss and keeps only the values it is told to keep', async () => {
+    const { instance } = cache();
+    const load = vi.fn((value: string) => () => Promise.resolve(value));
+
+    expect(await instance.getOrLoad('a', load('kept'), () => true)).toBe('kept');
+    expect(await instance.getOrLoad('a', load('ignored'), () => true)).toBe('kept');
+    expect(await instance.getOrLoad('b', load('dropped'), () => false)).toBe('dropped');
+    expect(instance.get('b')).toBeUndefined();
+    expect(load).toHaveBeenCalledTimes(3);
   });
 
   it('evicts the least recently used entry when full', () => {

@@ -8,9 +8,9 @@ import { parseConfig } from '../../server/config.js';
 
 /**
  * The SmogSense API as the Vitest UI tests and the Playwright end-to-end tests see it: the real
- * Hono app (validation, routes, engine, AI composition and the grounding check) with only the
- * outside world replaced. Open-Meteo becomes a Severe day in Delhi; Gemini becomes fixed,
- * labelled replies, or is switched off.
+ * Hono app (validation, routes, engine, AI composition and the grounding check) with fakes for
+ * its two services' outside edges. The air service returns a Severe day in Delhi; the AI client
+ * returns fixed, labelled replies, or is switched off.
  */
 
 /** A Severe day in Delhi, so the plan has protection, community and emergency content. */

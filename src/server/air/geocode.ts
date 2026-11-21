@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import type { Place } from '../../shared/api.js';
+import type { UiLanguage } from '../../shared/languages.js';
+import { SETTINGS } from '../config.js';
 import { fetchJson, type FetchFailure, type HttpDeps } from '../http/fetch-json.js';
 import { ok, type Result } from '../../core/result.js';
 
 const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
-const MAX_RESULTS = 5;
 
 const geocodingResponseSchema = z.object({
   /** Absent when nothing matches. */
@@ -21,16 +22,17 @@ const geocodingResponseSchema = z.object({
     .optional(),
 });
 
-/** Search Open-Meteo's place names (English labels) for a city or town. */
+/** Search Open-Meteo's place names for a city or town, labelled in the interface language. */
 export async function searchPlaces(
   query: string,
+  lang: UiLanguage,
   deps: HttpDeps,
 ): Promise<Result<Place[], FetchFailure>> {
   const url = new URL(GEOCODING_URL);
   url.search = new URLSearchParams({
     name: query,
-    count: String(MAX_RESULTS),
-    language: 'en',
+    count: String(SETTINGS.geocodeResults),
+    language: lang,
     format: 'json',
   }).toString();
   const response = await fetchJson(url, geocodingResponseSchema, deps);

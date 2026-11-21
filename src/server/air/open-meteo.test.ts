@@ -82,8 +82,8 @@ describe('fetchAirData', () => {
     });
   });
 
-  it('passes on an upstream failure from either API', async () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  it('fails without air quality, but plans without the weather forecast', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const failing = (host: string) =>
       vi.fn<typeof fetch>((input) =>
         requestUrl(input).host === host
@@ -95,10 +95,13 @@ describe('fetchAirData', () => {
       ok: false,
       error: 'http',
     });
-    expect(await fetchAirData(DELHI, deps(failing('api.open-meteo.com')))).toEqual({
-      ok: false,
-      error: 'http',
-    });
+    const noWeather = await fetchAirData(DELHI, deps(failing('api.open-meteo.com')));
+    expect(noWeather.ok && noWeather.value.daylight).toEqual([]);
+    expect(noWeather.ok && noWeather.value.hourly.every((h) => h.blhM === null)).toBe(true);
+    expect(noWeather.ok && noWeather.value.hourly.some((h) => h.pm25 !== null)).toBe(true);
+    expect(warn.mock.calls.map(([line]) => String(line))).toContainEqual(
+      expect.stringContaining('Weather forecast unavailable'),
+    );
   });
 
   it('copes with missing weather hours and an incomplete sunset list', async () => {

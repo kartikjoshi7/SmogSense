@@ -8,6 +8,11 @@ import { z } from 'zod';
 type ServerModule = typeof import('./src/server/main.js');
 type ServerApp = ReturnType<ServerModule['createServerApp']>;
 
+/** Whether a module loaded at run time really is `src/server/main.ts`. */
+function isServerModule(mod: Record<string, unknown>): mod is ServerModule {
+  return typeof mod.createServerApp === 'function';
+}
+
 /**
  * Serve the Hono API on the Vite dev server so `npm run dev` runs UI and API on one port.
  * The app is rebuilt only when its source module changes, so caches survive between requests.
@@ -17,8 +22,12 @@ function devApi(env: Record<string, string>): Plugin {
 
   async function handle(server: ViteDevServer, req: IncomingMessage, res: ServerResponse) {
     const { getRequestListener } = await import('@hono/node-server');
-    const mod = (await server.ssrLoadModule('/src/server/main.ts')) as ServerModule;
-    const app = apps.get(mod) ?? mod.createServerApp({ ...process.env, ...env });
+    const mod: Record<string, unknown> = await server.ssrLoadModule('/src/server/main.ts');
+    if (!isServerModule(mod)) {
+      throw new Error('src/server/main.ts does not export createServerApp');
+    }
+    const app =
+      apps.get(mod) ?? mod.createServerApp({ ...process.env, ...env, NODE_ENV: 'development' });
     apps.set(mod, app);
     // Connect strips the mount path; the Hono app expects the full /api/... URL.
     req.url = `/api${req.url ?? ''}`;
@@ -29,7 +38,11 @@ function devApi(env: Record<string, string>): Plugin {
     name: 'smogsense-dev-api',
     configureServer(server) {
       server.middlewares.use('/api', (req, res) => {
-        void handle(server, req, res);
+        handle(server, req, res).catch((error: unknown) => {
+          server.config.logger.error(`SmogSense API failed to start: ${String(error)}`);
+          res.statusCode = 500;
+          res.end();
+        });
       });
     },
   };

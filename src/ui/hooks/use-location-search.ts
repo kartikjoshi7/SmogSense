@@ -3,6 +3,7 @@ import type { Place } from '../../shared/api.js';
 import { PLACE_QUERY_CHARS } from '../../shared/limits.js';
 import { api } from '../api/client.js';
 import { UI_SETTINGS } from '../settings.js';
+import { useAppState } from '../state/app-context.js';
 import type { SavedLocation } from '../state/storage.js';
 
 export type SearchStatus = 'idle' | 'searching' | 'done' | 'failed' | 'locating' | 'denied';
@@ -20,6 +21,7 @@ export function useLocationSearch(
   onLocate: (location: SavedLocation) => void,
   myLocationLabel: string,
 ) {
+  const { lang } = useAppState();
   const [places, setPlaces] = useState<Place[]>([]);
   const [status, setStatus] = useState<SearchStatus>('idle');
   const running = useRef<AbortController | null>(null);
@@ -32,7 +34,7 @@ export function useLocationSearch(
     const controller = new AbortController();
     running.current = controller;
     setStatus('searching');
-    const result = await api.geocode(query.trim(), controller.signal);
+    const result = await api.geocode(query.trim(), lang, controller.signal);
     if (controller.signal.aborted) {
       return;
     }

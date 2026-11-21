@@ -3,6 +3,7 @@ import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { secureHeaders } from 'hono/secure-headers';
+import { API_STATUS } from '../shared/api.js';
 import type { AirService } from './air/air-service.js';
 import type { AiService } from './ai/ai-service.js';
 import { SETTINGS, type EnvConfig } from './config.js';
@@ -54,7 +55,7 @@ export function createApp(deps: AppDeps) {
   app.use(
     bodyLimit({
       maxSize: SETTINGS.bodyLimitBytes,
-      onError: (c) => c.json({ error: 'Request is too large.' }, 413),
+      onError: (c) => c.json({ error: 'Request is too large.' }, API_STATUS.tooLarge),
     }),
   );
   app.use('/geocode', dataLimit);

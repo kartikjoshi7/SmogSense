@@ -18,9 +18,10 @@ const envSchema = z.object({
     z.enum(['OFF', 'MINIMAL', 'LOW']).default('MINIMAL'),
   ),
   ALLOWED_ORIGIN: z.preprocess(emptyToUndefined, z.url().optional()),
+  /** Production unless the platform says otherwise, so a missing value never loosens CORS. */
   NODE_ENV: z.preprocess(
     emptyToUndefined,
-    z.enum(['development', 'production', 'test']).default('development'),
+    z.enum(['development', 'production', 'test']).default('production'),
   ),
 });
 
@@ -31,7 +32,9 @@ export function parseConfig(raw: Record<string, unknown>): EnvConfig {
   return envSchema.parse(raw);
 }
 
-const MINUTE_MS = 60_000;
+export const SECOND_MS = 1000;
+const MINUTE_MS = 60 * SECOND_MS;
+const DAY_SECONDS = 24 * 60 * 60;
 
 /** Runtime limits and timings — every operational number lives here. */
 export const SETTINGS = {
@@ -43,9 +46,14 @@ export const SETTINGS = {
   upstreamRetries: 1,
   cacheMaxEntries: 500,
   airCacheTtlMs: 15 * MINUTE_MS,
-  geocodeCacheTtlMs: 24 * 60 * MINUTE_MS,
+  geocodeCacheTtlMs: DAY_SECONDS * SECOND_MS,
   /** How long the CDN may keep place search results (they change rarely). */
-  geocodeCdnMaxAgeSeconds: 24 * 60 * 60,
+  geocodeCdnMaxAgeSeconds: DAY_SECONDS,
+  /** Places one city search returns. */
+  geocodeResults: 5,
+  /** Days of air data asked for: yesterday, for the trailing 24-hour index, and two days ahead. */
+  airPastDays: 1,
+  airForecastDays: 2,
   /** Decimal places coordinates are rounded to before any lookup (0.1° ≈ 11 km). */
   coordinateDecimals: 1,
   rateLimitWindowMs: MINUTE_MS,
@@ -62,9 +70,13 @@ export const SETTINGS = {
   /** How long a model that answered 429 is skipped. */
   aiCooldownMs: 10 * MINUTE_MS,
   aiTemperature: 0.4,
-  /** Only the highest-priority recommendations are sent for AI wording, to save tokens. */
-  aiExplainTopN: 8,
+  /** Only the highest-priority recommendations go into explain and chat prompts, to save tokens. */
+  aiPromptTopN: 8,
   aiMaxOutputTokens: { explain: 900, chat: 400, notice: 400 },
+  /** Longest text the model may return for each part of a reply, in characters. */
+  aiReplyChars: { headline: 160, summary: 600, why: 600, step: 200, notice: 1200 },
+  /** Most steps the model may write for one recommendation. */
+  aiMaxSteps: 3,
   aiCacheTtlMs: 30 * MINUTE_MS,
   chatCacheTtlMs: 10 * MINUTE_MS,
 } as const;

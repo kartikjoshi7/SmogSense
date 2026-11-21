@@ -59,14 +59,15 @@ describe('createAirService', () => {
     expect(down).toHaveBeenCalledTimes(4);
   });
 
-  it('caches place searches regardless of letter case', async () => {
+  it('caches place searches regardless of letter case, per language', async () => {
     const fetch = openMeteoFetch();
     const { air } = service(fetch);
 
-    await air.searchPlaces('Gurugram');
-    const again = await air.searchPlaces('GURUGRAM');
+    await air.searchPlaces('Gurugram', 'en');
+    const again = await air.searchPlaces('GURUGRAM', 'en');
+    await air.searchPlaces('Gurugram', 'hi');
 
     expect(again.ok && again.value[0]?.name).toBe('Gurugram');
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 });

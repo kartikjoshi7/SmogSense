@@ -58,19 +58,20 @@ nothing left untranslated except names and units).
 
 **End to end.** Playwright runs `vite build && vite preview`, which sends the same headers as
 Vercel, and answers `/api/*` in the page with `src/ui/test/fake-server.ts`: the real Hono app from
-`createApp` (validation, routes, engine, AI composition, grounding) with only the outside world
-replaced, Open-Meteo by a Severe day in Delhi and Gemini by fixed replies. The Vitest UI tests use
-the same harness, so no part of the API is re-implemented for tests. Any console error, uncaught
-error or CSP violation fails the test. It covers:
+`createApp` (validation, routes, engine, AI composition, grounding) with its two services'
+outside edges replaced: the air service returns a Severe day in Delhi, and the AI client returns
+fixed replies or none. The Vitest UI tests use the same harness, so no part of the API is
+re-implemented for tests. The pieces the harness skips are tested on their own: the air service
+(location rounding, caching, Open-Meteo normalisation) against recorded responses, the Gemini
+client (schema request, JSON parsing, model fallback) with an injected SDK call, and
+`main.test.ts` runs the production wiring of `/api/plan` against the recorded responses. Any
+console error, uncaught error or CSP violation fails an end-to-end test. They cover:
 
 - the full flow: example family → plan → chat answer → community notice → copy, plus reload and
   Hindi;
-- a keyboard-only flow: skip link, setup, tabs with arrow keys, the chat dialog, Esc and focus return,
-  with a visible focus outline at each step;
-- axe (WCAG 2.2 A and AA, including colour contrast) on every screen and dialog, in light and dark;
-- 375 × 812 and 390 × 844 phones: no sideways scrolling and every control and standalone link at
-  least 44 × 44 px;
-- the AI-unavailable path: every card, answer and notice says "Standard guidance".
+- the AI-unavailable path: every card, answer and notice says "Standard guidance";
+- the keyboard, axe and phone-size checks listed in
+  [Accessibility › How it is tested](ACCESSIBILITY.md#how-it-is-tested).
 
 ## Coverage
 
@@ -85,8 +86,8 @@ Functions    : 98.58% ( 557/565 )
 Lines        : 99.28% ( 1381/1391 )
 ```
 
-`src/core` is at 100% on all four. Test helpers, fixtures and `src/ui/main.tsx` (four lines that
-mount the app) are excluded.
+`src/core` is at 100% on all four. Test helpers, fixtures and `src/ui/main.tsx` (the file that
+mounts the app) are excluded.
 
 ## Test doubles
 

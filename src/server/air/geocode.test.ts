@@ -8,7 +8,7 @@ function deps(fetch: typeof globalThis.fetch) {
 
 describe('searchPlaces', () => {
   it('maps Open-Meteo results to places', async () => {
-    const result = await searchPlaces('Gurugram', deps(openMeteoFetch()));
+    const result = await searchPlaces('Gurugram', 'en', deps(openMeteoFetch()));
 
     expect(result.ok && result.value[0]).toEqual({
       name: 'Gurugram',
@@ -19,9 +19,9 @@ describe('searchPlaces', () => {
     });
   });
 
-  it('asks for at most five English results for the query', async () => {
+  it('asks for at most five results for the query, in the interface language', async () => {
     const fetch = openMeteoFetch();
-    await searchPlaces('Gurugram', deps(fetch));
+    await searchPlaces('Gurugram', 'en', deps(fetch));
     const url = requestUrl(fetch.mock.calls[0]?.[0]);
 
     expect(Object.fromEntries(url.searchParams)).toEqual({
@@ -30,6 +30,8 @@ describe('searchPlaces', () => {
       language: 'en',
       format: 'json',
     });
+    await searchPlaces('Gurugram', 'hi', deps(fetch));
+    expect(requestUrl(fetch.mock.calls[1]?.[0]).searchParams.get('language')).toBe('hi');
   });
 
   it('returns no places when nothing matches, with missing labels as null', async () => {
@@ -38,8 +40,8 @@ describe('searchPlaces', () => {
       Promise.resolve(jsonResponse({ results: [{ name: 'Nowhere', latitude: 1, longitude: 2 }] })),
     );
 
-    expect(await searchPlaces('Zzz', deps(none))).toEqual({ ok: true, value: [] });
-    expect(await searchPlaces('Nowhere', deps(bare))).toEqual({
+    expect(await searchPlaces('Zzz', 'en', deps(none))).toEqual({ ok: true, value: [] });
+    expect(await searchPlaces('Nowhere', 'en', deps(bare))).toEqual({
       ok: true,
       value: [{ name: 'Nowhere', region: null, country: null, lat: 1, lon: 2 }],
     });
@@ -49,6 +51,6 @@ describe('searchPlaces', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const down = vi.fn<typeof fetch>(() => Promise.resolve(jsonResponse({}, 404)));
 
-    expect(await searchPlaces('Delhi', deps(down))).toEqual({ ok: false, error: 'http' });
+    expect(await searchPlaces('Delhi', 'en', deps(down))).toEqual({ ok: false, error: 'http' });
   });
 });

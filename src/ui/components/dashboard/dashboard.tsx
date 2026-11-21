@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, type RefObject } from 'react';
 import { planHeadline, planSummary } from '../../../core/explain/index.js';
-import type { ExplainResponse, PlanRequest } from '../../../shared/api.js';
+import { API_STATUS, type ExplainResponse, type PlanRequest } from '../../../shared/api.js';
 import type { Plan } from '../../../shared/plan.js';
 import type { ApiError } from '../../api/client.js';
 import { usePlan } from '../../hooks/use-plan.js';
@@ -27,9 +27,9 @@ type OpenDialog = 'chat' | 'notice' | null;
 /** What to say when the plan fails: the cause when the status tells it, else a general line. */
 function planErrorText(t: Messages['dashboard'], error: ApiError): string {
   const byStatus: Readonly<Record<number, string>> = {
-    429: t.errors.busy,
-    502: t.errors.upstream,
-    503: t.errors.noData,
+    [API_STATUS.tooManyRequests]: t.errors.busy,
+    [API_STATUS.upstreamFailed]: t.errors.upstream,
+    [API_STATUS.noData]: t.errors.noData,
   };
   return (error.status === null ? undefined : byStatus[error.status]) ?? t.errors.general;
 }

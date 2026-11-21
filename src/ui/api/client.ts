@@ -11,6 +11,7 @@ import {
   type ExplainRequest,
   type PlanRequest,
 } from '../../shared/api.js';
+import type { UiLanguage } from '../../shared/languages.js';
 
 /**
  * Why a call failed: the HTTP status when the server answered with an error, or null when there
@@ -56,9 +57,9 @@ function post<T>(path: string, body: unknown, schema: ZodType<T>, signal?: Abort
 
 /** Every call the UI makes to the SmogSense API, each validated against the shared schemas. */
 export const api = {
-  geocode: (q: string, signal?: AbortSignal) =>
+  geocode: (q: string, lang: UiLanguage, signal?: AbortSignal) =>
     request(
-      `/api/geocode?${new URLSearchParams({ q }).toString()}`,
+      `/api/geocode?${new URLSearchParams({ q, lang }).toString()}`,
       geocodeResponseSchema,
       withSignal({}, signal),
     ),

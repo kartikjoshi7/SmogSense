@@ -113,6 +113,15 @@ describe('CORS', () => {
     expect(other.headers.get('Access-Control-Allow-Origin')).toBeNull();
   });
 
+  it('allows no localhost origin when NODE_ENV is not set', async () => {
+    const unset = app({ config: parseConfig({}) });
+    const res = await unset.request('/api/health', {
+      headers: { Origin: 'http://localhost:5173' },
+    });
+
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull();
+  });
+
   it('also allows the Vite dev server in development', async () => {
     const dev = app({ config: parseConfig({ NODE_ENV: 'development' }) });
     const res = await dev.request('/api/health', { headers: { Origin: 'http://localhost:5173' } });
@@ -203,7 +212,7 @@ describe('AI routes', () => {
     const body = explainResponseSchema.parse(await res.json());
 
     expect(res.status).toBe(200);
-    expect(body.source).toBe('fallback');
+    expect(body.introSource).toBe('fallback');
     expect(body.items.length).toBeGreaterThan(5);
   });
 

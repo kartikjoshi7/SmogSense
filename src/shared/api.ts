@@ -1,9 +1,17 @@
 import { z } from 'zod';
 import { CHAT_LIMITS, PLACE_QUERY_CHARS } from './limits.js';
-import { languageSchema } from './languages.js';
+import { languageSchema, uiLanguageSchema } from './languages.js';
 import { planSchema, recommendationIdSchema } from './plan.js';
 import { coordinatesSchema } from './primitives.js';
 import { profileSchema } from './profile.js';
+
+/** The statuses the API answers with when it cannot help; the UI has a message for each. */
+export const API_STATUS = {
+  tooLarge: 413,
+  tooManyRequests: 429,
+  upstreamFailed: 502,
+  noData: 503,
+} as const;
 
 /** A point on the map. The server rounds it to 0.1° before using it. */
 export type Location = z.infer<typeof coordinatesSchema>;
@@ -16,6 +24,8 @@ export const geocodeQuerySchema = z.object({
     .min(PLACE_QUERY_CHARS.min)
     .max(PLACE_QUERY_CHARS.max)
     .regex(/^[\p{L}\p{M} ,.'-]+$/u, 'Use letters, spaces and simple punctuation only'),
+  /** The interface language, for place names in the user's script. */
+  lang: uiLanguageSchema.default('en'),
 });
 
 const placeSchema = z.object({
@@ -62,8 +72,6 @@ export const explainResponseSchema = z.object({
   /** Whether the headline and summary were written by the AI or are standard guidance. */
   introSource: textSourceSchema,
   items: z.array(explainedItemSchema),
-  /** "mixed" when some items are AI-written and others are standard guidance. */
-  source: z.enum(['ai', 'fallback', 'mixed']),
 });
 export type ExplainResponse = z.infer<typeof explainResponseSchema>;
 

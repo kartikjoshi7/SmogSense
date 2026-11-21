@@ -28,6 +28,22 @@ export class TtlCache<V> {
     return entry.value;
   }
 
+  /**
+   * The cached value for a key, or a freshly loaded one. A loaded value is stored only when
+   * `keep` accepts it, so failures and fallbacks are never cached and the next call tries again.
+   */
+  async getOrLoad(key: string, load: () => Promise<V>, keep: (value: V) => boolean): Promise<V> {
+    const hit = this.get(key);
+    if (hit !== undefined) {
+      return hit;
+    }
+    const value = await load();
+    if (keep(value)) {
+      this.set(key, value);
+    }
+    return value;
+  }
+
   /** Store a value, evicting the least recently used entry when full. */
   set(key: string, value: V): void {
     this.entries.delete(key);
