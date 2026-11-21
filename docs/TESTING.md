@@ -15,12 +15,12 @@ CI (`.github/workflows/ci.yml`) runs all three on every push and pull request, p
 
 | Layer                                  | Files  | Tests   | Environment                        |
 | -------------------------------------- | ------ | ------- | ---------------------------------- |
-| `src/core` (engine)                    | 12     | 200     | Node                               |
+| `src/core` (engine)                    | 12     | 203     | Node                               |
 | `src/shared` (schemas)                 | 3      | 15      | Node                               |
-| `src/server` (API, Open-Meteo, Gemini) | 14     | 114     | Node                               |
+| `src/server` (API, Open-Meteo, Gemini) | 14     | 116     | Node                               |
 | `api` (Vercel entry)                   | 1      | 3       | Node                               |
-| `src/ui` (React)                       | 15     | 107     | jsdom + Testing Library + axe-core |
-| **Vitest total**                       | **45** | **439** |                                    |
+| `src/ui` (React)                       | 15     | 110     | jsdom + Testing Library + axe-core |
+| **Vitest total**                       | **45** | **447** |                                    |
 | `e2e` (Playwright)                     | 4      | 19      | Chromium, production build         |
 
 **Engine.** Every AQI breakpoint edge on both scales (through `computeIndex`, so float error in
@@ -81,10 +81,10 @@ and 90% for the whole project. `npm run coverage`, and with it `npm run check` a
 below them. From the last run:
 
 ```
-Statements   : 99.19% ( 1487/1499 )
-Branches     : 96.83% ( 704/727 )
-Functions    : 98.76% ( 562/569 )
-Lines        : 99.36% ( 1415/1424 )
+Statements   : 99.14% ( 1506/1519 )
+Branches     : 96.74% ( 714/738 )
+Functions    : 98.77% ( 565/572 )
+Lines        : 99.3% ( 1434/1444 )
 ```
 
 `src/core` is at 100% on all four. Test helpers, fixtures and `src/ui/main.tsx` (the file that

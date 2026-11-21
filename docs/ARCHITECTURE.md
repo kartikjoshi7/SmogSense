@@ -151,10 +151,10 @@ status, in the interface language.
 ## Build and deploy
 
 - `vite build` produces static files in `dist/`. Gzip sizes from the last build: main bundle
-  122.0 kB, CSS 4.1 kB, and lazy chunks of 1.3 kB (chat), 1.0 kB (community) and 0.8 kB (dialog).
+  122.4 kB, CSS 4.1 kB, and lazy chunks of 1.3 kB (chat), 1.0 kB (community) and 0.8 kB (dialog).
 - What the main bundle holds, measured by splitting a build by origin (gzip): React and React DOM
   67.5 kB, Zod with the shared schemas 28.5 kB, the engine with its English and Hindi text
-  17.8 kB (the Hindi text alone 4.4 kB) and the rest of the UI 10.4 kB. Zod stays in the browser
+  18.1 kB (the Hindi text alone 4.5 kB) and the rest of the UI 10.5 kB. Zod stays in the browser
   because every response and the saved household are validated there, with the same schemas the
   server uses; `zod/mini` would be smaller, but every shared schema would have to be rewritten in
   its functional style, and one schema style for server and browser was the better trade. Hindi
