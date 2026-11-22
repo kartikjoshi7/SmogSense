@@ -1,9 +1,10 @@
 import { PROFILE_LIMITS } from '../../../shared/limits.js';
 import type { Home, MaskType } from '../../../shared/profile.js';
 import { useMessages } from '../../state/app-context.js';
-import { CheckboxField } from '../common/choice-fields.js';
-import { NumberField, SelectField, StepLegend } from '../common/fields.js';
-import { fieldSetter, useRangeError, type Section } from './field-section.js';
+import { CheckboxField } from '../common/checkbox-fields.js';
+import { NumberField, SelectField } from '../common/fields.js';
+import { fieldSetter, useRangeError, type Section } from './setup-section.js';
+import { StepLegend } from './step-legend.js';
 
 function RoomFields({ value, invalid, onChange }: Section<Home>) {
   const set = fieldSetter(onChange);

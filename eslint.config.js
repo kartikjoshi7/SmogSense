@@ -1,10 +1,10 @@
 import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
+import importXPlugin from 'eslint-plugin-import-x';
+import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
-import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
-import importXPlugin from 'eslint-plugin-import-x';
 import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
 /** Every way a file in `src/core` can name another layer: from the root or relatively. */
 const layerPaths = (layer) => [
@@ -55,13 +55,15 @@ export default tseslint.config(
   {
     plugins: { 'import-x': importXPlugin },
     settings: {
-      // Without these, import-x skips TypeScript files when following imports, so no-cycle sees nothing.
+      // Without these, import-x skips TypeScript files when following imports, so no-cycle sees
+      // nothing.
       'import-x/extensions': ['.ts', '.tsx', '.js', '.mjs'],
       'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx'] },
       'import-x/resolver-next': [
         importXPlugin.createNodeResolver({
           extensions: ['.ts', '.tsx', '.js', '.mjs'],
-          // Imports name the compiled `.js` file (AGENTS.md rule 10); the source is `.ts` or `.tsx`.
+          // Imports name the compiled `.js` file (AGENTS.md rule 10); the source is `.ts` or
+          // `.tsx`.
           extensionAlias: { '.js': ['.ts', '.tsx', '.js'] },
         }),
       ],
@@ -71,6 +73,11 @@ export default tseslint.config(
       'import-x/no-unresolved': 'error',
       'import-x/no-duplicates': 'error',
       'import-x/no-self-import': 'error',
+      // Default groups: node builtins, packages, then parent and sibling files.
+      'import-x/order': [
+        'error',
+        { 'newlines-between': 'never', alphabetize: { order: 'asc', caseInsensitive: true } },
+      ],
     },
   },
 
@@ -89,6 +96,8 @@ export default tseslint.config(
       'no-empty': 'error',
       'prefer-const': 'error',
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
+      '@typescript-eslint/no-import-type-side-effects': 'error',
+      '@typescript-eslint/no-shadow': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
@@ -164,13 +173,8 @@ export default tseslint.config(
     files: ['**/*.js', '**/*.mjs'],
     languageOptions: {
       ...tseslint.configs.disableTypeChecked.languageOptions,
-      globals: {
-        ...globals.node,
-      },
+      globals: globals.node,
     },
-    rules: {
-      ...tseslint.configs.disableTypeChecked.rules,
-      'no-console': 'off',
-    },
+    rules: { ...tseslint.configs.disableTypeChecked.rules, 'no-console': 'off' },
   },
 );

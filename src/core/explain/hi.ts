@@ -1,7 +1,7 @@
 import type { Audience } from '../../shared/api.js';
 import type { Severity } from '../../shared/plan.js';
-import { recommendations } from './hi-recommendations.js';
 import { languagePack, type DayPhrases, type LanguagePack } from './format.js';
+import { recommendations } from './hi-recommendations.js';
 
 const AUDIENCE: Readonly<Record<Audience, string>> = {
   housing_society: 'प्रिय निवासियों',

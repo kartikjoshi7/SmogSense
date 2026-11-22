@@ -29,6 +29,7 @@ function jsonSchemaOf(schema: ZodType): object {
   return jsonSchema;
 }
 
+/** The SDK settings for one request: JSON output in the reply's schema, limits and thinking. */
 export function requestConfig<T>(
   request: AiRequest<T>,
   thinking: EnvConfig['GEMINI_THINKING_LEVEL'],
@@ -44,6 +45,7 @@ export function requestConfig<T>(
   };
 }
 
+/** The model's reply checked against its schema, or why it was rejected. */
 export function parseReply<T>(
   text: string | undefined,
   schema: ZodType<T>,

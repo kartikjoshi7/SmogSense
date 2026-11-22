@@ -15,12 +15,12 @@ which also runs the other gates in [Code quality](CODE_QUALITY.md#gates-that-fai
 
 | Layer                                  | Files  | Tests   | Environment                        |
 | -------------------------------------- | ------ | ------- | ---------------------------------- |
-| `src/core` (engine)                    | 14     | 218     | Node                               |
+| `src/core` (engine)                    | 15     | 218     | Node                               |
 | `src/shared` (schemas)                 | 3      | 16      | Node                               |
-| `src/server` (API, Open-Meteo, Gemini) | 14     | 121     | Node                               |
+| `src/server` (API, Open-Meteo, Gemini) | 15     | 121     | Node                               |
 | `api` (Vercel entry)                   | 1      | 3       | Node                               |
 | `src/ui` (React)                       | 16     | 117     | jsdom + Testing Library + axe-core |
-| **Vitest total**                       | **48** | **475** |                                    |
+| **Vitest total**                       | **50** | **475** |                                    |
 | `e2e` (Playwright)                     | 4      | 19      | Chromium, production build         |
 
 **Engine.** Every AQI breakpoint edge on both scales (through `computeIndex`, so float error in
@@ -31,7 +31,7 @@ Very Poor and Moderate days, a healthy couple, a homebound senior, a London hous
 AQI, a walker offered the metro as protection on a smoggy day (and not on a clean one), a coal fire
 heating the main room, and
 gaps in the data (too few hours, no boundary-layer height). `constants.test.ts` also fails
-if the assumptions table in `docs/ARCHITECTURE.md` no longer matches `constants.ts`.
+if the assumptions table in `docs/ARCHITECTURE.md` no longer matches the constants in `src/core/constants/`.
 
 **Server.** Routes through `app.request()`: validation errors, oversized and malformed bodies,
 CORS, security headers, CDN cache headers, 404s, a safe 500, upstream 502 and sparse-data 503,
@@ -83,10 +83,10 @@ and 90% for the whole project. `npm run coverage`, and with it `npm run check` a
 below them. From the last run:
 
 ```
-Statements   : 99.12% ( 1587/1601 )
-Branches     : 96.52% ( 751/778 )
-Functions    : 98.82% ( 588/595 )
-Lines        : 99.27% ( 1515/1526 )
+Statements   : 99.13% ( 1608/1622 )
+Branches     : 96.52% ( 749/776 )
+Functions    : 98.83% ( 593/600 )
+Lines        : 99.28% ( 1534/1545 )
 ```
 
 `src/core` is at 100% on all four. Test helpers, fixtures and `src/ui/main.tsx` (the file that

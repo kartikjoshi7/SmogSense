@@ -191,7 +191,8 @@ api/                     the Vercel function that hands /api/* to the Hono app
 src/                     the app in four layers: core, shared, server and ui
 e2e/                     Playwright tests against the production build
 docs/                    one doc per judging area, the architecture, the decisions and screenshots
-scripts/                 check-repo.mjs: one branch, tracked files under 9 MB, no .env files
+scripts/                 check-repo.mjs (one branch, tracked files under 9 MB, no .env files, the
+                         documented code sizes) and code-size.mjs (measures those sizes)
 .github/workflows/       CI (check and e2e jobs) and CodeQL
 AGENTS.md                the engineering rules every change follows
 .pre-commit-config.yaml  optional checks before each commit, using the npm scripts

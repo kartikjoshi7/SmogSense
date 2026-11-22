@@ -98,7 +98,9 @@ export function templateKit(phrases: ImpactPhrases) {
   };
 }
 
-/** The day in a sentence or two: the reading, then when the inversion clears or the cleanest hour. */
+/**
+ * The day in a sentence or two: the reading, then when the inversion clears or the cleanest hour.
+ */
 function daySummary(
   plan: Plan,
   labels: Pick<LanguagePack, 'scales' | 'categories'>,

@@ -1,10 +1,10 @@
 import { z } from 'zod';
-import { CHAT_LIMITS, PLACE_QUERY_CHARS } from './limits.js';
 import { languageSchema, uiLanguageSchema } from './languages.js';
+import { CHAT_LIMITS, PLACE_QUERY_CHARS } from './limits.js';
 import { planSchema } from './plan.js';
-import { recommendationIdSchema } from './recommendation.js';
 import { coordinatesSchema } from './primitives.js';
 import { profileSchema } from './profile.js';
+import { recommendationIdSchema } from './recommendation.js';
 
 /** The statuses the API answers with when it cannot help, shared by the server and the UI. */
 export const API_STATUS = {

@@ -1,10 +1,10 @@
-import { makeAir } from '../../core/fixtures/air.js';
+import { makeAir, SEVERE } from '../../core/fixtures/air.js';
 import { fail, ok } from '../../core/result.js';
 import { createAiService } from '../../server/ai/ai-service.js';
 import type { AiClient } from '../../server/ai/gemini-client.js';
-import type { AirService } from '../../server/air/air-service.js';
 import { createApp } from '../../server/app.js';
 import { parseConfig } from '../../server/config.js';
+import { fakeAir } from '../../server/test/fake-air.js';
 
 /**
  * The SmogSense API as the Vitest UI tests and the Playwright end-to-end tests see it: the real
@@ -14,9 +14,7 @@ import { parseConfig } from '../../server/config.js';
  */
 
 /** A Severe day in Delhi, so the plan has protection, community and emergency content. */
-const SEVERE_AIR = makeAir({ scale: 2.4 });
-
-const GURUGRAM = { name: 'Gurugram', region: 'Haryana', country: 'India', lat: 28.46, lon: 77.03 };
+const SEVERE_AIR = makeAir({ scale: SEVERE });
 
 /** The wording the fake model writes, so tests can tell it apart from standard guidance. */
 export const FAKE_AI = {
@@ -72,10 +70,7 @@ function failureFor(request: Request, options: FakeApiOptions) {
 export function createFakeApi(
   options: FakeApiOptions = {},
 ): (request: Request) => Promise<Response> {
-  const air: AirService = {
-    getAir: () => Promise.resolve(ok(SEVERE_AIR)),
-    searchPlaces: () => Promise.resolve(ok([GURUGRAM])),
-  };
+  const air = fakeAir({ getAir: () => Promise.resolve(ok(SEVERE_AIR)) });
   const app = createApp({
     config: parseConfig({}),
     air,

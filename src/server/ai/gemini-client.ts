@@ -1,8 +1,8 @@
 import { ApiError, type GenerateContentParameters } from '@google/genai';
+import { fail, type Result } from '../../core/result.js';
 import { API_STATUS } from '../../shared/api.js';
 import { SETTINGS, type EnvConfig } from '../config.js';
 import * as logger from '../logger.js';
-import { fail, type Result } from '../../core/result.js';
 import { parseReply, requestConfig, type AiRequest } from './gemini-request.js';
 
 /**

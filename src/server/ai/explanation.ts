@@ -6,9 +6,8 @@ import type { Plan } from '../../shared/plan.js';
 import type { Recommendation } from '../../shared/recommendation.js';
 import { SETTINGS } from '../config.js';
 import type { AiClient } from './gemini-client.js';
-import { allowedNumbers, isGrounded } from './grounding.js';
+import { allowedNumbers, isGrounded, logUngrounded } from './grounding.js';
 import { SYSTEM_INSTRUCTION, explainPrompt, type ExplainInput } from './prompts.js';
-import { logUngrounded } from './text-replies.js';
 
 const LIMITS = SETTINGS.aiReplyChars;
 
@@ -78,7 +77,9 @@ function composeExplanation(
   };
 }
 
-/** The explanation of a plan: Gemini's wording where it is grounded, standard guidance elsewhere. */
+/**
+ * The explanation of a plan: Gemini's wording where it is grounded, standard guidance elsewhere.
+ */
 export async function writeExplanation(
   client: AiClient,
   input: ExplainInput,

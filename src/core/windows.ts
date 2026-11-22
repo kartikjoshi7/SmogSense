@@ -66,19 +66,23 @@ export function activityMeanPm25(
   start: number,
   durationMin: number,
 ): number | null {
-  const mean = spanMean(readings, start, spanHours(durationMin));
-  return mean === null ? null : roundTo(mean, DECIMALS.windowMean);
+  const windowPm25 = spanMean(readings, start, spanHours(durationMin));
+  return windowPm25 === null ? null : roundTo(windowPm25, DECIMALS.windowMean);
 }
 
 /** Every complete window starting in the next 24 hours, with its mean PM2.5. */
 function candidates(hourly: readonly HourlyReading[], from: number, span: number): Candidate[] {
   return hourly.slice(from, from + PLAN_HORIZON_HOURS).flatMap((reading, offset) => {
-    const mean = spanMean(hourly, from + offset, span);
-    return mean === null ? [] : [{ time: reading.time, hour: reading.hour, mean }];
+    const windowPm25 = spanMean(hourly, from + offset, span);
+    return windowPm25 === null
+      ? []
+      : [{ time: reading.time, hour: reading.hour, mean: windowPm25 }];
   });
 }
 
-/** Lower mean wins; on a tie, the start closer to the usual hour wins (else the earlier one stays). */
+/**
+ * Lower mean wins; on a tie, the start closer to the usual hour wins (else the earlier one stays).
+ */
 function isBetter(candidate: Candidate, best: Candidate, usualHour: number | null): boolean {
   if (candidate.mean !== best.mean) {
     return candidate.mean < best.mean;
@@ -121,7 +125,9 @@ export function bestActivityWindow(
   };
 }
 
-/** The daylight hour in the next 24 hours with the lowest PM2.5: the time to air the home briefly. */
+/**
+ * The daylight hour in the next 24 hours with the lowest PM2.5: the time to air the home briefly.
+ */
 export function ventilationHour(
   hourly: readonly HourlyReading[],
   fromIndex: number,

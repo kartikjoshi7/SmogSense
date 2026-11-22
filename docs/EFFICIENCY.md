@@ -37,13 +37,14 @@ own functions, with no network call.
 
 ## What the browser downloads
 
-- Gzip sizes from the last build: main bundle 124.2 kB, CSS 5.2 kB, and lazy chunks of 1.3 kB
+- Gzip sizes from the last build: main bundle 124.5 kB, CSS 5.2 kB, and lazy chunks of 1.4 kB
   (chat), 1.1 kB (community) and 0.8 kB (the dialog they share).
 - What the main bundle holds, measured by splitting a build by origin (gzip): React and React DOM
-  67.5 kB, Zod with the shared schemas 28.7 kB, the engine with its English and Hindi text
-  19.0 kB (the Hindi text alone 4.7 kB) and the rest of the UI 11.0 kB. Why Zod is worth its
+  67.4 kB, Zod with the shared schemas 28.7 kB, the engine with its recommendation text in both
+  languages 10.4 kB and the UI with its labels 18.8 kB. All the Hindi text, the engine's and the
+  UI's, is 9.4 kB. Why Zod is worth its
   share is [decision 4](DECISIONS.md#4-one-set-of-zod-schemas-on-both-sides). Hindi stays in the
-  main bundle: loading it separately would save about 4 kB but make the first switch to Hindi
+  main bundle: loading it separately would save about 9 kB but make the first switch to Hindi
   wait on the network.
 - Every built file has a content hash in its name, and the live site serves those files with
   `Cache-Control: public, max-age=31536000, immutable` and Brotli compression, while the page

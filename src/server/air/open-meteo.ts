@@ -1,10 +1,10 @@
 import { z } from 'zod';
+import { fail, ok, type Result } from '../../core/result.js';
 import { airDataSchema, type AirData, type HourlyReading } from '../../shared/air.js';
 import type { Location } from '../../shared/api.js';
 import { SECOND_MS, SETTINGS } from '../config.js';
 import { fetchJson, type FetchFailure, type HttpDeps } from '../http/fetch-json.js';
 import * as logger from '../logger.js';
-import { fail, ok, type Result } from '../../core/result.js';
 
 const AIR_QUALITY_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';

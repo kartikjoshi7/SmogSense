@@ -1,6 +1,6 @@
 import type { Sensitivity, Severity } from '../shared/plan.js';
-import type { OutdoorAdvice } from '../shared/recommendation.js';
 import type { Member } from '../shared/profile.js';
+import type { OutdoorAdvice } from '../shared/recommendation.js';
 import { OUTDOOR_ADVICE_BAND, SENSITIVE_ADVICE_SHIFT } from './constants.js';
 
 /**
@@ -27,14 +27,20 @@ export function householdSensitivity(members: readonly Member[]): Sensitivity {
   return levels.includes('elevated') ? 'elevated' : 'normal';
 }
 
-/** Ids of members in a sensitive group (children, infants, seniors, health conditions): they get personal alerts. */
+/**
+ * Ids of members in a sensitive group (children, infants, seniors, health conditions): they get
+ * personal alerts.
+ */
 export function sensitiveMemberIds(members: readonly Member[]): string[] {
   return members.filter((m) => memberSensitivity(m) !== 'normal').map((m) => m.id);
 }
 
 const NO_EXERTION: ReadonlySet<OutdoorAdvice> = new Set(['avoid', 'stay_indoors']);
 
-/** Whether exertion outdoors is off today: the advice says avoid it or stay in, or it is an emergency. */
+/**
+ * Whether exertion outdoors is off today: the advice says avoid it or stay in, or it is an
+ * emergency.
+ */
 export function outdoorExertionUnsafe(advice: OutdoorAdvice, severity: Severity): boolean {
   return NO_EXERTION.has(advice) || severity === 'emergency';
 }

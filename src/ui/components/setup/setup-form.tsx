@@ -1,20 +1,20 @@
-import { type RefObject } from 'react';
-import { memberName } from '../../members.js';
-import { useAppDispatch, useAppState, useMessages } from '../../state/app-context.js';
-import { DEMO_HOUSEHOLD, DEMO_LOCATION, EMPTY_PROFILE } from './defaults.js';
-import { CommuteFieldset, ExerciseFieldset } from './lifestyle-fieldsets.js';
-import { HomeFieldset } from './home-fieldset.js';
-import type { InvalidFields } from './field-section.js';
-import { LocationPicker } from './location-picker.js';
-import { MembersFieldset } from './members-fieldset.js';
-import { SetupHero } from './setup-hero.js';
+import type { RefObject } from 'react';
 import {
   invalidPaths,
   useSetupDraft,
   useSetupSubmit,
   type Draft,
   type ProfileUpdate,
-} from './setup-draft.js';
+} from '../../hooks/use-setup-draft.js';
+import { memberName } from '../../members.js';
+import { useAppDispatch, useAppState, useMessages } from '../../state/app-context.js';
+import { DEMO_HOUSEHOLD, DEMO_LOCATION, EMPTY_PROFILE } from './defaults.js';
+import { HomeFieldset } from './home-fieldset.js';
+import { CommuteFieldset, ExerciseFieldset } from './lifestyle-fieldsets.js';
+import { LocationPicker } from './location-picker.js';
+import { MembersFieldset } from './members-fieldset.js';
+import { SetupHero } from './setup-hero.js';
+import type { InvalidFields } from './setup-section.js';
 
 interface LifestyleSectionsProps {
   readonly draft: Draft;
@@ -63,7 +63,11 @@ function LifestyleSections({ draft, invalid, update }: LifestyleSectionsProps) {
   );
 }
 
-function SetupActions({ showError }: { readonly showError: boolean }) {
+interface SetupActionsProps {
+  readonly showError: boolean;
+}
+
+function SetupActions({ showError }: SetupActionsProps) {
   const t = useMessages().setup;
   const { editing } = useAppState();
   const dispatch = useAppDispatch();

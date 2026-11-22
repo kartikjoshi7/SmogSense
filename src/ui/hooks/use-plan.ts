@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ExplainResponse, PlanRequest } from '../../shared/api.js';
+import type { UiLanguage } from '../../shared/languages.js';
 import type { Plan } from '../../shared/plan.js';
 import type { Profile } from '../../shared/profile.js';
 import { api, type ApiError } from '../api/client.js';
-import type { UiLanguage } from '../../shared/languages.js';
 import type { SavedLocation } from '../state/storage.js';
 
 type Loaded =
@@ -11,7 +11,9 @@ type Loaded =
   | { readonly status: 'error'; readonly error: ApiError }
   | { readonly status: 'ready'; readonly plan: Plan };
 
-/** A loaded plan also carries its AI wording, once it arrives; standard guidance shows until then. */
+/**
+ * A loaded plan also carries its AI wording, once it arrives; standard guidance shows until then.
+ */
 export type PlanState =
   | Exclude<Loaded, { readonly status: 'ready' }>
   | (Extract<Loaded, { readonly status: 'ready' }> & {

@@ -102,11 +102,16 @@ export const FLOAT_ERROR_DECIMALS = 6;
 
 // ---------------------------------------------------------------- Winter inversion
 
-/** Boundary-layer height (m) below which pollution is treated as trapped near the ground (estimate). */
+/**
+ * Boundary-layer height (m) below which pollution is treated as trapped near the ground (estimate).
+ */
 export const INVERSION_TRAPPED_BLH_M = 200;
 
 /** Wind speed (km/h) below which air is treated as stagnant (estimate). */
 export const INVERSION_STAGNANT_WIND_KMH = 5;
 
-/** Boundary-layer height (m) at which daytime mixing is treated as having cleared the inversion (estimate). */
+/**
+ * Boundary-layer height (m) at which daytime mixing is treated as having cleared the inversion
+ * (estimate).
+ */
 export const INVERSION_CLEARED_BLH_M = 500;

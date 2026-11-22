@@ -1,5 +1,7 @@
 import { HOURS_PER_DAY } from '../../shared/limits.js';
 import type { Plan } from '../../shared/plan.js';
+import { SETTINGS } from '../config.js';
+import * as logger from '../logger.js';
 
 /** Numbers inside common terms ("PM2.5", "N95"); "PM10" is covered by the small-number rule. */
 const ALWAYS_ALLOWED = new Set([2.5, 95]);
@@ -77,7 +79,9 @@ function addNumbers(target: Set<number>, values: readonly unknown[]): void {
   }
 }
 
-/** Every number the plan supports: the readings, timing, forecast and each recommendation's facts. */
+/**
+ * Every number the plan supports: the readings, timing, forecast and each recommendation's facts.
+ */
 export function allowedNumbers(plan: Plan): ReadonlySet<number> {
   const allowed = new Set(ALWAYS_ALLOWED);
   addNumbers(allowed, [plan.index.value, plan.index.pm25Mean24h]);
@@ -111,4 +115,14 @@ function isAllowed({ value, measured, decimals }: Quantity, allowed: ReadonlySet
  */
 export function isGrounded(text: string, allowed: ReadonlySet<number>): boolean {
   return extractQuantities(text).every((quantity) => isAllowed(quantity, allowed));
+}
+
+/** The kinds of text the model writes, each with its own output budget. */
+export type ReplyKind = keyof typeof SETTINGS.aiMaxOutputTokens;
+
+/** Record AI text that was dropped for quoting numbers the plan does not contain. */
+export function logUngrounded(kind: ReplyKind, rejected: number): void {
+  if (rejected > 0) {
+    logger.warn('AI text failed the grounding check', { kind, rejected });
+  }
 }

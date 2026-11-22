@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import type { ReactElement } from 'react';
-import { AppProvider } from '../state/app-context.js';
 import type { UiLanguage } from '../../shared/languages.js';
+import { AppProvider } from '../state/app-context.js';
 import { saveState } from '../state/storage.js';
 import { memoryStore } from './fake-api.js';
 

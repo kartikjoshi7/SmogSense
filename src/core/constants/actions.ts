@@ -1,5 +1,6 @@
 /**
- * When each kind of advice starts, and how recommendations are ranked.
+ * When each kind of advice starts, how recommendations are ranked, and where Delhi NCR's rules
+ * apply.
  * Sources: docs/ARCHITECTURE.md › Assumptions behind the numbers.
  */
 import type { Sensitivity } from '../../shared/plan.js';

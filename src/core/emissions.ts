@@ -35,7 +35,9 @@ function weeklyCommuteCo2Kg(mode: CommuteMode, oneWayKm: number, daysPerWeek: nu
   return COMMUTE_MODES[mode].co2KgPerKm * oneWayKm * TRIPS_PER_COMMUTE_DAY * daysPerWeek;
 }
 
-/** PM2.5 inhaled on one day's round trip in µg, from mode speed, in-transit levels and breathing. */
+/**
+ * PM2.5 inhaled on one day's round trip in µg, from mode speed, in-transit levels and breathing.
+ */
 export function dailyCommuteDoseUg(
   mode: CommuteMode,
   oneWayKm: number,

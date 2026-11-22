@@ -1,11 +1,11 @@
+import { roundTo } from '../../core/numbers.js';
+import type { Result } from '../../core/result.js';
 import type { AirData } from '../../shared/air.js';
 import type { Location, Place } from '../../shared/api.js';
+import type { UiLanguage } from '../../shared/languages.js';
 import { TtlCache } from '../cache.js';
 import { SETTINGS } from '../config.js';
 import type { FetchFailure } from '../http/fetch-json.js';
-import { roundTo } from '../../core/numbers.js';
-import type { Result } from '../../core/result.js';
-import type { UiLanguage } from '../../shared/languages.js';
 import { searchPlaces } from './geocode.js';
 import { fetchAirData, type AirFailure } from './open-meteo.js';
 

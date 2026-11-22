@@ -1,10 +1,10 @@
 import type { AirData, HourlyReading, Pollutants } from '../shared/air.js';
 import type { IndexReading, Plan, TimelineEntry } from '../shared/plan.js';
-import type { RecommendationId } from '../shared/recommendation.js';
 import type { Profile } from '../shared/profile.js';
+import type { RecommendationId } from '../shared/recommendation.js';
 import { computeIndex } from './aqi.js';
 import { PLAN_HORIZON_HOURS } from './constants.js';
-import { ok, type Result } from './result.js';
+import { analyzeInversion } from './inversion.js';
 import { alternativeCandidates } from './recommendations/alternatives.js';
 import { communityCandidates } from './recommendations/community.js';
 import type { Candidate, PlanContext } from './recommendations/context.js';
@@ -12,9 +12,9 @@ import { indoorAirCandidates } from './recommendations/indoor-air.js';
 import { protectionCandidates } from './recommendations/protection.js';
 import { compareIds, rank } from './recommendations/rank.js';
 import { routineCandidates } from './recommendations/routine.js';
+import { ok, type Result } from './result.js';
 import { sensitiveMemberIds, householdSensitivity, outdoorAdvice } from './risk.js';
 import { severityMode } from './severity.js';
-import { analyzeInversion } from './inversion.js';
 import { bestActivityWindow, ventilationHour } from './windows.js';
 
 /** Recommendations that depend only on the air and the place, not on the household, in order. */
@@ -27,7 +27,9 @@ const FOR_EVERYONE: readonly RecommendationId[] = [
 
 const NO_READING: Pollutants = { pm25: null, pm10: null, no2: null, o3: null, co: null, so2: null };
 
-/** Every pollutant's concentration at one hour of the data, or all null when that hour is missing. */
+/**
+ * Every pollutant's concentration at one hour of the data, or all null when that hour is missing.
+ */
 function pollutantsAt(hourly: readonly HourlyReading[], index: number): Pollutants {
   const reading = hourly[index];
   if (reading === undefined) {

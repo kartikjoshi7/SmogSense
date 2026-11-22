@@ -7,8 +7,8 @@ import {
   type SearchStatus,
 } from '../../hooks/use-location-search.js';
 import { useMessages } from '../../state/app-context.js';
-import { StepLegend } from '../common/fields.js';
 import type { SavedLocation } from '../../state/storage.js';
+import { StepLegend } from './step-legend.js';
 
 function placeLabel(place: Place): string {
   return [place.name, place.region, place.country].filter((part) => part !== null).join(', ');

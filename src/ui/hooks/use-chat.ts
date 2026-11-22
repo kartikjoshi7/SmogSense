@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { replyLanguage } from '../../core/explain/index.js';
 import type { PlanRequest, TextSource } from '../../shared/api.js';
 import type { Language } from '../../shared/languages.js';
@@ -20,7 +20,7 @@ export type ChatMessage =
 export type ChatStatus = 'idle' | 'sending' | 'error' | 'busy';
 
 /** The conversation so far and a way to ask the next question; resolves true once answered. */
-export function useChat(request: PlanRequest) {
+function useChat(request: PlanRequest) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [status, setStatus] = useState<ChatStatus>('idle');
 
@@ -51,4 +51,22 @@ export function useChat(request: PlanRequest) {
   };
 
   return { messages, status, ask };
+}
+
+/** The conversation and the question being typed; the box empties once its question is answered. */
+export function useChatSession(request: PlanRequest, lang: Language) {
+  const [question, setQuestion] = useState('');
+  const input = useRef<HTMLTextAreaElement>(null);
+  const { messages, status, ask } = useChat(request);
+  const send = async (text: string) => {
+    if (status === 'sending' || text.trim() === '') {
+      return;
+    }
+    if (await ask(text.trim(), lang)) {
+      setQuestion('');
+    }
+    // Answered or not, focus goes back to the question box (a clicked suggestion may be gone).
+    input.current?.focus();
+  };
+  return { question, setQuestion, input, messages, status, send };
 }

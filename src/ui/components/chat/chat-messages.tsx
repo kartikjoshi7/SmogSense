@@ -2,8 +2,12 @@ import type { ChatMessage } from '../../hooks/use-chat.js';
 import { useMessages } from '../../state/app-context.js';
 import { SourceTag } from '../common/source-tag.js';
 
+interface MessageListProps {
+  readonly messages: readonly ChatMessage[];
+}
+
 /** The conversation. It is a live region from the start, so the first answer is announced too. */
-export function MessageList({ messages }: { readonly messages: readonly ChatMessage[] }) {
+export function MessageList({ messages }: MessageListProps) {
   const t = useMessages().chat;
   return (
     <ol aria-live="polite" aria-label={t.conversation} className="grid gap-3">
@@ -33,6 +37,7 @@ interface SuggestionsProps {
   readonly onPick: (question: string) => void;
 }
 
+/** Example questions to start with; each one is asked when picked. */
 export function Suggestions({ busy, onPick }: SuggestionsProps) {
   const t = useMessages().chat;
   return (

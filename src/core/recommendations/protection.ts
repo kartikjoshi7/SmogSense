@@ -25,7 +25,10 @@ function n95Outdoors(ctx: PlanContext): Candidate[] {
   ];
 }
 
-/** Personal precautions for the sensitive members: children, seniors, and anyone with a heart or lung condition or a pregnancy. */
+/**
+ * Personal precautions for the sensitive members: children, seniors, and anyone with a heart or
+ * lung condition or a pregnancy.
+ */
 function sensitiveMembers(ctx: PlanContext): Candidate[] {
   if (ctx.sensitiveIds.length === 0 || ctx.index.band < ACTION_BAND.alertSensitive) {
     return [];
@@ -51,7 +54,10 @@ function inNcr(lat: number, lon: number): boolean {
   );
 }
 
-/** In Delhi NCR on very poor days, check the current GRAP stage (rules change, so none are hard-coded). */
+/**
+ * In Delhi NCR on very poor days, check the current GRAP stage (rules change, so none are
+ * hard-coded).
+ */
 function ncrGrapCheck(ctx: PlanContext): Candidate[] {
   if (ctx.index.band < ACTION_BAND.grapCheck || !inNcr(ctx.air.lat, ctx.air.lon)) {
     return [];

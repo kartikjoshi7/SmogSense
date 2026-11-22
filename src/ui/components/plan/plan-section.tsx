@@ -1,7 +1,7 @@
 import { recommendationCategorySchema } from '../../../shared/recommendation.js';
-import type { Household } from '../../state/storage.js';
 import { memberName } from '../../members.js';
 import { useMessages } from '../../state/app-context.js';
+import type { Household } from '../../state/storage.js';
 import { CategoryTabs } from './category-tabs.js';
 import type { ShownRecommendation } from './explained.js';
 import { RecommendationCard } from './recommendation-card.js';

@@ -137,7 +137,7 @@ status, in the interface language.
   its explanation: a new household or place reloads both, a new language asks only for new wording.
   It cancels superseded requests and tags each result with the request it answers, so a slow old
   answer is never shown. `use-location-search.ts`, `use-chat.ts` and `use-community-notice.ts`
-  handle search, chat and notices; `use-speech.ts` and `use-share-notice.ts` wrap the browser's
+  handle search, chat and notices, and `use-setup-draft.ts` holds the setup form's draft until it is saved; `use-speech.ts` and `use-share-notice.ts` wrap the browser's
   speech synthesis, clipboard and share sheet. `api/client.ts` is the only code that calls `fetch`, and it
   validates every response against the shared schemas. Browser-side timings live in
   `settings.ts`.

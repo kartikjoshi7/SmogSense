@@ -4,9 +4,9 @@ import {
   communityRequestSchema,
   explainRequestSchema,
 } from '../../shared/api.js';
+import type { AiService } from '../ai/ai-service.js';
 import type { AirService } from '../air/air-service.js';
 import { clientKey } from '../allowance.js';
-import type { AiService } from '../ai/ai-service.js';
 import { planFailureResponse } from '../http/errors.js';
 import { jsonBody } from '../middleware/validate.js';
 import { loadPlan } from '../plan-service.js';

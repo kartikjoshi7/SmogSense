@@ -1,6 +1,6 @@
 /** Hindi words and phrases the recommendation templates share. */
-import type { OutdoorAdvice } from '../../shared/recommendation.js';
 import type { CookingFuel, MaskType, SmokyHeating } from '../../shared/profile.js';
+import type { OutdoorAdvice } from '../../shared/recommendation.js';
 import { templateKit, type ImpactPhrases } from './format.js';
 
 export const MASK: Readonly<Record<MaskType, string>> = {

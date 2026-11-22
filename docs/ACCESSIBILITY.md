@@ -15,7 +15,7 @@ screen reader, by ear and in Hindi.
 - `lang` on the page follows the chosen language (`state/app-context.tsx`). Chat answers and
   community notices carry their own `lang` (see Reading and language).
 
-**Forms** (`components/setup/*`, `components/common/fields.tsx`)
+**Forms** (`components/setup/*`, `components/common/fields.tsx` and `checkbox-fields.tsx`)
 
 - Every control has a visible `label`; groups such as health conditions and commute alternatives
   are `fieldset`s with a `legend`, and each family member's fields are a group named after that

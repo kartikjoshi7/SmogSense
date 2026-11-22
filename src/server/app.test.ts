@@ -1,9 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { makeAir } from '../core/fixtures/air.js';
+import { fail, ok } from '../core/result.js';
 import { geocodeResponseSchema, planResponseSchema } from '../shared/api.js';
 import { parseConfig } from './config.js';
-import { fail, ok } from '../core/result.js';
-import { fakeAir, GURUGRAM } from './test/fake-air.js';
 import {
   ORIGIN,
   errorResponseSchema,
@@ -11,6 +10,7 @@ import {
   app,
   postPlan,
 } from './test/app-harness.js';
+import { fakeAir, GURUGRAM } from './test/fake-air.js';
 
 afterEach(() => {
   vi.restoreAllMocks();

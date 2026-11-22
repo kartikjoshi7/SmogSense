@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { planHeadline } from './explain/index.js';
 import { makeAir, MODERATE, POOR, SEVERE } from './fixtures/air.js';
+import { HEALTHY_COUPLE, HOMEBOUND_SENIOR, SHARMA_FAMILY } from './fixtures/profiles.js';
 import {
   findRecommendation as find,
   idsOf as ids,
   planFor as plan,
 } from './fixtures/recommendations.js';
-import { HEALTHY_COUPLE, HOMEBOUND_SENIOR, SHARMA_FAMILY } from './fixtures/profiles.js';
-import { planHeadline } from './explain/index.js';
 import { communityPlan } from './plan.js';
 
 const MUMBAI = { lat: 19.07, lon: 72.88 };

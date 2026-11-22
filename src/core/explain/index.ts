@@ -13,7 +13,9 @@ function guidanceLanguage(lang: Language): UiLanguage {
   return lang === 'hi' ? 'hi' : 'en';
 }
 
-/** The language a reply is written in: the one asked for when the AI wrote it, else the guidance's. */
+/**
+ * The language a reply is written in: the one asked for when the AI wrote it, else the guidance's.
+ */
 export function replyLanguage(source: TextSource, lang: Language): Language {
   return source === 'ai' ? lang : guidanceLanguage(lang);
 }

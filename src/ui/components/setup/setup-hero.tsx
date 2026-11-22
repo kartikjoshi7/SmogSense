@@ -1,4 +1,4 @@
-import { type RefObject } from 'react';
+import type { RefObject } from 'react';
 import { useMessages } from '../../state/app-context.js';
 
 interface SetupHeroProps {

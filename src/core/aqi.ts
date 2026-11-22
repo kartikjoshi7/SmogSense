@@ -11,8 +11,8 @@ import {
   type AqiBand,
   type AqiScaleDefinition,
 } from './constants.js';
-import { fail, ok, type Result } from './result.js';
 import { mean, roundTo } from './numbers.js';
+import { fail, ok, type Result } from './result.js';
 
 type Pollutant = 'pm25' | 'pm10';
 
@@ -41,7 +41,10 @@ function subIndex(concentration: number, pollutant: Pollutant, bands: readonly A
   return Math.round(((row.iHi - row.iLo) * (concentration - cLo)) / (cHi - cLo) + row.iLo);
 }
 
-/** Band number (0 = best) and category of an index value; values past the table stay in the worst band. */
+/**
+ * Band number (0 = best) and category of an index value; values past the table stay in the worst
+ * band.
+ */
 function classify(
   value: number,
   bands: AqiScaleDefinition['bands'],

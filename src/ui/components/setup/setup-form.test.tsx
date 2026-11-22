@@ -2,10 +2,11 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { App } from '../../app.js';
+import { nextMemberId } from '../../members.js';
 import { checkA11y } from '../../test/axe.js';
 import { fakeApi, memoryStore } from '../../test/fake-api.js';
 import type { FakeApiOptions } from '../../test/fake-server.js';
-import { DEMO_HOUSEHOLD, DEMO_LOCATION, nextMemberId } from './defaults.js';
+import { DEMO_HOUSEHOLD, DEMO_LOCATION } from './defaults.js';
 
 function setup(options: FakeApiOptions = {}, store = memoryStore()) {
   const fetchMock = fakeApi(options);

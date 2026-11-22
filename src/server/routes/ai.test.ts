@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fail } from '../../core/result.js';
 import {
   chatResponseSchema,
   communityResponseSchema,
   explainResponseSchema,
 } from '../../shared/api.js';
 import { createAiService } from '../ai/ai-service.js';
-import { fail } from '../../core/result.js';
-import { fakeAir } from '../test/fake-air.js';
 import { app, parsedOrDown, validPlanRequest } from '../test/app-harness.js';
+import { fakeAir } from '../test/fake-air.js';
 
 afterEach(() => {
   vi.restoreAllMocks();

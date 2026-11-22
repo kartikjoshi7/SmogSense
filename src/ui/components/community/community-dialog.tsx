@@ -8,8 +8,12 @@ import { Dialog } from '../common/dialog.js';
 import { SelectField } from '../common/fields.js';
 import { SourceTag } from '../common/source-tag.js';
 
+interface NoticeActionsProps {
+  readonly notice: string;
+}
+
 /** Copy and share buttons; when the browser refuses either, say so and suggest the other. */
-function NoticeActions({ notice }: { readonly notice: string }) {
+function NoticeActions({ notice }: NoticeActionsProps) {
   const t = useMessages().community;
   const { status, copy, share, canShare } = useShareNotice(notice);
   const problem: Partial<Record<ShareStatus, string>> = {
@@ -35,8 +39,12 @@ function NoticeActions({ notice }: { readonly notice: string }) {
   );
 }
 
+interface NoticeOutcomeProps {
+  readonly state: NoticeState;
+}
+
 /** The notice being written, the finished notice with its actions, or what went wrong. */
-function NoticeOutcome({ state }: { readonly state: NoticeState }) {
+function NoticeOutcome({ state }: NoticeOutcomeProps) {
   const t = useMessages().community;
   return (
     <>

@@ -8,7 +8,11 @@ const HEIGHT = 160;
 const LABEL_SPACE = 18;
 const LABEL_EVERY_HOURS = 3;
 
-function ForecastTable({ plan }: { readonly plan: Plan }) {
+interface ForecastTableProps {
+  readonly plan: Plan;
+}
+
+function ForecastTable({ plan }: ForecastTableProps) {
   const t = useMessages().forecast;
   return (
     <table className="w-full text-left text-sm">
@@ -34,8 +38,14 @@ function ForecastTable({ plan }: { readonly plan: Plan }) {
   );
 }
 
+interface MissingBarProps {
+  readonly x: number;
+  readonly width: number;
+  readonly height: number;
+}
+
 /** An hour with no forecast: a dashed outline the full height of the chart, never a zero bar. */
-function MissingBar({ x, width, height }: { x: number; width: number; height: number }) {
+function MissingBar({ x, width, height }: MissingBarProps) {
   return (
     <rect
       x={x + 2}
@@ -94,8 +104,14 @@ function ForecastBars({ plan, descriptionId }: ForecastBarsProps) {
   );
 }
 
-/** Hourly PM2.5 for the next day, drawn as bars with the cleanest hour highlighted, or as a table. */
-export function ForecastChart({ plan }: { readonly plan: Plan }) {
+interface ForecastChartProps {
+  readonly plan: Plan;
+}
+
+/**
+ * Hourly PM2.5 for the next day, drawn as bars with the cleanest hour highlighted, or as a table.
+ */
+export function ForecastChart({ plan }: ForecastChartProps) {
   const t = useMessages().forecast;
   const [asTable, setAsTable] = useState(false);
   const descriptionId = useId();

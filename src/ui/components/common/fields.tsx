@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from 'react';
+import { useId } from 'react';
 import { clock } from '../../../core/explain/format.js';
 import { CLOCK_HOURS, type Range } from '../../../shared/limits.js';
 import { entries, type Labels } from '../../i18n/labels.js';
@@ -116,22 +116,5 @@ export function HourField({ label, value, onChange }: HourFieldProps) {
         ))}
       </select>
     </div>
-  );
-}
-
-interface StepLegendProps {
-  readonly step: number;
-  readonly children: ReactNode;
-}
-
-/** A setup step's title with its number; the number is decorative, the title names the group. */
-export function StepLegend({ step, children }: StepLegendProps) {
-  return (
-    <legend className="text-lg font-semibold">
-      <span aria-hidden="true" className="step-badge">
-        {step}
-      </span>
-      {children}
-    </legend>
   );
 }

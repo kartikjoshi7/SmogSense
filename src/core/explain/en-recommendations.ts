@@ -1,6 +1,6 @@
-import { clock, type LanguagePack } from './format.js';
 import { homeTemplates } from './en-home.js';
 import { FUEL, MASK, qualitative, SENSITIVE_ADVICE, swap } from './en-words.js';
+import { clock, type LanguagePack } from './format.js';
 
 /** English text for each recommendation, written from its own facts and impact. */
 export const recommendations: LanguagePack['recommendations'] = {

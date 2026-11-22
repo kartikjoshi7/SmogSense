@@ -33,7 +33,10 @@ export const CEILING_HEIGHT_M = 2.8;
 /** Clean-air delivery rate assumed for a typical home purifier, m³/h (estimate). */
 export const DEFAULT_PURIFIER_CADR_M3H = 250;
 
-/** Cooking fuels that fill the home with smoke: solid biomass and kerosene (WHO household-energy guidance). */
+/**
+ * Cooking fuels that fill the home with smoke: solid biomass and kerosene (WHO household-energy
+ * guidance).
+ */
 export const SMOKY_FUELS: readonly CookingFuel[] = ['biomass', 'kerosene'];
 
 /**

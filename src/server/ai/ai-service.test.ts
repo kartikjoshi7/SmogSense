@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { makeAir } from '../../core/fixtures/air.js';
 import { SHARMA_FAMILY } from '../../core/fixtures/profiles.js';
 import { buildPlan } from '../../core/plan.js';
-import type { Plan } from '../../shared/plan.js';
 import { fail, ok } from '../../core/result.js';
+import type { Plan } from '../../shared/plan.js';
 import { createAiService } from './ai-service.js';
 import type { AiClient } from './gemini-client.js';
 
@@ -15,7 +15,10 @@ function severePlan(): Plan {
   return result.value;
 }
 
-/** A model stand-in: replies with `value` (validated by the request's own schema), or is down when null. */
+/**
+ * A model stand-in: replies with `value` (validated by the request's own schema), or is down when
+ * null.
+ */
 function service(value: unknown) {
   const generate = vi.fn();
   const client: AiClient = {

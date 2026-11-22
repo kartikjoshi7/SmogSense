@@ -1,9 +1,10 @@
 import { PROFILE_LIMITS } from '../../../shared/limits.js';
 import type { Commute, Exercise } from '../../../shared/profile.js';
 import { useMessages } from '../../state/app-context.js';
-import { CheckboxField, CheckboxGroup } from '../common/choice-fields.js';
-import { HourField, NumberField, SelectField, StepLegend } from '../common/fields.js';
-import { fieldSetter, useRangeError, type Section } from './field-section.js';
+import { CheckboxField, CheckboxGroup } from '../common/checkbox-fields.js';
+import { HourField, NumberField, SelectField } from '../common/fields.js';
+import { fieldSetter, useRangeError, type Section } from './setup-section.js';
+import { StepLegend } from './step-legend.js';
 
 function CommuteTrip({ value, invalid, onChange }: Section<Commute>) {
   const set = fieldSetter(onChange);
@@ -36,14 +37,14 @@ function CommuteTrip({ value, invalid, onChange }: Section<Commute>) {
 }
 
 /** How the household commutes, when, and which alternatives it could use. */
-export function CommuteFieldset(props: Section<Commute>) {
+export function CommuteFieldset(section: Section<Commute>) {
   const t = useMessages();
-  const { value, onChange } = props;
+  const { value, onChange } = section;
   const set = fieldSetter(onChange);
   return (
     <fieldset className="card grid gap-3 sm:grid-cols-2">
       <StepLegend step={3}>{t.setup.commute.legend}</StepLegend>
-      <CommuteTrip {...props} />
+      <CommuteTrip {...section} />
       <HourField
         label={t.setup.commute.depart}
         value={value.departHour}

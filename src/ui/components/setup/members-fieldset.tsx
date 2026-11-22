@@ -2,8 +2,9 @@ import { useId } from 'react';
 import { MEMBER_NAME_CHARS, PROFILE_LIMITS } from '../../../shared/limits.js';
 import type { Member } from '../../../shared/profile.js';
 import { useMessages } from '../../state/app-context.js';
-import { CheckboxGroup } from '../common/choice-fields.js';
-import { SelectField, StepLegend } from '../common/fields.js';
+import { CheckboxGroup } from '../common/checkbox-fields.js';
+import { SelectField } from '../common/fields.js';
+import { StepLegend } from './step-legend.js';
 
 interface NameFieldProps {
   readonly name: string;

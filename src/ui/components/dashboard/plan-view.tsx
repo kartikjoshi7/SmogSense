@@ -14,8 +14,12 @@ import { InversionCard } from './inversion-card.js';
 /** The AI dialog the dashboard has open, if any. */
 export type OpenDialog = 'chat' | 'notice' | null;
 
+interface PlanActionsProps {
+  readonly onOpen: (dialog: OpenDialog) => void;
+}
+
 /** The two AI actions: ask about the plan, or write a notice for the community. */
-function PlanActions({ onOpen }: { readonly onOpen: (dialog: OpenDialog) => void }) {
+function PlanActions({ onOpen }: PlanActionsProps) {
   const t = useMessages().actions;
   return (
     <div className="flex flex-wrap gap-3">

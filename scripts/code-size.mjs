@@ -46,7 +46,7 @@ async function lineCounts(files) {
     const fileLines = result.messages.find((m) => m.ruleId === 'max-lines');
     const functions = result.messages
       .filter((m) => m.ruleId === 'max-lines-per-function')
-      .map((m) => ({ where: `${file}:${m.line}`, lines: countIn(m.message) }));
+      .map((m) => ({ file, lines: countIn(m.message) }));
     return { file, lines: fileLines === undefined ? 0 : countIn(fileLines.message), functions };
   });
 }
@@ -80,7 +80,6 @@ export async function measureCode() {
   const tests = await lineCounts(tracked.filter(isTest));
   const styles = tracked.filter((file) => file.startsWith('src/') && file.endsWith('.css'));
 
-  const total = source.reduce((sum, item) => sum + item.lines, 0);
   const bigFile = largest(source, (item) => item.lines);
   const bigTest = largest(tests, (item) => item.lines);
   const longest = largest(
@@ -90,9 +89,8 @@ export async function measureCode() {
   const bigStyle = largest(styles, cssLines);
   return [
     ['Source files / test files', `${source.length} / ${tests.length}`],
-    ['Lines of code per source file, on average', String(Math.round(total / source.length))],
     ['Largest source file (lines of code)', `${bigFile.lines} (\`${bigFile.file}\`)`],
-    ['Longest function (lines of code)', `${longest.lines} (\`${longest.where}\`)`],
+    ['Longest function (lines of code)', `${longest.lines} (in \`${longest.file}\`)`],
     ['Largest test file (lines of code)', `${bigTest.lines} (\`${bigTest.file}\`)`],
     ['Largest stylesheet (lines of code)', `${cssLines(bigStyle)} (\`${bigStyle}\`)`],
   ];

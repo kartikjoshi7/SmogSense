@@ -24,7 +24,10 @@ const EMERGENCY_FIRST: ReadonlySet<RecommendationId> = new Set([
   'exercise_indoors',
 ]);
 
-/** Health benefit in exposure-percentage points: measured when known, else from the qualitative level. */
+/**
+ * Health benefit in exposure-percentage points: measured when known, else from the qualitative
+ * level.
+ */
 function healthBenefit({ impact }: Rankable): number {
   return 'level' in impact
     ? QUALITATIVE_BENEFIT_PCT[impact.level]

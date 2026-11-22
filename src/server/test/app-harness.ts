@@ -1,10 +1,10 @@
 /** The API under test: the real app with fakes, and the helpers its tests share. */
-import { SHARMA_FAMILY } from '../../core/fixtures/profiles.js';
 import { z } from 'zod';
+import { SHARMA_FAMILY } from '../../core/fixtures/profiles.js';
+import { fail, ok } from '../../core/result.js';
 import { createAiService } from '../ai/ai-service.js';
 import { createApp, type AppDeps } from '../app.js';
 import { parseConfig } from '../config.js';
-import { fail, ok } from '../../core/result.js';
 import { fakeAir } from './fake-air.js';
 
 export const ORIGIN = 'https://smog-sense-sigma.vercel.app';
@@ -41,7 +41,7 @@ export function postPlan(body: unknown, init: RequestInit = {}) {
 
 export const validPlanRequest = { profile: SHARMA_FAMILY, location: { lat: 28.61, lon: 77.21 } };
 
-/** A model stand-in that always answers a chat question with plain advice. */
+/** A chat reply with plain advice, parsed by the schema the model was given (or a failure). */
 export function parsedOrDown<T>(schema: z.ZodType<T>) {
   const parsed = schema.safeParse({ answer: 'Stay inside and keep the windows shut.' });
   return parsed.success ? ok(parsed.data) : fail('unavailable' as const);

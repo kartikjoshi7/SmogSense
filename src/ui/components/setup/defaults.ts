@@ -64,9 +64,3 @@ export const DEMO_HOUSEHOLD: Household = {
 };
 
 export const DEMO_LOCATION: SavedLocation = { lat: 28.61, lon: 77.21, label: 'New Delhi' };
-
-/** The next free member id (`m1`, `m2`, …), never reusing one that is still in use. */
-export function nextMemberId(members: Profile['members']): string {
-  const used = members.map((m) => Number(m.id.slice(1))).filter(Number.isFinite);
-  return `m${Math.max(0, ...used) + 1}`;
-}

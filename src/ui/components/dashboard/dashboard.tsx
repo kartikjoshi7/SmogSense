@@ -24,8 +24,12 @@ function planErrorText(t: Messages['dashboard'], error: ApiError): string {
   return (error.status === null ? undefined : byStatus[error.status]) ?? t.errors.general;
 }
 
+interface PlanStatusProps {
+  readonly state: PlanState;
+}
+
 /** The live line that says the plan, or its AI wording, is on its way. */
-function PlanStatus({ state }: { readonly state: PlanState }) {
+function PlanStatus({ state }: PlanStatusProps) {
   const t = useMessages().dashboard;
   return (
     <p role="status" className="muted">

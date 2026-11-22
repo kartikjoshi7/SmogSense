@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
-import { createAirService } from './air/air-service.js';
 import { createAiService } from './ai/ai-service.js';
 import { createGeminiClient, type GenerateContent } from './ai/gemini-client.js';
+import { createAirService } from './air/air-service.js';
 import { createApp } from './app.js';
 import { parseConfig } from './config.js';
 

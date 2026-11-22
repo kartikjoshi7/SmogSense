@@ -2,8 +2,8 @@ import { useId, useState } from 'react';
 import { clock } from '../../../core/explain/format.js';
 import { exerciseDoseUg } from '../../../core/exposure.js';
 import { activityMeanPm25 } from '../../../core/windows.js';
-import type { Plan } from '../../../shared/plan.js';
 import { CLOCK_HOURS } from '../../../shared/limits.js';
+import type { Plan } from '../../../shared/plan.js';
 import type { Exercise, Member } from '../../../shared/profile.js';
 import { useMessages } from '../../state/app-context.js';
 

@@ -52,11 +52,17 @@ export const MASK_REDUCTION: Readonly<Record<MaskType, number>> = {
 };
 
 export interface CommuteModeFactors {
-  /** In-transit PM2.5 relative to ambient air (estimate, informed by Delhi on-road studies such as Goel et al. 2015, Atmospheric Environment). */
+  /**
+   * In-transit PM2.5 relative to ambient air (estimate, informed by Delhi on-road studies such as
+   * Goel et al. 2015, Atmospheric Environment).
+   */
   readonly exposureMultiplier: number;
   /** Typical urban door-to-door speed in km/h (estimate). */
   readonly speedKmh: number;
-  /** Tailpipe/grid CO₂ in kg per km — per vehicle for private modes, per passenger for bus and metro (estimate, India GHG Program road-transport factors). */
+  /**
+   * Tailpipe/grid CO₂ in kg per km — per vehicle for private modes, per passenger for bus and metro
+   * (estimate, India GHG Program road-transport factors).
+   */
   readonly co2KgPerKm: number;
   /** Breathing rate while travelling, m³/h. */
   readonly breathingM3h: number;

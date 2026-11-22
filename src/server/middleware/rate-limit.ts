@@ -1,6 +1,6 @@
 import { createMiddleware } from 'hono/factory';
-import { clientKey, createAllowance, type AllowanceOptions } from '../allowance.js';
 import { API_STATUS } from '../../shared/api.js';
+import { clientKey, createAllowance, type AllowanceOptions } from '../allowance.js';
 import { SECOND_MS } from '../config.js';
 
 /**

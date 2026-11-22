@@ -1,8 +1,8 @@
 import type { Severity } from '../../shared/plan.js';
 import type { OutdoorAdvice, RecommendationCategory } from '../../shared/recommendation.js';
-import type { Labels } from './labels.js';
 import { options } from './en-options.js';
 import { setup } from './en-setup.js';
+import type { Labels } from './labels.js';
 
 /** English interface text. Recommendation text itself comes from `src/core/explain`. */
 export const en = {

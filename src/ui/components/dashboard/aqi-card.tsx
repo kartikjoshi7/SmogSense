@@ -1,6 +1,6 @@
 import { categoryLabel, scaleLabel } from '../../../core/explain/index.js';
-import type { TextSource } from '../../../shared/api.js';
 import type { Pollutants } from '../../../shared/air.js';
+import type { TextSource } from '../../../shared/api.js';
 import type { Plan } from '../../../shared/plan.js';
 import { useAppState, useMessages } from '../../state/app-context.js';
 import { SourceTag } from '../common/source-tag.js';
@@ -15,8 +15,12 @@ const POLLUTANTS: readonly (readonly [keyof Pollutants, string])[] = [
   ['so2', 'SO₂'],
 ];
 
+interface CurrentPollutantsProps {
+  readonly current: Pollutants;
+}
+
 /** Every pollutant measured this hour, so the index is not the only number shown. */
-function CurrentPollutants({ current }: { readonly current: Pollutants }) {
+function CurrentPollutants({ current }: CurrentPollutantsProps) {
   const t = useMessages();
   return (
     <div className="mt-3">

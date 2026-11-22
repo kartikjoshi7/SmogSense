@@ -1,9 +1,9 @@
 import { z } from 'zod';
+import { ok, type Result } from '../../core/result.js';
 import type { Place } from '../../shared/api.js';
 import type { UiLanguage } from '../../shared/languages.js';
 import { SETTINGS } from '../config.js';
 import { fetchJson, type FetchFailure, type HttpDeps } from '../http/fetch-json.js';
-import { ok, type Result } from '../../core/result.js';
 
 const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 

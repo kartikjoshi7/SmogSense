@@ -1,5 +1,5 @@
-import type { LanguagePack } from './format.js';
 import { FUEL, HEATER, indoor, qualitative } from './en-words.js';
+import type { LanguagePack } from './format.js';
 
 /** English text for the recommendations about the air at home. */
 export const homeTemplates = {

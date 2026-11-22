@@ -1,11 +1,11 @@
 import type { AirData } from '../../shared/air.js';
 import { planSchema, type Plan } from '../../shared/plan.js';
-import {
-  type Recommendation,
-  type RecommendationId,
-  type RecommendationOf,
-} from '../../shared/recommendation.js';
 import type { Profile } from '../../shared/profile.js';
+import type {
+  Recommendation,
+  RecommendationId,
+  RecommendationOf,
+} from '../../shared/recommendation.js';
 import { buildPlan } from '../plan.js';
 
 const BASE: Omit<Recommendation, 'id' | 'impact' | 'facts'> = {

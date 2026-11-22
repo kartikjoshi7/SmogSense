@@ -2,8 +2,12 @@ import { clock } from '../../../core/explain/format.js';
 import type { Inversion } from '../../../shared/plan.js';
 import { useMessages } from '../../state/app-context.js';
 
+interface InversionCardProps {
+  readonly inversion: Inversion;
+}
+
 /** Explains the winter inversion: why pollution sits low in the morning and when it should lift. */
-export function InversionCard({ inversion }: { readonly inversion: Inversion }) {
+export function InversionCard({ inversion }: InversionCardProps) {
   const t = useMessages().inversion;
   let text = inversion.basis === 'none' ? t.unknown : t.clear;
   if (inversion.trappedNow) {

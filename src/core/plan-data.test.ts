@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { makeAir, MODERATE, SEVERE } from './fixtures/air.js';
+import { SHARMA_FAMILY } from './fixtures/profiles.js';
 import {
   findRecommendation as find,
   idsOf as ids,
   planFor as plan,
 } from './fixtures/recommendations.js';
-import { SHARMA_FAMILY } from './fixtures/profiles.js';
 import { buildPlan } from './plan.js';
 
 describe('current pollutants', () => {

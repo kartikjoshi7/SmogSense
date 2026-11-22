@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { UI_LANGUAGE_NAMES } from '../shared/languages.js';
-import { Dashboard } from './components/dashboard/dashboard.js';
 import { SelectField } from './components/common/fields.js';
+import { Dashboard } from './components/dashboard/dashboard.js';
 import { SetupForm } from './components/setup/setup-form.js';
-import { activeSetup } from './state/app-state.js';
 import { AppProvider, useAppDispatch, useAppState, useMessages } from './state/app-context.js';
+import { activeSetup } from './state/app-state.js';
 import type { KeyValueStore } from './state/storage.js';
 
 /** The app's name and tagline beside its mark (a decorative wind icon). */
@@ -114,8 +114,12 @@ function Screen() {
   );
 }
 
+interface AppProps {
+  readonly store: KeyValueStore | null;
+}
+
 /** The SmogSense app: skip link, header, the setup or plan screen, and footer. */
-export function App({ store }: { readonly store: KeyValueStore | null }) {
+export function App({ store }: AppProps) {
   return (
     <AppProvider store={store}>
       <SkipLink />

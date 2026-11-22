@@ -1,8 +1,12 @@
 import type { TextSource } from '../../../shared/api.js';
 import { useMessages } from '../../state/app-context.js';
 
+interface SourceTagProps {
+  readonly source: TextSource;
+}
+
 /** Says honestly whether text was written by the AI (and checked) or is standard guidance. */
-export function SourceTag({ source }: { readonly source: TextSource }) {
+export function SourceTag({ source }: SourceTagProps) {
   const t = useMessages();
   return (
     <span className={source === 'ai' ? 'tag tag-ai' : 'tag'}>

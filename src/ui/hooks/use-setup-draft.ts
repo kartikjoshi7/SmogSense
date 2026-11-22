@@ -1,9 +1,9 @@
 /** The setup form's draft household: its changes, its checks and saving it. */
 import { useState, type SyntheticEvent } from 'react';
-import { profileSchema, type Member, type Profile } from '../../../shared/profile.js';
-import { useAppDispatch } from '../../state/app-context.js';
-import type { SavedLocation } from '../../state/storage.js';
-import { nextMemberId } from './defaults.js';
+import { profileSchema, type Member, type Profile } from '../../shared/profile.js';
+import { nextMemberId } from '../members.js';
+import { useAppDispatch } from '../state/app-context.js';
+import type { SavedLocation } from '../state/storage.js';
 
 export interface Draft {
   readonly profile: Profile;
