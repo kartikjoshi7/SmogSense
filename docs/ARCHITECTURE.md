@@ -98,8 +98,9 @@ POST /api/plan  { profile, location }
   → buildPlan(profile, air) → 200 { plan } | 502 data unavailable | 503 not enough data
 
 POST /api/explain  { profile, location, lang }
-  same middleware with the AI rate limits (per minute and per day) → loadPlan
+  same middleware with the AI rate limit → loadPlan
   → AiService.explain: cache (SHA-256 of language, the whole plan and the members; 30 min)
+  → on a miss, one unit of the caller's daily allowance (none left: standard guidance)
   → GeminiClient.generate: each model in order, skipping cooled-down ones, within the daily budget,
     JSON schema in the request, Zod on the reply (a rejected reply is logged with its reason)
   → grounded AI text per item, standard guidance for the rest (dropped AI text is logged)

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import type { ExplainResponse } from '../../shared/api.js';
+import { useEffect, useMemo, useState } from 'react';
+import type { ExplainResponse, PlanRequest } from '../../shared/api.js';
 import type { Plan } from '../../shared/plan.js';
 import type { Profile } from '../../shared/profile.js';
 import { api, type ApiError } from '../api/client.js';
@@ -28,14 +28,13 @@ interface Tagged<T> {
 const LOADING: Loaded = { status: 'loading' };
 
 /** The plan for a household and place; changing either cancels the request still running. */
-function usePlanRequest(profile: Profile, location: SavedLocation, attempt: number) {
-  const key = JSON.stringify([profile, location.lat, location.lon, attempt]);
+function usePlanRequest(request: PlanRequest, attempt: number) {
+  const key = JSON.stringify([request, attempt]);
   const [loaded, setLoaded] = useState<Tagged<Loaded>>({ key: '', value: LOADING });
 
   useEffect(() => {
     const controller = new AbortController();
-    const body = { profile, location: { lat: location.lat, lon: location.lon } };
-    void api.plan(body, controller.signal).then((result) => {
+    void api.plan(request, controller.signal).then((result) => {
       if (!controller.signal.aborted) {
         const value: Loaded = result.ok
           ? { status: 'ready', plan: result.value.plan }
@@ -46,28 +45,22 @@ function usePlanRequest(profile: Profile, location: SavedLocation, attempt: numb
     return () => {
       controller.abort();
     };
-  }, [key, profile, location.lat, location.lon]);
+  }, [key, request]);
 
   return loaded.key === key ? loaded.value : LOADING;
 }
 
 /** The AI explanation of a loaded plan in one language; a new language only asks for new text. */
-function useExplanation(
-  plan: Plan | null,
-  profile: Profile,
-  location: SavedLocation,
-  lang: UiLanguage,
-) {
+function useExplanation(plan: Plan | null, request: PlanRequest, lang: UiLanguage) {
   const [explained, setExplained] = useState<Tagged<ExplainResponse | null> | null>(null);
-  const key = JSON.stringify([profile, location.lat, location.lon, lang]);
+  const key = JSON.stringify([request, lang]);
 
   useEffect(() => {
     if (plan === null) {
       return undefined;
     }
     const controller = new AbortController();
-    const body = { profile, location: { lat: location.lat, lon: location.lon }, lang };
-    void api.explain(body, controller.signal).then((result) => {
+    void api.explain({ ...request, lang }, controller.signal).then((result) => {
       if (!controller.signal.aborted) {
         setExplained({ key, value: result.ok ? result.value : null });
       }
@@ -75,7 +68,7 @@ function useExplanation(
     return () => {
       controller.abort();
     };
-  }, [key, plan, profile, location.lat, location.lon, lang]);
+  }, [key, plan, request, lang]);
 
   return explained?.key === key
     ? { done: true, value: explained.value }
@@ -89,13 +82,15 @@ function useExplanation(
  */
 export function usePlan(profile: Profile, location: SavedLocation, lang: UiLanguage) {
   const [attempt, setAttempt] = useState(0);
-  const loaded = usePlanRequest(profile, location, attempt);
-  const explanation = useExplanation(
-    loaded.status === 'ready' ? loaded.plan : null,
-    profile,
-    location,
-    lang,
+  const { lat, lon } = location;
+  // The one request body for this household and place, shared by every call that needs it;
+  // the place's name stays on the device.
+  const request = useMemo(
+    (): PlanRequest => ({ profile, location: { lat, lon } }),
+    [profile, lat, lon],
   );
+  const loaded = usePlanRequest(request, attempt);
+  const explanation = useExplanation(loaded.status === 'ready' ? loaded.plan : null, request, lang);
   const state: PlanState =
     loaded.status === 'ready'
       ? { ...loaded, explanation: explanation.value, explaining: !explanation.done }
@@ -103,6 +98,7 @@ export function usePlan(profile: Profile, location: SavedLocation, lang: UiLangu
 
   return {
     state,
+    request,
     retry: () => {
       setAttempt((n) => n + 1);
     },

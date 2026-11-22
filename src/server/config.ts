@@ -71,8 +71,8 @@ export const SETTINGS = {
   dataRequestsPerWindow: 60,
   aiRequestsPerWindow: 10,
   /**
-   * AI requests one client may make in a day. A request can try both models, so one client
-   * spends at most 60 calls of the default daily budget of 200; a family uses far fewer.
+   * Answers the model may write for one client in a day; answers from the cache are free. One
+   * answer can try both models, so one client spends at most 60 calls of the default budget of 200.
    */
   aiRequestsPerClientPerDay: 30,
   aiDailyWindowMs: DAY_SECONDS * SECOND_MS,

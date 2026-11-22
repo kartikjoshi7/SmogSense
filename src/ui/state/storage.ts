@@ -7,7 +7,8 @@ import { profileSchema } from '../../shared/profile.js';
 const STORAGE_KEY = 'smogsense:v1';
 
 const savedLocationSchema = coordinatesSchema.extend({
-  label: z.string().min(1).max(PLACE_LABEL_CHARS),
+  /** The place's name; null for the device's own position, named in the interface language. */
+  label: z.string().min(1).max(PLACE_LABEL_CHARS).nullable(),
 });
 export type SavedLocation = z.infer<typeof savedLocationSchema>;
 

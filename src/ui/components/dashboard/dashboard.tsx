@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, type RefObject } from 'react';
 import { planHeadline, planSummary } from '../../../core/explain/index.js';
-import { API_STATUS, type ExplainResponse, type PlanRequest } from '../../../shared/api.js';
+import { API_STATUS, type ExplainResponse } from '../../../shared/api.js';
 import type { Plan } from '../../../shared/plan.js';
 import type { ApiError } from '../../api/client.js';
 import { usePlan } from '../../hooks/use-plan.js';
@@ -107,11 +107,7 @@ export function Dashboard({
   const t = useMessages();
   const { lang } = useAppState();
   const [dialog, setDialog] = useState<OpenDialog>(null);
-  const { state, retry } = usePlan(household.profile, location, lang);
-  const request: PlanRequest = {
-    profile: household.profile,
-    location: { lat: location.lat, lon: location.lon },
-  };
+  const { state, request, retry } = usePlan(household.profile, location, lang);
   const close = () => {
     setDialog(null);
   };
@@ -119,7 +115,7 @@ export function Dashboard({
   return (
     <div className="grid gap-4">
       <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold">
-        {t.dashboard.title(location.label)}
+        {t.dashboard.title(location.label ?? t.setup.location.myLocation)}
       </h1>
       <p role="status" className="muted">
         {state.status === 'loading' ? t.dashboard.loading : ''}

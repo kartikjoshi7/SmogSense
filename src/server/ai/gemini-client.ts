@@ -5,6 +5,7 @@ import {
   type GenerateContentParameters,
 } from '@google/genai';
 import { z, type ZodType } from 'zod';
+import { API_STATUS } from '../../shared/api.js';
 import { SETTINGS, type EnvConfig } from '../config.js';
 import * as logger from '../logger.js';
 import { fail, ok, type Result } from '../../core/result.js';
@@ -50,15 +51,27 @@ type ModelFailure = 'rate_limited' | 'failed';
 /** Why a reply was rejected, for the logs. */
 type ReplyProblem = 'empty' | 'not_json' | 'off_schema';
 
+/** Each reply schema in JSON Schema form, converted on first use: the schemas never change. */
+const jsonSchemas = new WeakMap<ZodType, object>();
+
+function jsonSchemaOf(schema: ZodType): object {
+  const known = jsonSchemas.get(schema);
+  if (known !== undefined) {
+    return known;
+  }
+  const { $schema: _schemaUri, ...jsonSchema } = z.toJSONSchema(schema);
+  jsonSchemas.set(schema, jsonSchema);
+  return jsonSchema;
+}
+
 function requestConfig<T>(
   request: AiRequest<T>,
   thinking: GeminiOptions['thinkingLevel'],
 ): GenerateContentConfig {
-  const { $schema: _schemaUri, ...jsonSchema } = z.toJSONSchema(request.schema);
   return {
     systemInstruction: request.system,
     responseMimeType: 'application/json',
-    responseJsonSchema: jsonSchema,
+    responseJsonSchema: jsonSchemaOf(request.schema),
     temperature: SETTINGS.aiTemperature,
     maxOutputTokens: request.maxOutputTokens,
     abortSignal: AbortSignal.timeout(SETTINGS.aiTimeoutMs),
@@ -96,7 +109,7 @@ async function callModel<T>(
     });
     text = reply.text;
   } catch (error: unknown) {
-    const rateLimited = error instanceof ApiError && error.status === 429;
+    const rateLimited = error instanceof ApiError && error.status === API_STATUS.tooManyRequests;
     logger.warn('Gemini call failed', {
       model,
       reason: rateLimited ? 'rate_limited' : errorName(error),

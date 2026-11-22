@@ -8,14 +8,17 @@ all eight on every push.
 
 | Gate               | Command                        | What it enforces                                                                                                                                                                                                                                                                                                                                               |
 | ------------------ | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Types              | `npm run typecheck`            | Three TypeScript projects (browser, server with `NodeNext` resolution, end-to-end tests), all with `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `noImplicitReturns`, `noUnusedLocals`, `noUnusedParameters` and `noFallthroughCasesInSwitch`                                                                      |
+| Types              | `npm run typecheck`            | Four TypeScript projects (browser, server with `NodeNext` resolution, end-to-end tests, and the repository script through its JSDoc types), all with `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `noImplicitReturns`, `noUnusedLocals`, `noUnusedParameters` and `noFallthroughCasesInSwitch`                    |
 | Lint               | `npm run lint`                 | typescript-eslint `strictTypeChecked` and `stylisticTypeChecked`, React `recommended` with `no-danger`, React hooks, jsx-a11y `strict` and import-x (no cycles, no unresolved or duplicate imports). Each file: at most 250 lines of code. Each function: complexity ≤ 10, ≤ 60 lines, nesting ≤ 3, ≤ 4 parameters, no nested ternaries. Zero warnings allowed |
 | Format             | `npm run format:check`         | Prettier on every file, 100 columns; `.editorconfig` sets the same defaults in editors                                                                                                                                                                                                                                                                         |
 | Unused code        | `npm run knip`                 | No unused files, exports or dependencies; `knip --production` also fails on an export that only tests use                                                                                                                                                                                                                                                      |
 | Tests and coverage | `npm run coverage`             | Vitest with the coverage thresholds in [Testing › Coverage](TESTING.md#coverage)                                                                                                                                                                                                                                                                               |
 | Build              | `npm run build`                | The production build                                                                                                                                                                                                                                                                                                                                           |
-| Repository         | `npm run check:repo`           | One branch, tracked files under 9 MB, no `.env` files                                                                                                                                                                                                                                                                                                          |
+| Repository         | `npm run check:repo`           | One branch (in CI, on GitHub as well as locally), tracked files under 9 MB, no `.env` files                                                                                                                                                                                                                                                                    |
 | Dependencies       | `npm audit --audit-level=high` | No high or critical advisories ([Security › Dependencies](SECURITY.md#dependencies))                                                                                                                                                                                                                                                                           |
+
+`eslint.config.js` is the one script outside the type check: its plugins ship incomplete type
+definitions, and ESLint validates the config itself every time it runs.
 
 ## Layers, enforced by the linter
 
@@ -66,7 +69,7 @@ Measured on the source (tests, fixtures and test helpers excluded) in the commit
 | Type assertions (other than `as const`)            | 0       |
 | Non-null assertions (`!`)                          | 0       |
 | `@ts-ignore`, `@ts-expect-error`, `eslint-disable` | 0       |
-| Source files / test files                          | 93 / 51 |
+| Source files / test files                          | 96 / 52 |
 
 ## Check it yourself
 

@@ -46,7 +46,7 @@ export const commuteSchema = z.object({
   oneWayKm: rangeSchema(PROFILE_LIMITS.oneWayKm),
   departHour: hourSchema,
   returnHour: hourSchema,
-  daysPerWeek: rangeSchema(PROFILE_LIMITS.daysPerWeek).int(),
+  daysPerWeek: rangeSchema(PROFILE_LIMITS.daysPerWeek),
   /** Each alternative at most once. */
   alternatives: z.array(commuteAlternativeSchema).max(commuteAlternativeSchema.options.length),
 });
@@ -60,7 +60,7 @@ export const exerciseSchema = z.object({
   /** The member who usually exercises; null when it is the whole family or unknown. */
   memberId: memberIdSchema.nullable(),
   usualHour: hourSchema,
-  durationMin: rangeSchema(PROFILE_LIMITS.durationMin).int(),
+  durationMin: rangeSchema(PROFILE_LIMITS.durationMin),
   canMoveIndoors: z.boolean(),
 });
 export type Exercise = z.infer<typeof exerciseSchema>;
@@ -84,7 +84,7 @@ const incenseSchema = z.enum(['never', 'sometimes', 'daily']);
 export type Incense = z.infer<typeof incenseSchema>;
 
 export const homeSchema = z.object({
-  purifierCount: rangeSchema(PROFILE_LIMITS.purifierCount).int(),
+  purifierCount: rangeSchema(PROFILE_LIMITS.purifierCount),
   purifierCadrM3h: rangeSchema(PROFILE_LIMITS.purifierCadrM3h),
   /** Floor area of the room the family spends most time in. */
   roomAreaM2: rangeSchema(PROFILE_LIMITS.roomAreaM2),

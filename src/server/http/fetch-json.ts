@@ -1,4 +1,5 @@
 import type { ZodType } from 'zod';
+import { API_STATUS } from '../../shared/api.js';
 import * as logger from '../logger.js';
 import { fail, ok, type Result } from '../../core/result.js';
 
@@ -32,7 +33,8 @@ async function attempt<T>(url: URL, schema: ZodType<T>, deps: HttpDeps): Promise
   if (!response.ok) {
     // Release the connection now rather than when the response is garbage-collected.
     await response.body?.cancel();
-    return failure('http', response.status >= 500);
+    // A 5xx is the upstream's own failure, worth one retry; a 4xx will not change.
+    return failure('http', response.status >= API_STATUS.internal);
   }
   let body: unknown;
   try {

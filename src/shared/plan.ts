@@ -29,14 +29,14 @@ const aqiCategorySchema = z.enum([
 export type AqiCategory = z.infer<typeof aqiCategorySchema>;
 
 /** An index value on either scale. */
-const indexValueSchema = rangeSchema(INDEX_VALUES).int();
+const indexValueSchema = rangeSchema(INDEX_VALUES);
 
 const indexReadingSchema = z.object({
   scale: aqiScaleSchema,
   value: indexValueSchema,
   category: aqiCategorySchema,
   /** Position of the category on its scale, 0 (best) to 5 (worst). */
-  band: rangeSchema(INDEX_BANDS).int(),
+  band: rangeSchema(INDEX_BANDS),
   pm25Mean24h: z.number().min(0),
 });
 export type IndexReading = z.infer<typeof indexReadingSchema>;

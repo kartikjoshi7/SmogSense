@@ -5,31 +5,53 @@ const LIMIT_MB = 9;
 const MAX_TRACKED_SIZE_BYTES = LIMIT_MB * 1024 * 1024;
 let exitCode = 0;
 
+/** @param {string} message */
 function fail(message) {
   console.error(`FAIL: ${message}`);
   exitCode = 1;
 }
 
+/** @param {string} message */
 function pass(message) {
   console.log(`OK:   ${message}`);
 }
 
-// 1. Check number of local branches
-const branches = execSync('git branch', { encoding: 'utf-8' })
+/**
+ * One branch only, here and, in CI, on GitHub too: a CI checkout holds just the branch under test,
+ * so only the remote's list can show an extra one.
+ * @param {string} where
+ * @param {string[]} branches
+ */
+function checkOneBranch(where, branches) {
+  if (branches.length > 1) {
+    fail(`Found ${branches.length} ${where} branches (expected 1): ${branches.join(', ')}`);
+  } else {
+    pass(`Single ${where} branch: ${branches[0] ?? 'main'}`);
+  }
+}
+
+// 1. Branches: local, and on origin when running in CI (`CI` is set by GitHub Actions).
+const localBranches = execSync('git branch', { encoding: 'utf-8' })
   .split('\n')
   .map((b) => b.replace(/^\*\s*/, '').trim())
   .filter(Boolean);
+checkOneBranch('local', localBranches);
 
-if (branches.length > 1) {
-  fail(`Found ${branches.length} local branches (expected 1): ${branches.join(', ')}`);
-} else {
-  pass(`Single local branch: ${branches[0] ?? 'main'}`);
+if (process.env.CI) {
+  const remoteBranches = execSync('git ls-remote --heads origin', { encoding: 'utf-8' })
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => line.replace(/^\S+\s+refs\/heads\//, ''));
+  checkOneBranch('remote', remoteBranches);
 }
 
 // 2. Check total size of tracked files
 const trackedFiles = execSync('git ls-files', { encoding: 'utf-8' }).split('\n').filter(Boolean);
 
-/** Size in bytes; 0 for a tracked file that was deleted from the working tree. */
+/**
+ * Size in bytes; 0 for a tracked file that was deleted from the working tree.
+ * @param {string} file
+ */
 const sizeOf = (file) => statSync(file, { throwIfNoEntry: false })?.size ?? 0;
 const totalSize = trackedFiles.reduce((sum, file) => sum + sizeOf(file), 0);
 

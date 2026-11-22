@@ -27,6 +27,7 @@ export const setup = {
   cancel: 'Cancel',
   errors: 'Please fix the highlighted fields.',
   range: (min: number, max: number) => `Enter a number from ${min} to ${max}.`,
+  wholeRange: (min: number, max: number) => `Enter a whole number from ${min} to ${max}.`,
   location: {
     legend: 'Where do you live?',
     useMine: 'Use my location',
@@ -72,7 +73,7 @@ export const setup = {
     indoors: 'This can be done indoors',
   },
   home: {
-    legend: 'Your home',
+    legend: 'Your home and habits',
     purifiers: 'Air purifiers',
     cadr: 'Purifier clean-air rate (m³/h)',
     area: 'Main room size (m²)',

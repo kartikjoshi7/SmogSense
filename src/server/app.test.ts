@@ -9,11 +9,11 @@ import {
   geocodeResponseSchema,
   planResponseSchema,
 } from '../shared/api.js';
-import type { AirService } from './air/air-service.js';
 import { createAiService } from './ai/ai-service.js';
 import { createApp, type AppDeps } from './app.js';
 import { parseConfig } from './config.js';
 import { fail, ok } from '../core/result.js';
+import { fakeAir, GURUGRAM } from './test/fake-air.js';
 
 const ORIGIN = 'https://smog-sense-sigma.vercel.app';
 
@@ -22,15 +22,6 @@ const errorResponseSchema = z.strictObject({
   error: z.string(),
   issues: z.array(z.strictObject({ path: z.string(), message: z.string() })).optional(),
 });
-const GURUGRAM = { name: 'Gurugram', region: 'Haryana', country: 'India', lat: 28.46, lon: 77.03 };
-
-function fakeAir(overrides: Partial<AirService> = {}): AirService {
-  return {
-    getAir: () => Promise.resolve(ok(makeAir())),
-    searchPlaces: () => Promise.resolve(ok([GURUGRAM])),
-    ...overrides,
-  };
-}
 
 function app(overrides: Partial<AppDeps> = {}) {
   return createApp({
@@ -55,6 +46,12 @@ function postPlan(body: unknown, init: RequestInit = {}) {
 }
 
 const validPlanRequest = { profile: SHARMA_FAMILY, location: { lat: 28.61, lon: 77.21 } };
+
+/** A model stand-in that always answers a chat question with plain advice. */
+function parsedOrDown<T>(schema: z.ZodType<T>) {
+  const parsed = schema.safeParse({ answer: 'Stay inside and keep the windows shut.' });
+  return parsed.success ? ok(parsed.data) : fail('unavailable' as const);
+}
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -268,25 +265,28 @@ describe('AI routes', () => {
     expect(statuses.filter((s) => s === 200)).toHaveLength(10);
   });
 
-  it('gives each client a daily AI allowance of 30, so no one client spends the budget', async () => {
+  it('gives each client IP a daily allowance of 30 model answers, then standard guidance', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     let clock = 0;
-    const limited = app({ now: () => clock });
-    const explain = (ip: string) =>
-      post('/api/explain', { ...validPlanRequest, lang: 'en' }, limited, ip);
-    const statuses: number[] = [];
-    for (let i = 0; i < 30; i++) {
-      // Spread out so the per-minute limit never applies.
-      clock += 10 * 60_000;
-      statuses.push((await explain('1.1.1.1')).status);
+    const answering = createAiService({
+      client: { generate: (request) => Promise.resolve(parsedOrDown(request.schema)) },
+      now: () => clock,
+    });
+    const limited = app({ ai: answering, now: () => clock });
+    const ask = async (question: string, ip: string) => {
+      const body = { ...validPlanRequest, lang: 'en', question, history: [] };
+      const res = await post('/api/chat', body, limited, ip);
+      return { status: res.status, ...chatResponseSchema.parse(await res.json()) };
+    };
+    for (let i = 1; i <= 30; i++) {
+      clock += 10 * 60_000; // spread out, so the per-minute limit never applies
+      expect(await ask(`Question ${String(i)}?`, '1.1.1.1')).toMatchObject({ source: 'ai' });
     }
     clock += 10 * 60_000;
-    const blocked = await explain('1.1.1.1');
 
-    expect(statuses.every((s) => s === 200)).toBe(true);
-    expect(blocked.status).toBe(429);
-    expect(Number(blocked.headers.get('Retry-After'))).toBeGreaterThan(60);
-    expect((await explain('2.2.2.2')).status).toBe(200);
+    expect(await ask('Question 31?', '1.1.1.1')).toMatchObject({ status: 200, source: 'fallback' });
+    expect(await ask('Question 31?', '2.2.2.2')).toMatchObject({ status: 200, source: 'ai' });
     clock += 24 * 60 * 60_000;
-    expect((await explain('1.1.1.1')).status).toBe(200);
+    expect(await ask('Question 32?', '1.1.1.1')).toMatchObject({ source: 'ai' });
   });
 });

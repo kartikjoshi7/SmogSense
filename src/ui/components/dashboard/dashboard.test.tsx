@@ -21,6 +21,21 @@ function showDashboard() {
   );
 }
 
+describe('Dashboard heading', () => {
+  it('names a place found by GPS in the interface language', () => {
+    renderInApp(
+      <Dashboard
+        household={DEMO_HOUSEHOLD}
+        location={{ ...DEMO_LOCATION, label: null }}
+        headingRef={createRef<HTMLHeadingElement>()}
+      />,
+      'hi',
+    );
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('मेरी मौजूदा लोकेशन');
+  });
+});
+
 describe('Dashboard errors', () => {
   it.each([
     [502, /Air-quality data is unavailable right now/],

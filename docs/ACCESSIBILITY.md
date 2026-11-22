@@ -21,7 +21,10 @@ screen reader, by ear and in Hindi.
   are `fieldset`s with a `legend`, and each family member's fields are a group named after that
   member, so a screen reader says whose details are being edited.
 - Range errors are linked to their field with `aria-describedby` and `aria-invalid`; a summary is
-  announced with `role="alert"` when the form is submitted with problems.
+  announced with `role="alert"` when the form is submitted with problems. Fields that take whole
+  numbers say so in their message and open a numeric keypad on phones.
+- Each step is a group named for what it holds; the last, "Your home and habits", also holds the
+  mask question and the household's smoke habits.
 - Location search and GPS progress are announced through a `role="status"` live region, and a
   failed search says so instead of reporting "no places found". That status line also describes
   the search field, which is marked invalid when the form is sent without a place.
@@ -57,6 +60,8 @@ screen reader, by ear and in Hindi.
 
 **Reading and language**
 
+- A place found by GPS is named in the interface language ("My current location", "मेरी मौजूदा
+  लोकेशन"), so the page heading never mixes languages.
 - The interface and the plan are in English and Hindi; chat answers and community notices can be
   in ten languages. Each answer and notice carries the `lang` it is written in (English when it is
   standard guidance for a language without its own), and every language picker marks each option,

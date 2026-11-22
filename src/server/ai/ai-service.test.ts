@@ -32,6 +32,8 @@ function service(value: unknown) {
 }
 
 const plan = severePlan();
+/** The client asking, for the daily AI allowance. */
+const CALLER = '203.0.113.7';
 const [first, second] = plan.recommendations;
 
 const parseLine = (line: unknown): unknown => JSON.parse(String(line));
@@ -48,7 +50,7 @@ afterEach(() => {
 
 /** The explanation the service builds from this model reply for the severe-day plan. */
 function explainWith(reply: unknown) {
-  return service(reply).ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'en' });
+  return service(reply).ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'en' }, CALLER);
 }
 
 describe('merging the model’s explanation with standard guidance', () => {
@@ -118,8 +120,8 @@ describe('createAiService', () => {
   it('explains a plan and caches AI answers', async () => {
     const { ai, generate } = service({ headline: 'Today', summary: 'Stay in.', items: [] });
 
-    await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'en' });
-    await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'en' });
+    await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'en' }, CALLER);
+    await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'en' }, CALLER);
 
     expect(generate).toHaveBeenCalledTimes(1);
   });
@@ -134,8 +136,8 @@ describe('createAiService', () => {
       ),
     };
 
-    await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'en' });
-    await ai.explain({ plan: changedBelowTop, profile: SHARMA_FAMILY, lang: 'en' });
+    await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'en' }, CALLER);
+    await ai.explain({ plan: changedBelowTop, profile: SHARMA_FAMILY, lang: 'en' }, CALLER);
 
     expect(generate).toHaveBeenCalledTimes(2);
   });
@@ -143,8 +145,8 @@ describe('createAiService', () => {
   it('falls back to standard guidance without caching the fallback', async () => {
     const { ai, generate } = service(null);
 
-    const response = await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'hi' });
-    await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'hi' });
+    const response = await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'hi' }, CALLER);
+    await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'hi' }, CALLER);
 
     expect(response.introSource).toBe('fallback');
     expect(response.items.every((item) => item.source === 'fallback')).toBe(true);
@@ -166,22 +168,43 @@ describe('createAiService', () => {
       history: [],
     };
 
-    expect(await good.ai.chat(input)).toEqual({
+    expect(await good.ai.chat(input, CALLER)).toEqual({
       answer: 'Keep Aarav indoors; the room is 201 µg/m³ without a purifier.',
       source: 'ai',
     });
-    expect(await invented.ai.chat(input)).toMatchObject({ source: 'fallback' });
-    expect((await invented.ai.chat(input)).answer).toContain('Use an air purifier');
+    expect(await invented.ai.chat(input, CALLER)).toMatchObject({ source: 'fallback' });
+    expect((await invented.ai.chat(input, CALLER)).answer).toContain('Use an air purifier');
     expect(logged()).toContainEqual(expect.objectContaining({ kind: 'chat', rejected: 1 }));
+  });
+
+  it('charges the daily allowance only for answers the model writes, never for cached ones', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { ai, generate } = service({ answer: 'Stay inside and keep the windows shut.' });
+    const ask = (question: string, caller = CALLER) =>
+      ai.chat({ plan, profile: SHARMA_FAMILY, lang: 'en', question, history: [] }, caller);
+    for (let i = 1; i <= 30; i++) {
+      await ask(`Question ${String(i)}?`);
+    }
+
+    expect(await ask('Question 31?')).toMatchObject({ source: 'fallback' });
+    expect(await ask('Question 1?')).toMatchObject({ source: 'ai' });
+    expect(generate).toHaveBeenCalledTimes(30);
+    expect(await ask('Question 31?', '198.51.100.4')).toMatchObject({ source: 'ai' });
+    expect(generate).toHaveBeenCalledTimes(31);
   });
 
   it('writes community notices, falling back to a standard one', async () => {
     const good = service({ notice: `Air quality index ${plan.index.value} today. Stay indoors.` });
     const down = service(null);
 
-    const fallback = await down.ai.communityNotice({ plan, audience: 'school', lang: 'en' });
+    const fallback = await down.ai.communityNotice(
+      { plan, audience: 'school', lang: 'en' },
+      CALLER,
+    );
 
-    expect(await good.ai.communityNotice({ plan, audience: 'school', lang: 'en' })).toMatchObject({
+    expect(
+      await good.ai.communityNotice({ plan, audience: 'school', lang: 'en' }, CALLER),
+    ).toMatchObject({
       source: 'ai',
     });
     expect(fallback.source).toBe('fallback');

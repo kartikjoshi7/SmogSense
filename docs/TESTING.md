@@ -17,10 +17,10 @@ which also runs the other gates in [Code quality](CODE_QUALITY.md#gates-that-fai
 | -------------------------------------- | ------ | ------- | ---------------------------------- |
 | `src/core` (engine)                    | 14     | 218     | Node                               |
 | `src/shared` (schemas)                 | 3      | 16      | Node                               |
-| `src/server` (API, Open-Meteo, Gemini) | 14     | 120     | Node                               |
+| `src/server` (API, Open-Meteo, Gemini) | 14     | 121     | Node                               |
 | `api` (Vercel entry)                   | 1      | 3       | Node                               |
-| `src/ui` (React)                       | 15     | 116     | jsdom + Testing Library + axe-core |
-| **Vitest total**                       | **47** | **473** |                                    |
+| `src/ui` (React)                       | 16     | 117     | jsdom + Testing Library + axe-core |
+| **Vitest total**                       | **48** | **475** |                                    |
 | `e2e` (Playwright)                     | 4      | 19      | Chromium, production build         |
 
 **Engine.** Every AQI breakpoint edge on both scales (through `computeIndex`, so float error in
@@ -83,10 +83,10 @@ and 90% for the whole project. `npm run coverage`, and with it `npm run check` a
 below them. From the last run:
 
 ```
-Statements   : 99.11% ( 1565/1579 )
-Branches     : 96.44% ( 732/759 )
-Functions    : 98.8% ( 579/586 )
-Lines        : 99.26% ( 1493/1504 )
+Statements   : 99.12% ( 1587/1601 )
+Branches     : 96.52% ( 751/778 )
+Functions    : 98.82% ( 588/595 )
+Lines        : 99.27% ( 1515/1526 )
 ```
 
 `src/core` is at 100% on all four. Test helpers, fixtures and `src/ui/main.tsx` (the file that

@@ -1,13 +1,14 @@
 import { z } from 'zod';
 import { CLOCK_HOURS, LATITUDE, LONGITUDE, type Range } from './limits.js';
 
-/** A number within a range. */
-export function rangeSchema({ min, max }: Range) {
-  return z.number().min(min).max(max);
+/** A number within a range, and a whole number when the range says so. */
+export function rangeSchema({ min, max, whole = false }: Range) {
+  const value = z.number().min(min).max(max);
+  return whole ? value.int() : value;
 }
 
 /** A whole clock hour. */
-export const hourSchema = rangeSchema(CLOCK_HOURS).int();
+export const hourSchema = rangeSchema(CLOCK_HOURS);
 
 /** A pollutant concentration in µg/m³ (CO included); null where the data has no value. */
 export const concentrationSchema = z.number().min(0).nullable();

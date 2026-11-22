@@ -28,9 +28,11 @@ implements it and the test that checks it.
 - `GET /api/geocode` and `POST /api/plan` share an allowance of 60 requests a minute per client
   IP; the three AI routes share one of 10. Over the limit the API answers 429 with `Retry-After`
   (`middleware/rate-limit.ts`, tested in `rate-limit.test.ts` and `app.test.ts`).
-- Each client may also make 30 AI requests a day. A request can try both models, so one client
-  can spend at most 60 of the default daily budget of 200, and cannot leave everyone else with
-  standard guidance (`app.test.ts`).
+- Each client may also have 30 answers a day written by the model. The AI service charges this
+  allowance only when it calls the model, so answers from its cache are free (`allowance.ts`,
+  `ai-service.test.ts`). An answer can try both models, so one client can spend at most 60 of the
+  default daily budget of 200 and cannot leave everyone else with standard guidance; past its
+  allowance, that client gets standard guidance, not an error (`app.test.ts`).
 - The client IP is the first `x-forwarded-for` entry, which Vercel's proxy sets.
 - **The rate limits, the caches and the Gemini daily budget are kept in memory, per serverless
   instance.** Two instances count separately, and a cold start begins empty. This bounds abuse on
@@ -107,8 +109,8 @@ queries also reach unchanged code. Its findings go to the repository's code-scan
 ## Known limits
 
 - Per-instance rate limits, caches and AI budget, as above.
-- The limits count requests per IP address, before the AI cache is consulted. People behind one
-  address (a school or office network) share the daily AI allowance, and once it is spent they get
-  standard guidance until the next day; the plan itself is never limited by it.
+- The limits count per IP address, so people behind one address (a school or office network)
+  share the daily AI allowance. Cached answers are free, and once the allowance is spent new
+  answers are standard guidance until the day's window passes; the plan itself is never limited.
 - There are no accounts, so nothing server-side is tied to a person; the trade-off is that a
   household profile lives in one browser and is lost if storage is cleared.

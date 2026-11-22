@@ -64,7 +64,7 @@ function statusText(
     return news;
   }
   if (state.value !== null) {
-    return t.chosen(state.value.label);
+    return t.chosen(state.value.label ?? t.myLocation);
   }
   return state.invalid ? t.required : '';
 }
@@ -82,7 +82,7 @@ export function LocationPicker({
   const t = useMessages().setup.location;
   const inputId = useId();
   const [query, setQuery] = useState('');
-  const { places, status, search, locate } = useLocationSearch(onChange, t.myLocation);
+  const { places, status, search, locate } = useLocationSearch(onChange);
   const announcement = statusText(t, { value, status, found: places.length, invalid });
   const statusId = useId();
   // Submitting without a place marks the search field invalid, described by the status line.

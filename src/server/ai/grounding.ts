@@ -1,10 +1,11 @@
+import { HOURS_PER_DAY } from '../../shared/limits.js';
 import type { Plan } from '../../shared/plan.js';
 
 /** Numbers inside common terms ("PM2.5", "N95"); "PM10" is covered by the small-number rule. */
 const ALWAYS_ALLOWED = new Set([2.5, 95]);
 
 /** Whole numbers up to this are clock hours or counts ("at 14", "3 steps") unless given a unit. */
-const MAX_PLAIN_INTEGER = 24;
+const MAX_PLAIN_INTEGER = HOURS_PER_DAY;
 
 /**
  * A percent sign, a unit of mass, or the word for "percent" in one of the app's languages right

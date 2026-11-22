@@ -4,12 +4,9 @@ import { memberName } from '../../members.js';
 import { useAppDispatch, useAppState, useMessages } from '../../state/app-context.js';
 import type { SavedLocation } from '../../state/storage.js';
 import { DEMO_HOUSEHOLD, DEMO_LOCATION, EMPTY_PROFILE, nextMemberId } from './defaults.js';
-import {
-  CommuteFieldset,
-  ExerciseFieldset,
-  HomeFieldset,
-  type InvalidFields,
-} from './lifestyle-fieldsets.js';
+import { CommuteFieldset, ExerciseFieldset } from './lifestyle-fieldsets.js';
+import { HomeFieldset } from './home-fieldset.js';
+import type { InvalidFields } from './field-section.js';
 import { LocationPicker } from './location-picker.js';
 import { MembersFieldset } from './members-fieldset.js';
 

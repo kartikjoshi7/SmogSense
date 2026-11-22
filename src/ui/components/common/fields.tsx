@@ -82,7 +82,8 @@ export function NumberField({
       <input
         id={id}
         type="number"
-        inputMode="decimal"
+        inputMode={range.whole === true ? 'numeric' : 'decimal'}
+        step={range.whole === true ? 1 : 'any'}
         value={Number.isFinite(value) ? value : ''}
         min={range.min}
         max={range.max}

@@ -14,9 +14,11 @@ import type {
   TextSource,
 } from '../../shared/api.js';
 import { communityPlan } from '../../core/plan.js';
+import { fail } from '../../core/result.js';
 import type { Language } from '../../shared/languages.js';
 import { CHAT_LIMITS } from '../../shared/limits.js';
 import type { Plan, Recommendation } from '../../shared/plan.js';
+import { createAllowance } from '../allowance.js';
 import { TtlCache } from '../cache.js';
 import { SETTINGS } from '../config.js';
 import * as logger from '../logger.js';
@@ -53,9 +55,9 @@ const noticeReply = z.object({ notice: z.string().min(1).max(LIMITS.notice) });
 
 /** Gemini-written explanations, answers and notices, always backed by standard guidance. */
 export interface AiService {
-  explain(input: ExplainInput): Promise<ExplainResponse>;
-  chat(input: ChatInput): Promise<ChatResponse>;
-  communityNotice(input: NoticeInput): Promise<CommunityResponse>;
+  explain(input: ExplainInput, caller: string): Promise<ExplainResponse>;
+  chat(input: ChatInput, caller: string): Promise<ChatResponse>;
+  communityNotice(input: NoticeInput, caller: string): Promise<CommunityResponse>;
 }
 
 /** Record AI text that was dropped for quoting numbers the plan does not contain. */
@@ -210,27 +212,44 @@ export function createAiService(deps: {
   const explanations = new TtlCache<ExplainResponse>({ ...options, ttlMs: SETTINGS.aiCacheTtlMs });
   const notices = new TtlCache<CommunityResponse>({ ...options, ttlMs: SETTINGS.aiCacheTtlMs });
   const answers = new TtlCache<ChatResponse>({ ...options, ttlMs: SETTINGS.chatCacheTtlMs });
+  // Each client's share of the day's model calls. Only a cache miss reaches the model, so an
+  // answer from the cache costs nothing; once the share is spent, the client gets standard text.
+  const allowance = createAllowance({
+    limit: SETTINGS.aiRequestsPerClientPerDay,
+    windowMs: SETTINGS.aiDailyWindowMs,
+    maxClients: SETTINGS.rateLimitMaxClients,
+    now: deps.now,
+  });
+  const modelFor = (caller: string): AiClient => ({
+    generate(request) {
+      if (allowance.take(caller).ok) {
+        return deps.client.generate(request);
+      }
+      logger.warn('Gemini skipped', { reason: 'client_allowance_spent' });
+      return Promise.resolve(fail('unavailable'));
+    },
+  });
 
   return {
-    explain(input) {
+    explain(input, caller) {
       // The response carries standard text for every recommendation, so it is keyed on the
       // whole plan, not only on the part the model sees.
       const key = cacheKey('explain', input.lang, input.plan, input.profile.members);
       return explanations.getOrLoad(
         key,
-        () => writeExplanation(deps.client, input),
+        () => writeExplanation(modelFor(caller), input),
         explanationHasAiText,
       );
     },
-    chat(input) {
+    chat(input, caller) {
       const prompt = chatPrompt(input);
-      const load = () => writeAnswer(deps.client, input, prompt);
+      const load = () => writeAnswer(modelFor(caller), input, prompt);
       return answers.getOrLoad(cacheKey('chat', prompt), load, hasAiText);
     },
-    communityNotice(input) {
+    communityNotice(input, caller) {
       const everyone = { ...input, plan: communityPlan(input.plan) };
       const prompt = communityPrompt(everyone);
-      const load = () => writeNotice(deps.client, everyone, prompt);
+      const load = () => writeNotice(modelFor(caller), everyone, prompt);
       return notices.getOrLoad(cacheKey('notice', prompt), load, hasAiText);
     },
   };

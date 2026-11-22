@@ -16,10 +16,7 @@ export function isSearchable(query: string): boolean {
  * City search and GPS lookup, with a status for each stage. A new search cancels the one still
  * running, so an older answer never replaces a newer one.
  */
-export function useLocationSearch(
-  onLocate: (location: SavedLocation) => void,
-  myLocationLabel: string,
-) {
+export function useLocationSearch(onLocate: (location: SavedLocation) => void) {
   const { lang } = useAppState();
   const [places, setPlaces] = useState<Place[]>([]);
   const [status, setStatus] = useState<SearchStatus>('idle');
@@ -45,7 +42,7 @@ export function useLocationSearch(
     setStatus('locating');
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        onLocate({ lat: coords.latitude, lon: coords.longitude, label: myLocationLabel });
+        onLocate({ lat: coords.latitude, lon: coords.longitude, label: null });
         setStatus('idle');
       },
       () => {

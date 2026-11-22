@@ -29,18 +29,21 @@ function allowedOrigins(config: EnvConfig): string[] {
   return config.ALLOWED_ORIGIN === undefined ? [] : [config.ALLOWED_ORIGIN];
 }
 
-function limiter(limit: number, windowMs: number, now: () => number) {
-  return rateLimit({ limit, windowMs, now, maxClients: SETTINGS.rateLimitMaxClients });
+function limiter(limit: number, now: () => number) {
+  return rateLimit({
+    limit,
+    now,
+    windowMs: SETTINGS.rateLimitWindowMs,
+    maxClients: SETTINGS.rateLimitMaxClients,
+  });
 }
 
 /** The API: security middleware, rate limits, routes and safe error handling. */
 export function createApp(deps: AppDeps) {
   const origins = allowedOrigins(deps.config);
-  const { rateLimitWindowMs, aiDailyWindowMs } = SETTINGS;
-  const dataLimit = limiter(SETTINGS.dataRequestsPerWindow, rateLimitWindowMs, deps.now);
-  const aiLimit = limiter(SETTINGS.aiRequestsPerWindow, rateLimitWindowMs, deps.now);
-  // A day-long allowance per client, so no one client can spend the shared Gemini budget.
-  const aiDailyLimit = limiter(SETTINGS.aiRequestsPerClientPerDay, aiDailyWindowMs, deps.now);
+  const dataLimit = limiter(SETTINGS.dataRequestsPerWindow, deps.now);
+  // The daily AI allowance is charged by the AI service, only when the model is really called.
+  const aiLimit = limiter(SETTINGS.aiRequestsPerWindow, deps.now);
   const app = new Hono().basePath('/api');
 
   app.use(secureHeaders());
@@ -61,7 +64,7 @@ export function createApp(deps: AppDeps) {
   app.use('/geocode', dataLimit);
   app.use('/plan', dataLimit);
   for (const path of ['/explain', '/chat', '/community']) {
-    app.use(path, aiLimit, aiDailyLimit);
+    app.use(path, aiLimit);
   }
 
   app.get('/health', (c) => c.json({ status: 'ok' }));

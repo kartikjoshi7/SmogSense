@@ -11,6 +11,7 @@ export const setup: Messages['setup'] = {
   cancel: 'रद्द करें',
   errors: 'कृपया चिह्नित जानकारी ठीक करें।',
   range: (min, max) => `${min} से ${max} तक की संख्या लिखें।`,
+  wholeRange: (min, max) => `${min} से ${max} तक की पूरी संख्या लिखें।`,
   location: {
     legend: 'आप कहाँ रहते हैं?',
     useMine: 'मेरी लोकेशन इस्तेमाल करें',
@@ -56,7 +57,7 @@ export const setup: Messages['setup'] = {
     indoors: 'यह घर के अंदर भी हो सकता है',
   },
   home: {
-    legend: 'आपका घर',
+    legend: 'आपका घर और आदतें',
     purifiers: 'एयर प्यूरीफ़ायर',
     cadr: 'प्यूरीफ़ायर की स्वच्छ-हवा दर (m³/h)',
     area: 'मुख्य कमरे का आकार (m²)',
