@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
-import { statSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
+import { measureCode } from './code-size.mjs';
 
 const LIMIT_MB = 9;
 const MAX_TRACKED_SIZE_BYTES = LIMIT_MB * 1024 * 1024;
@@ -28,6 +29,20 @@ function checkOneBranch(where, branches) {
   } else {
     pass(`Single ${where} branch: ${branches[0] ?? 'main'}`);
   }
+}
+
+/**
+ * The two-column rows of the Markdown tables in a document, as label → value.
+ * @param {string} markdown
+ */
+function tableRows(markdown) {
+  /** @type {Map<string, string>} */
+  const rows = new Map();
+  for (const line of markdown.split('\n').filter((l) => l.startsWith('|'))) {
+    const [, label = '', value = ''] = line.split('|').map((cell) => cell.trim());
+    rows.set(label, value);
+  }
+  return rows;
 }
 
 // 1. Branches: local, and on origin when running in CI (`CI` is set by GitHub Actions).
@@ -71,6 +86,18 @@ if (trackedEnvFiles.length > 0) {
   fail(`Tracked .env files found: ${trackedEnvFiles.join(', ')}`);
 } else {
   pass('No tracked .env files (except .env.example)');
+}
+
+// 4. The size facts in docs/CODE_QUALITY.md, measured again.
+const stated = tableRows(readFileSync('docs/CODE_QUALITY.md', 'utf8'));
+for (const [label, value] of await measureCode()) {
+  if (stated.get(label) === value) {
+    pass(`${label}: ${value}`);
+  } else {
+    fail(
+      `docs/CODE_QUALITY.md says "${label}" is ${stated.get(label) ?? 'missing'}; measured ${value}`,
+    );
+  }
 }
 
 console.log('');

@@ -14,7 +14,7 @@ all eight on every push.
 | Unused code        | `npm run knip`                 | No unused files, exports or dependencies; `knip --production` also fails on an export that only tests use                                                                                                                                                                                                                                                                                     |
 | Tests and coverage | `npm run coverage`             | Vitest with the coverage thresholds in [Testing › Coverage](TESTING.md#coverage)                                                                                                                                                                                                                                                                                                              |
 | Build              | `npm run build`                | The production build                                                                                                                                                                                                                                                                                                                                                                          |
-| Repository         | `npm run check:repo`           | One branch (in CI, on GitHub as well as locally), tracked files under 9 MB, no `.env` files                                                                                                                                                                                                                                                                                                   |
+| Repository         | `npm run check:repo`           | One branch (in CI, on GitHub as well as locally), tracked files under 9 MB, no `.env` files, and the sizes under [By the numbers](#by-the-numbers) match the code                                                                                                                                                                                                                             |
 | Dependencies       | `npm audit --audit-level=high` | No high or critical advisories ([Security › Dependencies](SECURITY.md#dependencies))                                                                                                                                                                                                                                                                                                          |
 
 `eslint.config.js` is the one script outside the type check: its plugins ship incomplete type
@@ -61,15 +61,27 @@ Each rule is stated here once; the linked section shows how the code applies it.
 
 ## By the numbers
 
-Measured on the source (tests, fixtures and test helpers excluded) in the commit that last changed this file:
+Counted in the source (tests, fixtures and test helpers excluded):
 
-| Check                                              | Count   |
-| -------------------------------------------------- | ------- |
-| `any` types                                        | 0       |
-| Type assertions (other than `as const`)            | 0       |
-| Non-null assertions (`!`)                          | 0       |
-| `@ts-ignore`, `@ts-expect-error`, `eslint-disable` | 0       |
-| Source files / test files                          | 96 / 52 |
+| Check                                              | Count |
+| -------------------------------------------------- | ----- |
+| `any` types                                        | 0     |
+| Type assertions (other than `as const`)            | 0     |
+| Non-null assertions (`!`)                          | 0     |
+| `@ts-ignore`, `@ts-expect-error`, `eslint-disable` | 0     |
+
+Sizes, in lines of code as the lint limits count them (blank lines and comments excluded).
+`npm run size` measures them with ESLint's own `max-lines` and `max-lines-per-function` rules
+(`scripts/code-size.mjs`), and `npm run check:repo` fails when this table and the code disagree:
+
+| Measure                                   | Value                                                 |
+| ----------------------------------------- | ----------------------------------------------------- |
+| Source files / test files                 | 117 / 54                                              |
+| Lines of code per source file, on average | 61                                                    |
+| Largest source file (lines of code)       | 141 (`src/ui/i18n/en.ts`)                             |
+| Longest function (lines of code)          | 40 (`src/ui/components/setup/location-picker.tsx:79`) |
+| Largest test file (lines of code)         | 200 (`src/ui/app.test.tsx`)                           |
+| Largest stylesheet (lines of code)        | 122 (`src/ui/styles/controls.css`)                    |
 
 ## Check it yourself
 
