@@ -4,18 +4,18 @@ The choices that shaped SmogSense, why we made them, what we turned down and wha
 Each record ends with the code that carries the decision and the tests that would fail if it were
 quietly undone. The other docs describe how things work; this one records why.
 
-| #                                                     | Decision                                                        | What it costs                                               |
-| ----------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------- |
-| [1](#1-the-engine-decides-the-ai-explains)            | A deterministic engine makes the plan; Gemini only explains it  | The AI cannot suggest an action the engine does not know    |
-| [2](#2-every-number-the-ai-writes-is-checked)         | Every number in an AI reply must match a number in the plan     | Some correct replies are replaced by standard guidance      |
-| [3](#3-one-hono-app-in-one-vercel-function)           | One Hono app, served by one Vercel function                     | State in memory is per instance; cold starts                |
-| [4](#4-one-set-of-zod-schemas-on-both-sides)          | One set of Zod schemas, used by the server and the browser      | Zod is about a quarter of the main bundle                   |
-| [5](#5-facts-are-typed-per-recommendation)            | Each recommendation's facts and impact are typed by its id      | A new recommendation touches the schema and both languages  |
-| [6](#6-one-exception-to-a-pure-engine-sharedlimitsts) | The engine may read one dependency-free module from `shared`    | One documented exception in the layer rule                  |
-| [7](#7-caches-and-limits-in-memory)                   | Caches, rate limits and the AI budget live in memory            | Limits are per instance, not global                         |
-| [8](#8-the-time-zone-picks-the-aqi-scale)             | The location's time zone picks India's NAQI or the US AQI       | Near a border, the grid point's time zone decides           |
-| [9](#9-open-meteo-as-the-only-data-source)            | Open-Meteo's modelled forecast is the only air and weather data | Grid-cell estimates, not readings from the nearest monitor  |
-| [10](#10-no-chart-ui-kit-or-state-library)            | No chart, UI-kit or state-management library                    | We own the chart's drawing and accessibility code ourselves |
+| # | Decision | What it costs |
+| --- | --- | --- |
+| [1](#1-the-engine-decides-the-ai-explains) | A deterministic engine makes the plan; Gemini only explains it | The AI cannot suggest an action the engine does not know |
+| [2](#2-every-number-the-ai-writes-is-checked) | Every number in an AI reply must match a number in the plan | Some correct replies are replaced by standard guidance |
+| [3](#3-one-hono-app-in-one-vercel-function) | One Hono app, served by one Vercel function | State in memory is per instance; cold starts |
+| [4](#4-one-set-of-zod-schemas-on-both-sides) | One set of Zod schemas, used by the server and the browser | Zod is about a quarter of the main bundle |
+| [5](#5-facts-are-typed-per-recommendation) | Each recommendation's facts and impact are typed by its id | A new recommendation touches the schema and both languages |
+| [6](#6-one-exception-to-a-pure-engine-sharedlimitsts) | The engine may read one dependency-free module from `shared` | One documented exception in the layer rule |
+| [7](#7-caches-and-limits-in-memory) | Caches, rate limits and the AI budget live in memory | Limits are per instance, not global |
+| [8](#8-the-time-zone-picks-the-aqi-scale) | The location's time zone picks India's NAQI or the US AQI | Near a border, the grid point's time zone decides |
+| [9](#9-open-meteo-as-the-only-data-source) | Open-Meteo's modelled forecast is the only air and weather data | Grid-cell estimates, not readings from the nearest monitor |
+| [10](#10-no-chart-ui-kit-or-state-library) | No chart, UI-kit or state-management library | We own the chart's drawing and accessibility code ourselves |
 
 ## 1. The engine decides, the AI explains
 

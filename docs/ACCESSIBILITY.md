@@ -83,13 +83,13 @@ screen reader, by ear and in Hindi.
 
 ## How it is tested
 
-| Check                        | Where                                                    | What it covers                                                                                                                                                                                                            |
-| ---------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| axe-core in Vitest (jsdom)   | `src/ui/**/*.test.tsx`                                   | Setup form with errors, the plan, both dialogs, lifestyle fields; no colour contrast (jsdom cannot render)                                                                                                                |
-| axe in Playwright (Chromium) | `e2e/accessibility.spec.ts`                              | WCAG 2.2 A and AA rules, colour contrast included, on the setup form (empty and with errors), the plan and each category tab, the forecast table, both dialogs with answers, and the plan in Hindi, all in light and dark |
-| Keyboard only                | `e2e/keyboard.spec.ts`                                   | Skip link, setup, plan tabs with arrow keys, chat dialog, Esc and focus return, focus trap in both directions, visible focus at each step                                                                                 |
-| Phone size                   | `e2e/mobile.spec.ts`                                     | 375 × 812 and 390 × 844 viewports: no sideways scrolling and no control or standalone link smaller than 44 × 44 px                                                                                                        |
-| Focus and live regions       | `app.test.tsx`, `dialog.test.tsx`, `setup-form.test.tsx` | Focus on first load and on screen changes, dialog focus handling, announcements                                                                                                                                           |
+| Check | Where | What it covers |
+| --- | --- | --- |
+| axe-core in Vitest (jsdom) | `src/ui/**/*.test.tsx` | Setup form with errors, the plan, both dialogs, lifestyle fields; no colour contrast (jsdom cannot render) |
+| axe in Playwright (Chromium) | `e2e/accessibility.spec.ts` | WCAG 2.2 A and AA rules, colour contrast included, on the setup form (empty and with errors), the plan and each category tab, the forecast table, both dialogs with answers, and the plan in Hindi, all in light and dark |
+| Keyboard only | `e2e/keyboard.spec.ts` | Skip link, setup, plan tabs with arrow keys, chat dialog, Esc and focus return, focus trap in both directions, visible focus at each step |
+| Phone size | `e2e/mobile.spec.ts` | 375 × 812 and 390 × 844 viewports: no sideways scrolling and no control or standalone link smaller than 44 × 44 px |
+| Focus and live regions | `app.test.tsx`, `dialog.test.tsx`, `setup-form.test.tsx` | Focus on first load and on screen changes, dialog focus handling, announcements |
 
 ## Manual checks
 

@@ -13,15 +13,15 @@ implements it and the test that checks it.
 
 ## Input validation
 
-| Boundary                   | Control                                                                                                 | Code                                      | Tests                                      |
-| -------------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------ |
-| Request bodies and queries | Zod schemas from `src/shared`; invalid input gets a 400 listing the problem fields, never a stack trace | `middleware/validate.ts`, `shared/api.ts` | `app.test.ts`, `profile.test.ts`           |
-| Body size                  | 16 KB limit, 413 beyond it                                                                              | `app.ts` (`bodyLimit`)                    | `app.test.ts`                              |
-| Chat                       | Question 1–500 characters, at most 6 earlier turns of up to 1,200 characters                            | `shared/limits.ts`, `shared/api.ts`       | `api.test.ts`, `routes/ai.test.ts`         |
-| City search                | 2–60 characters: letters and digits in any script, spaces and `,.'()-` only                             | `shared/api.ts`                           | `app.test.ts`                              |
-| Open-Meteo responses       | Parsed with Zod before use; anything unexpected is a typed failure                                      | `air/open-meteo.ts`, `http/fetch-json.ts` | `open-meteo.test.ts`, `fetch-json.test.ts` |
-| Gemini replies             | Must match the JSON schema sent with the request, checked again with Zod                                | `ai/gemini-client.ts`                     | `gemini-client.test.ts`                    |
-| Saved state                | `localStorage` is parsed with Zod; anything invalid is ignored                                          | `ui/state/storage.ts`                     | `state.test.ts`                            |
+| Boundary | Control | Code | Tests |
+| --- | --- | --- | --- |
+| Request bodies and queries | Zod schemas from `src/shared`; invalid input gets a 400 listing the problem fields, never a stack trace | `middleware/validate.ts`, `shared/api.ts` | `app.test.ts`, `profile.test.ts` |
+| Body size | 16 KB limit, 413 beyond it | `app.ts` (`bodyLimit`) | `app.test.ts` |
+| Chat | Question 1–500 characters, at most 6 earlier turns of up to 1,200 characters | `shared/limits.ts`, `shared/api.ts` | `api.test.ts`, `routes/ai.test.ts` |
+| City search | 2–60 characters: letters and digits in any script, spaces and `,.'()-` only | `shared/api.ts` | `app.test.ts` |
+| Open-Meteo responses | Parsed with Zod before use; anything unexpected is a typed failure | `air/open-meteo.ts`, `http/fetch-json.ts` | `open-meteo.test.ts`, `fetch-json.test.ts` |
+| Gemini replies | Must match the JSON schema sent with the request, checked again with Zod | `ai/gemini-client.ts` | `gemini-client.test.ts` |
+| Saved state | `localStorage` is parsed with Zod; anything invalid is ignored | `ui/state/storage.ts` | `state.test.ts` |
 
 ## Rate limits, caches and budgets
 

@@ -14,7 +14,7 @@ notices in ten languages, and it may only use the numbers the engine computed.
 **Live app:** https://smog-sense-sigma.vercel.app (no sign-up; "Try an example family in Delhi"
 fills the form in one click).
 
-![The plan for a family in New Delhi on a very poor day: India AQI 314 with a smog-emergency headline written by the AI, this hour's six pollutant readings, the inversion card, the day's timeline and a bar chart of PM2.5 over the next 24 hours with the cleanest hour highlighted](docs/images/plan.webp)
+![The plan for a family in New Delhi on a very poor day: India AQI 314 with a smog-emergency headline written by the AI, this hour's six pollutant readings, the inversion card, the day's timeline and a bar chart of PM2.5 over the next 24 hours with the cleanest hour highlighted](docs/images/plan.png)
 
 ## Contents
 
@@ -31,15 +31,15 @@ fills the form in one click).
 
 ## Evidence for each judging area
 
-| Area                         | In short                                                                                                                | Details                                |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| Code quality                 | Strict TypeScript, strict ESLint with layer rules, Prettier and knip as gates; no `any`, no type assertions             | [Code quality](docs/CODE_QUALITY.md)   |
-| Security                     | Server-only key, Zod on every input, rate limits, strict CSP; every AI number checked; no names or conditions to the AI | [Security](docs/SECURITY.md)           |
-| Efficiency                   | The plan never waits for the AI; cached, shared upstream calls; small prompts; lazy dialogs; no chart library           | [Efficiency](docs/EFFICIENCY.md)       |
-| Testing                      | Unit, integration and Playwright end-to-end tests with axe; 100% coverage of the engine                                 | [Testing](docs/TESTING.md)             |
-| Accessibility                | WCAG 2.2 AA checked by axe in light and dark, keyboard-only flow, 44 px targets, English and Hindi, read-aloud          | [Accessibility](docs/ACCESSIBILITY.md) |
-| Problem statement alignment  | Each requirement of the brief traced to code and tests; real Open-Meteo data; works without the AI                      | [Alignment](docs/ALIGNMENT.md)         |
-| Design decisions (all areas) | Ten records: why each choice was made, what was turned down, what it costs, and the tests that hold it                  | [Decisions](docs/DECISIONS.md)         |
+| Area | In short | Details |
+| --- | --- | --- |
+| Code quality | Strict TypeScript, strict ESLint with layer rules, Prettier and knip as gates; no `any`, no type assertions | [Code quality](docs/CODE_QUALITY.md) |
+| Security | Server-only key, Zod on every input, rate limits, strict CSP; every AI number checked; no names or conditions to the AI | [Security](docs/SECURITY.md) |
+| Efficiency | The plan never waits for the AI; cached, shared upstream calls; small prompts; lazy dialogs; no chart library | [Efficiency](docs/EFFICIENCY.md) |
+| Testing | Unit, integration and Playwright end-to-end tests with axe; 100% coverage of the engine | [Testing](docs/TESTING.md) |
+| Accessibility | WCAG 2.2 AA checked by axe in light and dark, keyboard-only flow, 44 px targets, English and Hindi, read-aloud | [Accessibility](docs/ACCESSIBILITY.md) |
+| Problem statement alignment | Each requirement of the brief traced to code and tests; real Open-Meteo data; works without the AI | [Alignment](docs/ALIGNMENT.md) |
+| Design decisions (all areas) | Ten records: why each choice was made, what was turned down, what it costs, and the tests that hold it | [Decisions](docs/DECISIONS.md) |
 
 How the parts fit together, request by request, is in [Architecture](docs/ARCHITECTURE.md), and
 the rules every change follows are in [AGENTS.md](AGENTS.md).
@@ -121,18 +121,18 @@ flowchart LR
    loaded only when opened.
 
 <p>
-  <img src="docs/images/setup.webp" width="560" alt="The setup screen: a hero with the example-family button, then numbered cards for where you live, who lives with you (each member grouped under their name) and the daily commute with the options you could use">
-  <img src="docs/images/plan-phone-dark.webp" width="200" alt="The same plan on a 390-pixel phone in dark mode: the AQI card stacks above this hour's pollutant readings">
+  <img src="docs/images/setup.png" width="560" alt="The setup screen: a hero with the example-family button, then numbered cards for where you live, who lives with you (each member grouped under their name) and the daily commute with the options you could use">
+  <img src="docs/images/plan-phone-dark.png" width="200" alt="The same plan on a 390-pixel phone in dark mode: the AQI card stacks above this hour's pollutant readings">
 </p>
 
 **GenAI usage.** Gemini (through `@google/genai`) is used in three places, all in
 `src/server/ai/`:
 
-| Use              | Route                 | What the model gets and returns                                                                                                                                                                            |
-| ---------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Plan narrator    | `POST /api/explain`   | The highest-priority recommendations with their numbers, the household's member ids and age groups (never names or health conditions), the language → JSON headline, summary, and `why` + `steps` per item |
-| Ask SmogSense    | `POST /api/chat`      | The same facts, the answer language, up to 6 earlier turns and the question inside `<user_question>` delimiters → JSON answer                                                                              |
-| Community notice | `POST /api/community` | The day's facts as they apply to everyone nearby (nothing about the household), the audience and language → JSON notice                                                                                    |
+| Use | Route | What the model gets and returns |
+| --- | --- | --- |
+| Plan narrator | `POST /api/explain` | The highest-priority recommendations with their numbers, the household's member ids and age groups (never names or health conditions), the language → JSON headline, summary, and `why` + `steps` per item |
+| Ask SmogSense | `POST /api/chat` | The same facts, the answer language, up to 6 earlier turns and the question inside `<user_question>` delimiters → JSON answer |
+| Community notice | `POST /api/community` | The day's facts as they apply to everyone nearby (nothing about the household), the audience and language → JSON notice |
 
 Every reply must match a JSON schema and pass the numeric grounding check
 ([Security › AI safety](docs/SECURITY.md#ai-safety)). Anything that fails, times out or cannot be
@@ -146,18 +146,18 @@ caching, a cool-down after a 429 and a daily budget ([Efficiency](docs/EFFICIENC
 `src/shared/api.ts`, and the limits on each group of routes are in
 [Security](docs/SECURITY.md#rate-limits-caches-and-budgets).
 
-| Route                 | What it does                                               | Uses AI |
-| --------------------- | ---------------------------------------------------------- | ------- |
-| `GET /api/health`     | Says the API is up                                         | No      |
-| `GET /api/geocode`    | Finds places by name, with names in the interface language | No      |
-| `POST /api/plan`      | Builds the household's plan for a place from live data     | No      |
-| `POST /api/explain`   | Words the plan's headline, summary and top items           | Yes     |
-| `POST /api/chat`      | Answers a question about today's plan                      | Yes     |
-| `POST /api/community` | Writes a notice for a housing society, school or workplace | Yes     |
+| Route | What it does | Uses AI |
+| --- | --- | --- |
+| `GET /api/health` | Says the API is up | No |
+| `GET /api/geocode` | Finds places by name, with names in the interface language | No |
+| `POST /api/plan` | Builds the household's plan for a place from live data | No |
+| `POST /api/explain` | Words the plan's headline, summary and top items | Yes |
+| `POST /api/chat` | Answers a question about today's plan | Yes |
+| `POST /api/community` | Writes a notice for a housing society, school or workplace | Yes |
 
 ## Features
 
-![The plan's five tabs (low-emission routines, indoor air hacks, sustainable alternatives, protection and community) above three recommendation cards, each with its benefit (a measured cut or a qualitative level), its effort, why and how, and a label saying whether the AI or standard guidance wrote it](docs/images/recommendations.webp)
+![The plan's five tabs (low-emission routines, indoor air hacks, sustainable alternatives, protection and community) above three recommendation cards, each with its benefit (a measured cut or a qualitative level), its effort, why and how, and a label saying whether the AI or standard guidance wrote it](docs/images/recommendations.png)
 
 - **A plan in five tabs named after the brief:** low-emission routines, indoor air hacks,
   sustainable alternatives, protection and community. Measurable actions show their own numbers
@@ -173,16 +173,16 @@ caching, a cool-down after a 429 and a daily budget ([Efficiency](docs/EFFICIENC
 
 ## Tech stack
 
-| Part       | Technology                                                              | Why                                                                         |
-| ---------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Language   | TypeScript (strict) for the browser, the API and the tests              | One set of types from the form to the engine                                |
-| Interface  | React 19, Vite 8, Tailwind CSS 4, a hand-written SVG chart              | [Decision 10](docs/DECISIONS.md#10-no-chart-ui-kit-or-state-library)        |
-| API        | Hono 4 in one Vercel function (Node 22)                                 | [Decision 3](docs/DECISIONS.md#3-one-hono-app-in-one-vercel-function)       |
-| Validation | Zod 4, the same schemas on the server and in the browser                | [Decision 4](docs/DECISIONS.md#4-one-set-of-zod-schemas-on-both-sides)      |
-| AI         | Google Gemini through `@google/genai`                                   | [Decisions 1 and 2](docs/DECISIONS.md#1-the-engine-decides-the-ai-explains) |
-| Data       | Open-Meteo air quality, weather and geocoding (no key)                  | [Decision 9](docs/DECISIONS.md#9-open-meteo-as-the-only-data-source)        |
-| Tests      | Vitest, Testing Library, jsdom, axe-core, Playwright                    | [Testing](docs/TESTING.md)                                                  |
-| Quality    | ESLint 9 with typescript-eslint, Prettier, knip, GitHub Actions, CodeQL | [Code quality](docs/CODE_QUALITY.md)                                        |
+| Part | Technology | Why |
+| --- | --- | --- |
+| Language | TypeScript (strict) for the browser, the API and the tests | One set of types from the form to the engine |
+| Interface | React 19, Vite 8, Tailwind CSS 4, a hand-written SVG chart | [Decision 10](docs/DECISIONS.md#10-no-chart-ui-kit-or-state-library) |
+| API | Hono 4 in one Vercel function (Node 22) | [Decision 3](docs/DECISIONS.md#3-one-hono-app-in-one-vercel-function) |
+| Validation | Zod 4, the same schemas on the server and in the browser | [Decision 4](docs/DECISIONS.md#4-one-set-of-zod-schemas-on-both-sides) |
+| AI | Google Gemini through `@google/genai` | [Decisions 1 and 2](docs/DECISIONS.md#1-the-engine-decides-the-ai-explains) |
+| Data | Open-Meteo air quality, weather and geocoding (no key) | [Decision 9](docs/DECISIONS.md#9-open-meteo-as-the-only-data-source) |
+| Tests | Vitest, Testing Library, jsdom, axe-core, Playwright | [Testing](docs/TESTING.md) |
+| Quality | ESLint 9 with typescript-eslint, Prettier, knip, GitHub Actions, CodeQL | [Code quality](docs/CODE_QUALITY.md) |
 
 ## Project structure
 
@@ -214,13 +214,13 @@ cp .env.example .env.local   # add GEMINI_API_KEY; without it the app uses stand
 npm run dev                  # UI and API on http://localhost:5173
 ```
 
-| Variable                | What it sets (defaults live in `src/server/config.ts`)                  |
-| ----------------------- | ----------------------------------------------------------------------- |
-| `GEMINI_API_KEY`        | The Gemini key, read on the server only                                 |
-| `GEMINI_MODELS`         | Model ids to try, in order, separated by commas                         |
-| `GEMINI_DAILY_BUDGET`   | Gemini calls allowed per day on each server instance                    |
-| `GEMINI_THINKING_LEVEL` | How much the model thinks before answering: `OFF`, `MINIMAL` or `LOW`   |
-| `ALLOWED_ORIGIN`        | A full URL allowed to call the API from another site; unset allows none |
+| Variable | What it sets (defaults live in `src/server/config.ts`) |
+| --- | --- |
+| `GEMINI_API_KEY` | The Gemini key, read on the server only |
+| `GEMINI_MODELS` | Model ids to try, in order, separated by commas |
+| `GEMINI_DAILY_BUDGET` | Gemini calls allowed per day on each server instance |
+| `GEMINI_THINKING_LEVEL` | How much the model thinks before answering: `OFF`, `MINIMAL` or `LOW` |
+| `ALLOWED_ORIGIN` | A full URL allowed to call the API from another site; unset allows none |
 
 To check a change the way CI does, run `npm run check`, `npm run check:repo` and
 `npm run test:e2e`. What each one enforces is in

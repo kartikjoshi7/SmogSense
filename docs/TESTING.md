@@ -13,15 +13,15 @@ which also runs the other gates in [Code quality](CODE_QUALITY.md#gates-that-fai
 
 ## What is tested
 
-| Layer                                  | Files  | Tests   | Environment                        |
-| -------------------------------------- | ------ | ------- | ---------------------------------- |
-| `src/core` (engine)                    | 15     | 218     | Node                               |
-| `src/shared` (schemas)                 | 3      | 16      | Node                               |
-| `src/server` (API, Open-Meteo, Gemini) | 15     | 121     | Node                               |
-| `api` (Vercel entry)                   | 1      | 3       | Node                               |
-| `src/ui` (React)                       | 16     | 117     | jsdom + Testing Library + axe-core |
-| **Vitest total**                       | **50** | **475** |                                    |
-| `e2e` (Playwright)                     | 4      | 19      | Chromium, production build         |
+| Layer | Files | Tests | Environment |
+| --- | --- | --- | --- |
+| `src/core` (engine) | 15 | 218 | Node |
+| `src/shared` (schemas) | 3 | 16 | Node |
+| `src/server` (API, Open-Meteo, Gemini) | 15 | 121 | Node |
+| `api` (Vercel entry) | 1 | 3 | Node |
+| `src/ui` (React) | 16 | 117 | jsdom + Testing Library + axe-core |
+| **Vitest total** | **50** | **475** |  |
+| `e2e` (Playwright) | 4 | 19 | Chromium, production build |
 
 **Engine.** Every AQI breakpoint edge on both scales (through `computeIndex`, so float error in
 the 24-hour mean is covered too), the most-sensitive-member rule, severity
