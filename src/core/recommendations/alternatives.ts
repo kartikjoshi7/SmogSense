@@ -1,3 +1,4 @@
+/** Sustainable alternatives: commute swaps and cleaner cooking fuel. */
 import type { CommuteAlternative } from '../../shared/profile.js';
 import type {
   Level,

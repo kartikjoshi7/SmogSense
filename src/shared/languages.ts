@@ -1,3 +1,4 @@
+/** The languages the assistant answers in, and the two with full interface text. */
 import { z } from 'zod';
 
 /** Languages the assistant can answer in. */

@@ -1,3 +1,4 @@
+/** The air data the engine reads: hourly pollutants, weather and daylight, as Zod schemas. */
 import { z } from 'zod';
 import { AIR_DATA_MAX_DAYS, HOURS_PER_DAY, TIME_ZONE_CHARS } from './limits.js';
 import { concentrationSchema, coordinatesSchema, hourSchema } from './primitives.js';

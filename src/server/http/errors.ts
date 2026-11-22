@@ -1,3 +1,4 @@
+/** How failures become status codes and safe messages, in one table. */
 import type { Context } from 'hono';
 import { API_STATUS } from '../../shared/api.js';
 import type { PlanFailure } from '../plan-service.js';

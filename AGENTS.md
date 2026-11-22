@@ -33,7 +33,7 @@ Dependencies point one way: `ui → shared, core` · `server → shared, core` �
 6. **Never present a failure as success.** AI output carries a truthful `source: "ai" | "fallback"`, and the UI shows it. Upstream failures return a proper status code with a safe message.
 7. **No dead code:** no unused exports, files or dependencies, and no export that only tests use (knip enforces both, the second with `knip --production`), no commented-out code, no TODOs in committed code.
 8. **No test-only branches in production code.** Inject dependencies (fetch, clock, AI client) instead.
-9. Named exports only (default exports only where a framework requires them). Function components. `kebab-case` file names. A JSDoc comment on every exported function in `core/` and `server/`.
+9. Named exports only (default exports only where a framework requires them). Function components. `kebab-case` file names. Every source file opens with a one-line comment saying what it is for, and every exported function in `core/` and `server/` has a JSDoc comment.
 10. **Relative imports end in `.js`** (`import { x } from './x.js'`, even when the file is `x.ts`/`x.tsx`). Vercel compiles each `.ts` file to `.js` without rewriting import paths, so `.ts` or missing extensions crash the API at runtime. The server type-check (`NodeNext`) enforces this.
 11. **State lives in one place:** one React context + reducer for the language, household and location, persisted through a single storage module. Server data (the plan, answers) lives in the hooks that load it.
 

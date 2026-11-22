@@ -1,3 +1,4 @@
+/** Winter inversion: whether pollution is trapped near the ground now, and when it clears. */
 import type { HourlyReading } from '../shared/air.js';
 import type { Inversion } from '../shared/plan.js';
 import {

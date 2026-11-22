@@ -1,3 +1,4 @@
+/** The plan screen: loading and error states, the plan and the AI dialogs. */
 import { lazy, Suspense, useState, type RefObject } from 'react';
 import { API_STATUS, type PlanRequest } from '../../../shared/api.js';
 import type { ApiError } from '../../api/client.js';

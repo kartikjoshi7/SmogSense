@@ -1,3 +1,4 @@
+/** The setup form: every step, the actions and validation before saving. */
 import type { RefObject } from 'react';
 import {
   invalidPaths,

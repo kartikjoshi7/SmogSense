@@ -1,3 +1,4 @@
+/** The decision engine's entry point: one household's ranked plan for the next 24 hours. */
 import type { AirData, HourlyReading, Pollutants } from '../shared/air.js';
 import type { IndexReading, Plan, TimelineEntry } from '../shared/plan.js';
 import type { Profile } from '../shared/profile.js';

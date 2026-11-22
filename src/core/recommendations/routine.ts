@@ -1,3 +1,4 @@
+/** Low-emission routines: exercise, commute protection, airing the home and driving habits. */
 import { ACTION_BAND, COMMUTE_MODES, MASK_REDUCTION } from '../constants.js';
 import { commutes, dailyCommuteDoseUg } from '../emissions.js';
 import { reduction } from '../exposure.js';

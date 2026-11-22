@@ -1,3 +1,4 @@
+/** The what-if slider: move the exercise hour and see the dose change. */
 import { useId, useState } from 'react';
 import { clock } from '../../../core/explain/format.js';
 import { exerciseDoseUg } from '../../../core/exposure.js';

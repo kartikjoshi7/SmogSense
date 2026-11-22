@@ -1,3 +1,4 @@
+/** How much PM2.5 a person inhales, and how much a change reduces it. */
 import { MINUTES_PER_HOUR } from '../shared/limits.js';
 import type { Exercise, Member } from '../shared/profile.js';
 import { AGE_FACTOR, DECIMALS, EXERCISE_BREATHING_M3H } from './constants.js';

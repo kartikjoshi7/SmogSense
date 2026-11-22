@@ -1,3 +1,4 @@
+/** The app shell: skip link, header, the setup or plan screen, and footer. */
 import { useEffect, useRef } from 'react';
 import { UI_LANGUAGE_NAMES } from '../shared/languages.js';
 import { SelectField } from './components/common/fields.js';

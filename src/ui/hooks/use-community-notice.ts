@@ -1,3 +1,4 @@
+/** Requests a community notice and tracks its progress. */
 import { useState } from 'react';
 import { replyLanguage } from '../../core/explain/index.js';
 import type { Audience, PlanRequest, TextSource } from '../../shared/api.js';

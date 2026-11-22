@@ -1,3 +1,4 @@
+/** Indoor air hacks, each with a before-and-after estimate for the main room. */
 import type { Level, RecommendationOf } from '../../shared/recommendation.js';
 import { PURIFIER_NIGHT_HOUR, SMOKY_FUELS } from '../constants.js';
 import { reduction } from '../exposure.js';

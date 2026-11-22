@@ -1,3 +1,4 @@
+/** Accessible tabs with arrow-key navigation, used for the plan's categories. */
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 
 interface TabItem {

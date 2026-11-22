@@ -1,3 +1,4 @@
+/** Middleware that limits each client IP's requests and answers 429 when they run out. */
 import { createMiddleware } from 'hono/factory';
 import { API_STATUS } from '../../shared/api.js';
 import { clientKey, createAllowance, type AllowanceOptions } from '../allowance.js';

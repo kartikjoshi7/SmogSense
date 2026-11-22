@@ -1,3 +1,4 @@
+/** The only code in the UI that calls fetch: every API call, validated against the schemas. */
 import type { ZodType } from 'zod';
 import { fail, ok, type Result } from '../../core/result.js';
 import {

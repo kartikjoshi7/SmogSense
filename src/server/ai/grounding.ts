@@ -1,3 +1,4 @@
+/** The grounding check: AI text may only quote numbers that are facts of the plan. */
 import { HOURS_PER_DAY } from '../../shared/limits.js';
 import type { Plan } from '../../shared/plan.js';
 import { SETTINGS } from '../config.js';

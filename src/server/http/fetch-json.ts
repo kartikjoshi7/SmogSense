@@ -1,3 +1,4 @@
+/** The one fetch wrapper: timeouts, retries on server errors and schema-checked JSON. */
 import type { ZodType } from 'zod';
 import { fail, ok, type Result } from '../../core/result.js';
 import { API_STATUS } from '../../shared/api.js';

@@ -74,13 +74,14 @@ Sizes, in lines of code as the lint limits count them (blank lines and comments 
 `npm run size` measures them with ESLint's own `max-lines` and `max-lines-per-function` rules
 (`scripts/code-size.mjs`), and `npm run check:repo` fails when this table and the code disagree:
 
-| Measure                             | Value                                                 |
-| ----------------------------------- | ----------------------------------------------------- |
-| Source files / test files           | 118 / 54                                              |
-| Largest source file (lines of code) | 141 (`src/ui/i18n/en.ts`)                             |
-| Longest function (lines of code)    | 40 (in `src/ui/components/setup/location-picker.tsx`) |
-| Largest test file (lines of code)   | 200 (`src/ui/app.test.tsx`)                           |
-| Largest stylesheet (lines of code)  | 122 (`src/ui/styles/controls.css`)                    |
+| Measure                                           | Value                                                 |
+| ------------------------------------------------- | ----------------------------------------------------- |
+| Source files / test files                         | 118 / 54                                              |
+| Source files without a purpose comment at the top | 0                                                     |
+| Largest source file (lines of code)               | 141 (`src/ui/i18n/en.ts`)                             |
+| Longest function (lines of code)                  | 40 (in `src/ui/components/setup/location-picker.tsx`) |
+| Largest test file (lines of code)                 | 200 (`src/ui/app.test.tsx`)                           |
+| Largest stylesheet (lines of code)                | 122 (`src/ui/styles/controls.css`)                    |
 
 ## Check it yourself
 

@@ -1,3 +1,4 @@
+/** The empty household a new setup starts from, and the example family. */
 import { DEFAULT_PURIFIER_CADR_M3H } from '../../../core/constants.js';
 import type { Profile } from '../../../shared/profile.js';
 import type { Household, SavedLocation } from '../../state/storage.js';

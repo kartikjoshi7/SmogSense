@@ -1,3 +1,4 @@
+/** Standard guidance in the user's language: what the app says when the AI does not. */
 import type { Audience, TextSource } from '../../shared/api.js';
 import type { Language, UiLanguage } from '../../shared/languages.js';
 import type { AqiCategory, AqiScale, Plan } from '../../shared/plan.js';

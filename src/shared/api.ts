@@ -1,3 +1,4 @@
+/** The API's requests, responses and statuses, shared by the server and the UI. */
 import { z } from 'zod';
 import { languageSchema, uiLanguageSchema } from './languages.js';
 import { CHAT_LIMITS, PLACE_QUERY_CHARS } from './limits.js';

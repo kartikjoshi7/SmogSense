@@ -1,3 +1,4 @@
+/** The engine's output: the index reading, severity, inversion, forecast and timeline. */
 import { z } from 'zod';
 import { localTimeSchema, pollutantsSchema } from './air.js';
 import { INDEX_BANDS } from './limits.js';

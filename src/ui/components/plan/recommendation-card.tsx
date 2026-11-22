@@ -1,3 +1,4 @@
+/** One recommendation card: what to do, its impact, why, how and for whom. */
 import type { Impact } from '../../../shared/recommendation.js';
 import type { Messages } from '../../i18n/en.js';
 import { useMessages } from '../../state/app-context.js';

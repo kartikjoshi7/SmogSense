@@ -1,3 +1,4 @@
+/** Middleware that validates request bodies and queries with the shared Zod schemas. */
 import type { Context } from 'hono';
 import { validator } from 'hono/validator';
 import type { ZodType } from 'zod';

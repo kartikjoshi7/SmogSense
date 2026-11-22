@@ -1,3 +1,4 @@
+/** The top of the setup screen: what SmogSense does, and the example-family button. */
 import type { RefObject } from 'react';
 import { useMessages } from '../../state/app-context.js';
 

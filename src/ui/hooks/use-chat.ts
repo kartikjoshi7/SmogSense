@@ -1,3 +1,4 @@
+/** The chat conversation: sending questions, tracking answers and the question box. */
 import { useRef, useState } from 'react';
 import { replyLanguage } from '../../core/explain/index.js';
 import type { PlanRequest, TextSource } from '../../shared/api.js';

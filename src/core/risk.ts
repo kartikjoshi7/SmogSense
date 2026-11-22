@@ -1,3 +1,4 @@
+/** Who is sensitive in the household, and what outdoor activity is safe for them today. */
 import type { Sensitivity, Severity } from '../shared/plan.js';
 import type { Member } from '../shared/profile.js';
 import type { OutdoorAdvice } from '../shared/recommendation.js';

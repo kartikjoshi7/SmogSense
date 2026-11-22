@@ -1,3 +1,4 @@
+/** Reads text aloud with the browser's speech synthesis, in the interface language. */
 import { useEffect, useState } from 'react';
 import { useAppState } from '../state/app-context.js';
 

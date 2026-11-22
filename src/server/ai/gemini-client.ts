@@ -1,3 +1,4 @@
+/** The one Gemini client: model fallback, cool-downs, a daily budget and validated replies. */
 import { ApiError, type GenerateContentParameters } from '@google/genai';
 import { fail, type Result } from '../../core/result.js';
 import { API_STATUS } from '../../shared/api.js';

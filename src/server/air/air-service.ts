@@ -1,3 +1,4 @@
+/** The air service: Open-Meteo data and place search behind in-memory caches. */
 import { roundTo } from '../../core/numbers.js';
 import type { Result } from '../../core/result.js';
 import type { AirData } from '../../shared/air.js';

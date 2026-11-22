@@ -1,3 +1,4 @@
+/** English templates for every recommendation, each quoting its own facts and impact. */
 import { homeTemplates } from './en-home.js';
 import { FUEL, MASK, qualitative, SENSITIVE_ADVICE, swap } from './en-words.js';
 import { clock, type LanguagePack } from './format.js';

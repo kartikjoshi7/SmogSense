@@ -1,3 +1,4 @@
+/** App state and the one reducer that changes it. */
 import type { UiLanguage } from '../../shared/languages.js';
 import type { Household, Persisted, SavedLocation } from './storage.js';
 

@@ -1,3 +1,4 @@
+/** The day's timeline: when to do what, from now on. */
 import { clock } from '../../../core/explain/format.js';
 import type { TimelineEntry } from '../../../shared/plan.js';
 import { useMessages } from '../../state/app-context.js';

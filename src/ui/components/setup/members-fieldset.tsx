@@ -1,3 +1,4 @@
+/** The setup step for household members: names, age groups and health conditions. */
 import { useId } from 'react';
 import { MEMBER_NAME_CHARS, PROFILE_LIMITS } from '../../../shared/limits.js';
 import type { Member } from '../../../shared/profile.js';

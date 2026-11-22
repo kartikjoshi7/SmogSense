@@ -1,3 +1,4 @@
+/** Member helpers: display names and the next free member id. */
 import type { Member } from '../shared/profile.js';
 
 /**

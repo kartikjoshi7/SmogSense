@@ -1,3 +1,4 @@
+/** The card that explains the winter inversion and when it should clear. */
 import { clock } from '../../../core/explain/format.js';
 import type { Inversion } from '../../../shared/plan.js';
 import { useMessages } from '../../state/app-context.js';

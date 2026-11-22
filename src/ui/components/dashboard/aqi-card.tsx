@@ -1,3 +1,4 @@
+/** The headline card: the index, what it means today and this hour's pollutants. */
 import { categoryLabel, scaleLabel } from '../../../core/explain/index.js';
 import type { Pollutants } from '../../../shared/air.js';
 import type { TextSource } from '../../../shared/api.js';

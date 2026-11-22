@@ -1,3 +1,4 @@
+/** City search and GPS lookup, each with its own status. */
 import { useRef, useState } from 'react';
 import { geocodeQuerySchema, type Place } from '../../shared/api.js';
 import { api } from '../api/client.js';

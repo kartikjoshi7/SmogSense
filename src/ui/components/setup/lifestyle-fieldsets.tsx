@@ -1,3 +1,4 @@
+/** The setup steps about the commute and exercise. */
 import { PROFILE_LIMITS } from '../../../shared/limits.js';
 import type { Commute, Exercise } from '../../../shared/profile.js';
 import { useMessages } from '../../state/app-context.js';

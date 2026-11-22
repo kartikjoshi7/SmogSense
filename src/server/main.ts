@@ -1,3 +1,4 @@
+/** Builds the real app from environment variables: the one place real dependencies are made. */
 import { GoogleGenAI } from '@google/genai';
 import { createAiService } from './ai/ai-service.js';
 import { createGeminiClient, type GenerateContent } from './ai/gemini-client.js';

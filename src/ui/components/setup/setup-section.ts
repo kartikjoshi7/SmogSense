@@ -1,3 +1,4 @@
+/** What every setup step shares: its value, invalid fields, change handler and messages. */
 import type { Range } from '../../../shared/limits.js';
 import { useMessages } from '../../state/app-context.js';
 

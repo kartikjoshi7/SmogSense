@@ -1,3 +1,4 @@
+/** The AI routes: plan explanation, chat and community notices. */
 import { Hono } from 'hono';
 import {
   chatRequestSchema,

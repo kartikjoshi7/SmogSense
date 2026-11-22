@@ -1,3 +1,4 @@
+/** The Hono app: security middleware, rate limits, routes and safe error replies. */
 import { Hono, type ErrorHandler } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';

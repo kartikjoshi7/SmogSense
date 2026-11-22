@@ -1,3 +1,4 @@
+/** Community actions: checking on neighbours, reporting burning and sharing a notice. */
 import { ACTION_BAND } from '../constants.js';
 import { candidate, type Candidate, type PlanContext } from './context.js';
 

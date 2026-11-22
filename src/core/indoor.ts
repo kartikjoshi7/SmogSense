@@ -1,3 +1,4 @@
+/** The single-room model that estimates indoor PM2.5 before and after each indoor hack. */
 import type { Home, SmokyHeating } from '../shared/profile.js';
 import type { RecommendationId } from '../shared/recommendation.js';
 import {

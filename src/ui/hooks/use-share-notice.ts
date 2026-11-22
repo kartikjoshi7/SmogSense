@@ -1,3 +1,4 @@
+/** Copies a notice or opens the device's share sheet, and reports how it went. */
 import { useState } from 'react';
 
 export type ShareStatus = 'idle' | 'copied' | 'copy_failed' | 'share_failed';

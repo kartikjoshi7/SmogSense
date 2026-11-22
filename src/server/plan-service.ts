@@ -1,3 +1,4 @@
+/** Loads a household's plan: cached air data for the place, then the decision engine. */
 import { buildPlan } from '../core/plan.js';
 import type { Result } from '../core/result.js';
 import type { Location } from '../shared/api.js';

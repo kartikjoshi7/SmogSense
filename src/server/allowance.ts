@@ -1,3 +1,4 @@
+/** Per-client allowances over a sliding window, shared by the rate limits and the AI service. */
 import { fail, ok, type Result } from '../core/result.js';
 import { TtlCache } from './cache.js';
 

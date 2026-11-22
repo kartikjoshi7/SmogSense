@@ -1,3 +1,4 @@
+/** The data routes: city search and the household plan, with no AI involved. */
 import { Hono } from 'hono';
 import { geocodeQuerySchema, planRequestSchema } from '../../shared/api.js';
 import type { AirService } from '../air/air-service.js';

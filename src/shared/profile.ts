@@ -1,3 +1,4 @@
+/** The household profile: members, commute, exercise, home and mask, as Zod schemas. */
 import { z } from 'zod';
 import { PROFILE_LIMITS } from './limits.js';
 import { hourSchema, rangeSchema } from './primitives.js';

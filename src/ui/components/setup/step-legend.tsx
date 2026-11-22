@@ -1,3 +1,4 @@
+/** A setup step's numbered title. */
 import type { ReactNode } from 'react';
 
 interface StepLegendProps {

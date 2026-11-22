@@ -1,3 +1,4 @@
+/** Hindi names for the choices the setup form offers. */
 import type { Messages } from './en.js';
 
 /** Hindi names for the choices the setup form offers. */

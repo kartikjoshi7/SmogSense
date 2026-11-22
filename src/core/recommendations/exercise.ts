@@ -1,3 +1,4 @@
+/** Exercise advice: the cleanest daylight window, or indoors when outdoors is unsafe. */
 import { MIN_WORTHWHILE_REDUCTION_PCT } from '../constants.js';
 import { exerciseDoseUg, reduction } from '../exposure.js';
 import { currentRoom, indoorPm25 } from '../indoor.js';

@@ -1,3 +1,4 @@
+/** Pairs each recommendation with AI text when there is some, else standard guidance. */
 import { explainRecommendation } from '../../../core/explain/index.js';
 import type { ExplainResponse, TextSource } from '../../../shared/api.js';
 import type { UiLanguage } from '../../../shared/languages.js';

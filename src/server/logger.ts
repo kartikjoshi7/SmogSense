@@ -1,3 +1,4 @@
+/** The only code that writes logs: one structured entry per warning or error. */
 type Level = 'warn' | 'error';
 
 interface LogEntry {

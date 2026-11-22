@@ -1,3 +1,4 @@
+/** The AI service: cached, per-client-metered Gemini text, always backed by standard guidance. */
 import { createHash } from 'node:crypto';
 import { communityPlan } from '../../core/plan.js';
 import { fail } from '../../core/result.js';

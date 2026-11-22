@@ -1,3 +1,4 @@
+/** The tag that says whether text came from the AI or from standard guidance. */
 import type { TextSource } from '../../../shared/api.js';
 import { useMessages } from '../../state/app-context.js';
 

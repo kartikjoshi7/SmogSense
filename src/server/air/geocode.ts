@@ -1,3 +1,4 @@
+/** City and town search through Open-Meteo's geocoding API. */
 import { z } from 'zod';
 import { ok, type Result } from '../../core/result.js';
 import type { Place } from '../../shared/api.js';

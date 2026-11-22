@@ -1,3 +1,4 @@
+/** Labelled form fields: a select, a number within a range and a clock hour. */
 import { useId } from 'react';
 import { clock } from '../../../core/explain/format.js';
 import { CLOCK_HOURS, type Range } from '../../../shared/limits.js';

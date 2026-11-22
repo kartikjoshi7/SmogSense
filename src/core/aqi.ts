@@ -1,3 +1,4 @@
+/** The headline air-quality index on the India or US scale, from 24-hour PM means. */
 import type { AirData, HourlyReading } from '../shared/air.js';
 import { INDEX_VALUES } from '../shared/limits.js';
 import type { AqiCategory, AqiScale, IndexReading } from '../shared/plan.js';

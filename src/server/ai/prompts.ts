@@ -1,3 +1,4 @@
+/** The prompts sent to Gemini, with user text kept apart from the instructions as data. */
 import type { Audience, ChatTurn } from '../../shared/api.js';
 import { ENGLISH_NAMES, type Language } from '../../shared/languages.js';
 import type { Plan } from '../../shared/plan.js';

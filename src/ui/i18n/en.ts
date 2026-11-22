@@ -1,3 +1,4 @@
+/** English interface text; recommendation text comes from src/core/explain. */
 import type { Severity } from '../../shared/plan.js';
 import type { OutdoorAdvice, RecommendationCategory } from '../../shared/recommendation.js';
 import { options } from './en-options.js';

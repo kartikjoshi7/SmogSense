@@ -1,3 +1,4 @@
+/** The community notice dialog: an advisory for a society, school or workplace. */
 import { useState } from 'react';
 import type { Audience, PlanRequest } from '../../../shared/api.js';
 import { NATIVE_NAMES, type Language } from '../../../shared/languages.js';

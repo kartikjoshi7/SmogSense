@@ -76,7 +76,11 @@ function largest(items, size) {
  */
 export async function measureCode() {
   const tracked = execSync('git ls-files', { encoding: 'utf-8' }).split('\n').filter(Boolean);
-  const source = await lineCounts(tracked.filter(isSource));
+  const sourceFiles = tracked.filter(isSource);
+  const source = await lineCounts(sourceFiles);
+  const unexplained = sourceFiles.filter(
+    (file) => !/^(\/\*\*|\/\/)/.test(readFileSync(file, 'utf8')),
+  );
   const tests = await lineCounts(tracked.filter(isTest));
   const styles = tracked.filter((file) => file.startsWith('src/') && file.endsWith('.css'));
 
@@ -89,6 +93,7 @@ export async function measureCode() {
   const bigStyle = largest(styles, cssLines);
   return [
     ['Source files / test files', `${source.length} / ${tests.length}`],
+    ['Source files without a purpose comment at the top', String(unexplained.length)],
     ['Largest source file (lines of code)', `${bigFile.lines} (\`${bigFile.file}\`)`],
     ['Longest function (lines of code)', `${longest.lines} (in \`${longest.file}\`)`],
     ['Largest test file (lines of code)', `${bigTest.lines} (\`${bigTest.file}\`)`],

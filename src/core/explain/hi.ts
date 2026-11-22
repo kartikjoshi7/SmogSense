@@ -1,3 +1,4 @@
+/** The Hindi language pack: category and scale names, headlines, the day in a sentence, notices. */
 import type { Audience } from '../../shared/api.js';
 import type { Severity } from '../../shared/plan.js';
 import { languagePack, type DayPhrases, type LanguagePack } from './format.js';

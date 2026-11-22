@@ -1,3 +1,4 @@
+/** The plan's explanation: Gemini's wording where it is grounded, standard guidance elsewhere. */
 import { z } from 'zod';
 import { explainRecommendation, planHeadline, planSummary } from '../../core/explain/index.js';
 import type { ExplainResponse, TextSource } from '../../shared/api.js';

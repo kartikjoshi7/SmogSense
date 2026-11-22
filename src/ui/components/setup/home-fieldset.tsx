@@ -1,3 +1,4 @@
+/** The setup step about the home: purifiers, room, cooking, smoke sources and masks. */
 import { PROFILE_LIMITS } from '../../../shared/limits.js';
 import type { Home, MaskType } from '../../../shared/profile.js';
 import { useMessages } from '../../state/app-context.js';

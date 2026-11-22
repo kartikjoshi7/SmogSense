@@ -1,3 +1,4 @@
+/** Loads the household's plan, then its AI explanation, never showing a stale result. */
 import { useEffect, useMemo, useState } from 'react';
 import type { ExplainResponse, PlanRequest } from '../../shared/api.js';
 import type { UiLanguage } from '../../shared/languages.js';

@@ -1,3 +1,4 @@
+/** The loaded plan: the reading, the AI actions, the day in detail and every recommendation. */
 import { planHeadline, planSummary } from '../../../core/explain/index.js';
 import type { ExplainResponse } from '../../../shared/api.js';
 import type { Plan } from '../../../shared/plan.js';

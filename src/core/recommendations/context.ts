@@ -1,3 +1,4 @@
+/** What every recommendation generator shares: the plan context and the candidate shape. */
 import type { AirData } from '../../shared/air.js';
 import type { CleanestHour, IndexReading, Sensitivity, Severity } from '../../shared/plan.js';
 import type { Profile } from '../../shared/profile.js';

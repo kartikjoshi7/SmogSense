@@ -1,3 +1,4 @@
+/** The setup step for the place: GPS or a city search, with a live status line. */
 import { useId, useState } from 'react';
 import type { Place } from '../../../shared/api.js';
 import { PLACE_QUERY_CHARS } from '../../../shared/limits.js';

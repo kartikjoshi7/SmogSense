@@ -1,3 +1,4 @@
+/** The one in-memory cache: entries expire after a time-to-live, least recently used go first. */
 export interface CacheOptions {
   readonly maxEntries: number;
   readonly ttlMs: number;

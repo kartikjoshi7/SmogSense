@@ -1,3 +1,4 @@
+/** Hindi templates for every recommendation, each quoting its own facts and impact. */
 import { clock, type LanguagePack } from './format.js';
 import { homeTemplates } from './hi-home.js';
 import { FUEL, MASK, qualitative, SENSITIVE_ADVICE, swap } from './hi-words.js';

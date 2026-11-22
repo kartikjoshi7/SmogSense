@@ -1,3 +1,4 @@
+/** Labelled checkboxes: one on its own, or a group under a legend. */
 import { entries, type Labels } from '../../i18n/labels.js';
 
 interface CheckboxFieldProps {

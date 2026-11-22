@@ -1,3 +1,4 @@
+/** The app's one state context: the provider and the hooks that read it. */
 import {
   createContext,
   useContext,

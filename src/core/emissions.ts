@@ -1,3 +1,4 @@
+/** Commute emissions and in-transit exposure, and the commute swaps worth suggesting. */
 import type { Commute, CommuteAlternative, CommuteMode } from '../shared/profile.js';
 import {
   CAR_MODES,

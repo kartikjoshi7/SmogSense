@@ -1,3 +1,4 @@
+/** The one modal dialog: focus trap, Esc to close and focus returned on close. */
 import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react';
 
 const FOCUSABLE =

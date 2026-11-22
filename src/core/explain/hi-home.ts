@@ -1,3 +1,4 @@
+/** Hindi templates for the recommendations about the air at home. */
 import type { LanguagePack } from './format.js';
 import { FUEL, HEATER, indoor, qualitative } from './hi-words.js';
 

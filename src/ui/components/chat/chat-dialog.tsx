@@ -1,3 +1,4 @@
+/** The chat dialog: questions about today's plan, answered from its numbers. */
 import { useState } from 'react';
 import type { PlanRequest } from '../../../shared/api.js';
 import { NATIVE_NAMES, type Language } from '../../../shared/languages.js';

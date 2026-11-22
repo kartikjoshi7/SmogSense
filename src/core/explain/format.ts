@@ -1,3 +1,4 @@
+/** The language-pack contract, the shared template shapes and clock formatting. */
 import type { Audience } from '../../shared/api.js';
 import type { AqiCategory, AqiScale, Plan, Severity } from '../../shared/plan.js';
 import type {

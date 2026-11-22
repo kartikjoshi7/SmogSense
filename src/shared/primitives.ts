@@ -1,3 +1,4 @@
+/** Small schemas every other schema builds on: bounded numbers, hours and coordinates. */
 import { z } from 'zod';
 import { CLOCK_HOURS, INDEX_VALUES, LATITUDE, LONGITUDE, type Range } from './limits.js';
 

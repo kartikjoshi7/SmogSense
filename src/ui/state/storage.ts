@@ -1,3 +1,4 @@
+/** Saved state in the browser: validated on load, and safe when storage is blocked. */
 import { z } from 'zod';
 import { uiLanguageSchema } from '../../shared/languages.js';
 import { MEMBER_NAME_CHARS, PLACE_LABEL_CHARS } from '../../shared/limits.js';

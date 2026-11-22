@@ -1,3 +1,4 @@
+/** Vercel's entry point: hands every /api/* request to the Hono app. */
 import { createServerApp } from '../src/server/main.js';
 
 const app = createServerApp();

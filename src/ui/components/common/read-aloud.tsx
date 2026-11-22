@@ -1,3 +1,4 @@
+/** The read-aloud button, shown only where the browser can speak. */
 import { useSpeech } from '../../hooks/use-speech.js';
 import { useMessages } from '../../state/app-context.js';
 

@@ -1,3 +1,4 @@
+/** Personal protection: masks, care for sensitive members and local emergency rules. */
 import { ACTION_BAND, MASK_REDUCTION, NCR_BOUNDS } from '../constants.js';
 import { reduction } from '../exposure.js';
 import { candidate, type Candidate, type PlanContext } from './context.js';

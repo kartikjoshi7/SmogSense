@@ -1,3 +1,4 @@
+/** The chat conversation and the suggested first questions. */
 import type { ChatMessage } from '../../hooks/use-chat.js';
 import { useMessages } from '../../state/app-context.js';
 import { SourceTag } from '../common/source-tag.js';

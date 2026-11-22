@@ -1,3 +1,4 @@
+/** The browser entry point: renders the app with browser storage. */
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app.js';

@@ -1,3 +1,4 @@
+/** Hindi interface text, with the same keys as English. */
 import type { Messages } from './en.js';
 import { options } from './hi-options.js';
 import { setup } from './hi-setup.js';

@@ -1,3 +1,4 @@
+/** Environment variables, validated, and every runtime limit and timing in one place. */
 import { z } from 'zod';
 import { HOURS_PER_DAY, MINUTES_PER_HOUR, SECONDS_PER_MINUTE } from '../shared/limits.js';
 

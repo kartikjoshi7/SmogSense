@@ -1,3 +1,4 @@
+/** How strongly the plan reacts to the day's AQI band: normal to smog emergency. */
 import type { Sensitivity, Severity } from '../shared/plan.js';
 import { SEVERITY_BAND } from './constants.js';
 

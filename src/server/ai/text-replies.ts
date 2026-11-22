@@ -1,3 +1,4 @@
+/** Chat answers and community notices: grounded AI text, or standard text when there is none. */
 import { z, type ZodType } from 'zod';
 import { fallbackChatAnswer, fallbackCommunityNotice } from '../../core/explain/index.js';
 import type { ChatResponse, CommunityResponse } from '../../shared/api.js';

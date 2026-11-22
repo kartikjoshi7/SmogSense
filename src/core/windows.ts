@@ -1,3 +1,4 @@
+/** Clean-air windows: when to exercise and when to air the home, from the hourly forecast. */
 import type { Daylight, HourlyReading } from '../shared/air.js';
 import { HOURS_PER_DAY, MINUTES_PER_HOUR } from '../shared/limits.js';
 import type { CleanestHour } from '../shared/plan.js';

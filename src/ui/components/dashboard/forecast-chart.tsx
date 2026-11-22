@@ -1,3 +1,4 @@
+/** The 24-hour PM2.5 forecast, as an SVG bar chart or as a table. */
 import { useId, useState } from 'react';
 import { clock } from '../../../core/explain/format.js';
 import type { Plan } from '../../../shared/plan.js';

@@ -1,3 +1,4 @@
+/** English names for the choices the setup form offers. */
 import type {
   AgeGroup,
   Airtightness,

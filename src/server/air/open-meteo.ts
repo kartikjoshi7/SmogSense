@@ -1,3 +1,4 @@
+/** Air quality and weather from Open-Meteo, validated and shaped into the engine's input. */
 import { z } from 'zod';
 import { fail, ok, type Result } from '../../core/result.js';
 import { airDataSchema, type AirData, type HourlyReading } from '../../shared/air.js';

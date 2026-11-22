@@ -1,3 +1,4 @@
+/** The ranked recommendations, one tab per category. */
 import { recommendationCategorySchema } from '../../../shared/recommendation.js';
 import { memberName } from '../../members.js';
 import { useMessages } from '../../state/app-context.js';

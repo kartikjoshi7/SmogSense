@@ -1,3 +1,4 @@
+/** Hindi text for the setup screen. */
 import type { Messages } from './en.js';
 
 /** Hindi text for the setup screen: where the family lives and how it spends the day. */

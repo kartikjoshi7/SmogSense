@@ -1,3 +1,4 @@
+/** The chat question form: the box with its character count, status and send button. */
 import { useId, type RefObject, type SyntheticEvent } from 'react';
 import { CHAT_LIMITS } from '../../../shared/limits.js';
 import type { ChatStatus } from '../../hooks/use-chat.js';
