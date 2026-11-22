@@ -1,10 +1,11 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "lib": ["ES2023"],
     "types": ["node"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext"
   },
-  "include": ["src/server", "src/core", "src/shared", "api", "*.config.ts"]
+  "include": ["src/server", "src/core", "src/shared", "api", "*.config.ts"],
+  "exclude": []
 }

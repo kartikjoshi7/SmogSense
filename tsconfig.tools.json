@@ -1,12 +1,12 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "lib": ["ES2023"],
     "types": ["node"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "allowJs": true,
     "checkJs": true
   },
-  "include": ["scripts/**/*.mjs"]
+  "include": ["e2e", "scripts/**/*.mjs"],
+  "exclude": []
 }

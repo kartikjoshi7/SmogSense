@@ -11,7 +11,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -p tsconfig.app.json && tsc -p tsconfig.server.json && tsc -p tsconfig.e2e.json && tsc -p tsconfig.tools.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.server.json && tsc -p tsconfig.tools.json",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -60,5 +60,26 @@
     "typescript-eslint": "^8.73.0",
     "vite": "^8.3.8",
     "vitest": "^5.1.1"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "semi": true
+  },
+  "knip": {
+    "entry": [
+      "api/index.ts!",
+      "index.html!",
+      "*.config.{js,ts,mjs}",
+      "scripts/**/*.{js,mjs}"
+    ],
+    "project": [
+      "src/**/*.{ts,tsx,css}!",
+      "!src/**/{test,fixtures}/**!",
+      "api/**/*.ts!",
+      "e2e/**/*.ts",
+      "scripts/**/*.mjs"
+    ]
   }
 }

@@ -6,6 +6,17 @@ import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
 import importXPlugin from 'eslint-plugin-import-x';
 import globals from 'globals';
 
+/** Every way a file in `src/core` can name another layer: from the root or relatively. */
+const layerPaths = (layer) => [
+  `src/${layer}`,
+  `src/${layer}/**`,
+  `../${layer}/**`,
+  `../../${layer}/**`,
+];
+
+/** Lines of code only: the limits never pay for deleting blank lines or documentation. */
+const codeLines = (max) => ['error', { max, skipBlankLines: true, skipComments: true }];
+
 export default tseslint.config(
   { ignores: ['dist/**', 'coverage/**', 'node_modules/**'] },
 
@@ -16,7 +27,7 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.app.json', './tsconfig.server.json', './tsconfig.e2e.json'],
+        project: ['./tsconfig.json', './tsconfig.server.json', './tsconfig.tools.json'],
         projectService: false,
       },
     },
@@ -66,11 +77,9 @@ export default tseslint.config(
   {
     rules: {
       complexity: ['error', 10],
-      'max-lines-per-function': ['error', { max: 60, skipBlankLines: true, skipComments: true }],
-      // 250 lines of code per file (tests included) keeps a module to one topic that reads in one
-      // sitting; the only two files that ever exceeded it were message catalogues, split by topic.
-      // Blank lines and comments do not count, so the limit never pays for deleting documentation.
-      'max-lines': ['error', { max: 250, skipBlankLines: true, skipComments: true }],
+      // A function fits on one screen and a module holds one topic that reads in one sitting.
+      'max-lines-per-function': codeLines(60),
+      'max-lines': codeLines(250),
       'max-depth': ['error', 3],
       'max-params': ['error', 4],
       'no-nested-ternary': 'error',
@@ -90,50 +99,17 @@ export default tseslint.config(
   {
     files: ['src/core/**/*.ts'],
     rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              // Anything that is not a relative path is a package.
-              regex: '^[^.]',
-              message: 'core may not import from any npm package',
-            },
-            {
-              group: ['src/ui', 'src/ui/**', '../ui/**', '../../ui/**'],
-              message: 'core must not import from ui',
-            },
-            {
-              group: ['src/server', 'src/server/**', '../server/**', '../../server/**'],
-              message: 'core must not import from server',
-            },
-          ],
-        },
-      ],
       '@typescript-eslint/no-restricted-imports': [
         'error',
         {
           patterns: [
-            {
-              group: ['src/ui', 'src/ui/**', '../ui/**', '../../ui/**'],
-              message: 'core must not import from ui',
-              allowTypeImports: false,
-            },
-            {
-              group: ['src/server', 'src/server/**', '../server/**', '../../server/**'],
-              message: 'core must not import from server',
-              allowTypeImports: false,
-            },
+            // Anything that is not a relative path is a package.
+            { regex: '^[^.]', message: 'core may not import from any npm package' },
+            { group: layerPaths('ui'), message: 'core must not import from ui' },
+            { group: layerPaths('server'), message: 'core must not import from server' },
             {
               // shared/limits.ts imports nothing, so its bounds and units may be used as values.
-              group: [
-                'src/shared',
-                'src/shared/**',
-                '../shared/**',
-                '../../shared/**',
-                '!../shared/limits.js',
-                '!../../shared/limits.js',
-              ],
+              group: [...layerPaths('shared'), '!../shared/limits.js', '!../../shared/limits.js'],
               message: 'core may only use type-only imports from shared (values: shared/limits.ts)',
               allowTypeImports: true,
             },
@@ -146,18 +122,13 @@ export default tseslint.config(
   {
     // Tests may import shared schemas to check engine output against the API contract.
     files: ['src/core/**/*.test.ts', 'src/core/fixtures/**/*.ts'],
-    rules: {
-      'no-restricted-imports': 'off',
-      '@typescript-eslint/no-restricted-imports': 'off',
-    },
+    rules: { '@typescript-eslint/no-restricted-imports': 'off' },
   },
 
   {
     // The logger is the one place that writes to the console.
     files: ['src/server/logger.ts'],
-    rules: {
-      'no-console': 'off',
-    },
+    rules: { 'no-console': 'off' },
   },
 
   {
@@ -180,10 +151,12 @@ export default tseslint.config(
   },
 
   {
-    // A describe block holds many tests, so its callback is long by nature.
+    // ESLint cannot exempt only `describe` callbacks, and each one holds all of its tests, so test
+    // files have no function limit. Instead each covers one topic, in at most 200 lines of code.
     files: ['**/*.test.ts', '**/*.test.tsx', 'e2e/**/*.ts'],
     rules: {
       'max-lines-per-function': 'off',
+      'max-lines': codeLines(250),
     },
   },
 

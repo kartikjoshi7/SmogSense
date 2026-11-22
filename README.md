@@ -14,7 +14,7 @@ notices in ten languages, and it may only use the numbers the engine computed.
 **Live app:** https://smog-sense-sigma.vercel.app (no sign-up; "Try an example family in Delhi"
 fills the form in one click).
 
-![The plan for a family in New Delhi on a very poor day: India AQI 314 with a smog-emergency headline written by the AI, this hour's six pollutant readings, the inversion card, the day's timeline and a bar chart of PM2.5 over the next 24 hours with the cleanest hour highlighted](docs/images/plan.png)
+![The plan for a family in New Delhi on a very poor day: India AQI 314 with a smog-emergency headline written by the AI, this hour's six pollutant readings, the inversion card, the day's timeline and a bar chart of PM2.5 over the next 24 hours with the cleanest hour highlighted](docs/images/plan.webp)
 
 ## Contents
 
@@ -121,8 +121,8 @@ flowchart LR
    loaded only when opened.
 
 <p>
-  <img src="docs/images/setup.png" width="560" alt="The setup screen: a hero with the example-family button, then numbered cards for where you live, who lives with you (each member grouped under their name) and the daily commute with the options you could use">
-  <img src="docs/images/plan-phone-dark.png" width="200" alt="The same plan on a 390-pixel phone in dark mode: the AQI card stacks above this hour's pollutant readings">
+  <img src="docs/images/setup.webp" width="560" alt="The setup screen: a hero with the example-family button, then numbered cards for where you live, who lives with you (each member grouped under their name) and the daily commute with the options you could use">
+  <img src="docs/images/plan-phone-dark.webp" width="200" alt="The same plan on a 390-pixel phone in dark mode: the AQI card stacks above this hour's pollutant readings">
 </p>
 
 **GenAI usage.** Gemini (through `@google/genai`) is used in three places, all in
@@ -157,7 +157,7 @@ caching, a cool-down after a 429 and a daily budget ([Efficiency](docs/EFFICIENC
 
 ## Features
 
-![The plan's five tabs (low-emission routines, indoor air hacks, sustainable alternatives, protection and community) above three recommendation cards, each with its benefit (a measured cut or a qualitative level), its effort, why and how, and a label saying whether the AI or standard guidance wrote it](docs/images/recommendations.png)
+![The plan's five tabs (low-emission routines, indoor air hacks, sustainable alternatives, protection and community) above three recommendation cards, each with its benefit (a measured cut or a qualitative level), its effort, why and how, and a label saying whether the AI or standard guidance wrote it](docs/images/recommendations.webp)
 
 - **A plan in five tabs named after the brief:** low-emission routines, indoor air hacks,
   sustainable alternatives, protection and community. Measurable actions show their own numbers
