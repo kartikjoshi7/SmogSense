@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Hono, type ErrorHandler } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
@@ -38,6 +38,15 @@ function limiter(limit: number, now: () => number) {
   });
 }
 
+/** A safe reply for any error: no stack trace, no detail about what failed. */
+const safeError: ErrorHandler = (error, c) => {
+  if (error instanceof HTTPException) {
+    return c.json({ error: 'Invalid request' }, error.status);
+  }
+  logger.error('Unhandled error', { method: c.req.method, path: c.req.path, error: error.name });
+  return c.json({ error: 'Internal error' }, API_STATUS.internal);
+};
+
 /** The API: security middleware, rate limits, routes and safe error handling. */
 export function createApp(deps: AppDeps) {
   const origins = allowedOrigins(deps.config);
@@ -72,16 +81,6 @@ export function createApp(deps: AppDeps) {
   app.route('/', aiRoutes(deps.air, deps.ai));
 
   app.notFound((c) => c.json({ error: 'Not found' }, API_STATUS.notFound));
-  app.onError((error, c) => {
-    if (error instanceof HTTPException) {
-      return c.json({ error: 'Invalid request' }, error.status);
-    }
-    logger.error('Unhandled error', {
-      method: c.req.method,
-      path: c.req.path,
-      error: error.name,
-    });
-    return c.json({ error: 'Internal error' }, API_STATUS.internal);
-  });
+  app.onError(safeError);
   return app;
 }

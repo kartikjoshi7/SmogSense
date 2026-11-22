@@ -1,19 +1,11 @@
 import { lazy, Suspense, useState, type RefObject } from 'react';
-import { planHeadline, planSummary } from '../../../core/explain/index.js';
-import { API_STATUS, type ExplainResponse } from '../../../shared/api.js';
-import type { Plan } from '../../../shared/plan.js';
+import { API_STATUS, type PlanRequest } from '../../../shared/api.js';
 import type { ApiError } from '../../api/client.js';
-import { usePlan } from '../../hooks/use-plan.js';
+import { usePlan, type PlanState } from '../../hooks/use-plan.js';
 import type { Messages } from '../../i18n/en.js';
 import { useAppState, useMessages } from '../../state/app-context.js';
 import type { Household, SavedLocation } from '../../state/storage.js';
-import { explainedItems } from '../plan/explained.js';
-import { PlanSection } from '../plan/plan-section.js';
-import { Timeline } from '../plan/timeline.js';
-import { WhatIf } from '../plan/what-if.js';
-import { AqiCard } from './aqi-card.js';
-import { ForecastChart } from './forecast-chart.js';
-import { InversionCard } from './inversion-card.js';
+import { PlanView, type OpenDialog } from './plan-view.js';
 
 const ChatDialog = lazy(() =>
   import('../chat/chat-dialog.js').then((m) => ({ default: m.ChatDialog })),
@@ -21,8 +13,6 @@ const ChatDialog = lazy(() =>
 const CommunityDialog = lazy(() =>
   import('../community/community-dialog.js').then((m) => ({ default: m.CommunityDialog })),
 );
-
-type OpenDialog = 'chat' | 'notice' | null;
 
 /** What to say when the plan fails: the cause when the status tells it, else a general line. */
 function planErrorText(t: Messages['dashboard'], error: ApiError): string {
@@ -34,101 +24,70 @@ function planErrorText(t: Messages['dashboard'], error: ApiError): string {
   return (error.status === null ? undefined : byStatus[error.status]) ?? t.errors.general;
 }
 
-function PlanView({
-  plan,
-  explanation,
-  household,
-  onOpen,
-}: {
-  readonly plan: Plan;
-  readonly explanation: ExplainResponse | null;
-  readonly household: Household;
-  readonly onOpen: (dialog: OpenDialog) => void;
-}) {
-  const t = useMessages();
-  const { lang } = useAppState();
-  const items = explainedItems(plan, explanation, lang);
-  const { exercise, members } = household.profile;
+/** The live line that says the plan, or its AI wording, is on its way. */
+function PlanStatus({ state }: { readonly state: PlanState }) {
+  const t = useMessages().dashboard;
   return (
-    <>
-      <AqiCard
-        plan={plan}
-        headline={explanation?.headline ?? planHeadline(plan, lang)}
-        summary={explanation?.summary ?? planSummary(plan, lang)}
-        source={explanation?.introSource ?? 'fallback'}
-      />
-      <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          className="btn-primary"
-          onClick={() => {
-            onOpen('chat');
-          }}
-        >
-          {t.actions.ask}
-        </button>
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={() => {
-            onOpen('notice');
-          }}
-        >
-          {t.actions.notice}
-        </button>
-      </div>
-      <div className="grid gap-5 lg:grid-cols-12 lg:items-start">
-        <div className="grid gap-5 md:grid-cols-2 lg:col-span-5 lg:grid-cols-1">
-          <InversionCard inversion={plan.inversion} />
-          <Timeline entries={plan.timeline} items={items} />
-        </div>
-        <div className="grid gap-5 lg:col-span-7">
-          <ForecastChart plan={plan} />
-          {exercise.activity === 'none' ? null : (
-            <WhatIf plan={plan} exercise={exercise} members={members} />
-          )}
-        </div>
-      </div>
-      <PlanSection items={items} household={household} />
-    </>
+    <p role="status" className="muted">
+      {state.status === 'loading' ? t.loading : ''}
+      {state.status === 'ready' && state.explaining ? t.explaining : ''}
+    </p>
   );
 }
 
-/** Today's plan for the household: loading, errors, the plan itself and the AI dialogs. */
-export function Dashboard({
-  household,
-  location,
-  headingRef,
-}: {
+interface PlanErrorProps {
+  readonly error: ApiError;
+  readonly onRetry: () => void;
+}
+
+/** Why the plan could not be built, with a way to try again. */
+function PlanError({ error, onRetry }: PlanErrorProps) {
+  const t = useMessages().dashboard;
+  return (
+    <div role="alert" className="card grid gap-2">
+      <p>{planErrorText(t, error)}</p>
+      <button type="button" className="btn-primary justify-self-start" onClick={onRetry}>
+        {t.retry}
+      </button>
+    </div>
+  );
+}
+
+interface AiDialogsProps {
+  readonly open: OpenDialog;
+  readonly request: PlanRequest;
+  readonly onClose: () => void;
+}
+
+/** The chat and notice dialogs, each loaded the first time it opens. */
+function AiDialogs({ open, request, onClose }: AiDialogsProps) {
+  return (
+    <Suspense fallback={null}>
+      {open === 'chat' ? <ChatDialog request={request} onClose={onClose} /> : null}
+      {open === 'notice' ? <CommunityDialog request={request} onClose={onClose} /> : null}
+    </Suspense>
+  );
+}
+
+interface DashboardProps {
   readonly household: Household;
   readonly location: SavedLocation;
   readonly headingRef: RefObject<HTMLHeadingElement | null>;
-}) {
+}
+
+/** Today's plan for the household: loading, errors, the plan itself and the AI dialogs. */
+export function Dashboard({ household, location, headingRef }: DashboardProps) {
   const t = useMessages();
   const { lang } = useAppState();
   const [dialog, setDialog] = useState<OpenDialog>(null);
   const { state, request, retry } = usePlan(household.profile, location, lang);
-  const close = () => {
-    setDialog(null);
-  };
-
   return (
     <div className="grid gap-4">
       <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold">
         {t.dashboard.title(location.label ?? t.setup.location.myLocation)}
       </h1>
-      <p role="status" className="muted">
-        {state.status === 'loading' ? t.dashboard.loading : ''}
-        {state.status === 'ready' && state.explaining ? t.dashboard.explaining : ''}
-      </p>
-      {state.status === 'error' ? (
-        <div role="alert" className="card grid gap-2">
-          <p>{planErrorText(t.dashboard, state.error)}</p>
-          <button type="button" className="btn-primary justify-self-start" onClick={retry}>
-            {t.dashboard.retry}
-          </button>
-        </div>
-      ) : null}
+      <PlanStatus state={state} />
+      {state.status === 'error' ? <PlanError error={state.error} onRetry={retry} /> : null}
       {state.status === 'ready' ? (
         <PlanView
           plan={state.plan}
@@ -137,10 +96,13 @@ export function Dashboard({
           onOpen={setDialog}
         />
       ) : null}
-      <Suspense fallback={null}>
-        {dialog === 'chat' ? <ChatDialog request={request} onClose={close} /> : null}
-        {dialog === 'notice' ? <CommunityDialog request={request} onClose={close} /> : null}
-      </Suspense>
+      <AiDialogs
+        open={dialog}
+        request={request}
+        onClose={() => {
+          setDialog(null);
+        }}
+      />
     </div>
   );
 }

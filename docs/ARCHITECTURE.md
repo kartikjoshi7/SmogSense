@@ -31,13 +31,13 @@ standard guidance in English and Hindi, and `constants.ts` every coefficient (li
 [Assumptions behind the numbers](#assumptions-behind-the-numbers)).
 
 Each recommendation id carries its own facts and impact, the values its explanations quote. They are
-declared once, as a Zod discriminated union on `id` in `src/shared/plan.ts`, and the English and
+declared once, as a Zod discriminated union on `id` in `src/shared/recommendation.ts`, and the English and
 Hindi templates are typed per id, so a misspelt or missing fact fails the type check.
 
 ## Assumptions behind the numbers
 
 The bounds the engine shares with the API (index 0–500, bands 0–5, clock hours) are in
-`src/shared/limits.ts`. Everything else is in `src/core/constants.ts`, and this table shows every
+`src/shared/limits.ts`. Everything else is in `src/core/constants/`, one file per topic, and this table shows every
 constant there; `src/core/constants.test.ts` fails if one is missing or shows another value.
 
 | Constant                             | Value                                                                                                                                   | Source or reasoning                                                                                                          |

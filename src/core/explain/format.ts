@@ -1,14 +1,11 @@
 import type { Audience } from '../../shared/api.js';
+import type { AqiCategory, AqiScale, Plan, Severity } from '../../shared/plan.js';
 import type {
-  AqiCategory,
-  AqiScale,
   IndoorImpact,
-  Plan,
   RecommendationId,
   RecommendationOf,
-  Severity,
   SwapImpact,
-} from '../../shared/plan.js';
+} from '../../shared/recommendation.js';
 
 /** Plain-language text for one recommendation. */
 export interface Explanation {

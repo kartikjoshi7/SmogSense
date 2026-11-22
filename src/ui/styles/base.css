@@ -1,0 +1,44 @@
+body {
+  min-height: 100vh;
+  background: radial-gradient(1100px 480px at 50% -160px, var(--glow), transparent 70%), var(--bg);
+  color: var(--fg);
+  font-family: system-ui, 'Segoe UI', Roboto, 'Noto Sans', 'Noto Sans Devanagari', sans-serif;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.01em;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/*
+ * Grid items, fieldsets and form controls may shrink below their content's width, so a long
+ * option or a wide system font wraps on a narrow phone instead of pushing the page sideways.
+ */
+.grid > *,
+fieldset {
+  min-width: 0;
+}
+input,
+select,
+textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

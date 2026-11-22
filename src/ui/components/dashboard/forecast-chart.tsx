@@ -49,13 +49,12 @@ function MissingBar({ x, width, height }: { x: number; width: number; height: nu
   );
 }
 
-function ForecastBars({
-  plan,
-  descriptionId,
-}: {
+interface ForecastBarsProps {
   readonly plan: Plan;
   readonly descriptionId: string;
-}) {
+}
+
+function ForecastBars({ plan, descriptionId }: ForecastBarsProps) {
   const values = plan.forecast.flatMap((p) => (p.pm25 === null ? [] : [p.pm25]));
   const max = Math.max(1, ...values);
   const barWidth = WIDTH / Math.max(1, plan.forecast.length);

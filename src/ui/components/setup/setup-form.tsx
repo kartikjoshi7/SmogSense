@@ -1,76 +1,28 @@
-import { useState, type RefObject, type SyntheticEvent } from 'react';
-import { profileSchema, type Member, type Profile } from '../../../shared/profile.js';
+import { type RefObject } from 'react';
 import { memberName } from '../../members.js';
 import { useAppDispatch, useAppState, useMessages } from '../../state/app-context.js';
-import type { SavedLocation } from '../../state/storage.js';
-import { DEMO_HOUSEHOLD, DEMO_LOCATION, EMPTY_PROFILE, nextMemberId } from './defaults.js';
+import { DEMO_HOUSEHOLD, DEMO_LOCATION, EMPTY_PROFILE } from './defaults.js';
 import { CommuteFieldset, ExerciseFieldset } from './lifestyle-fieldsets.js';
 import { HomeFieldset } from './home-fieldset.js';
 import type { InvalidFields } from './field-section.js';
 import { LocationPicker } from './location-picker.js';
 import { MembersFieldset } from './members-fieldset.js';
+import { SetupHero } from './setup-hero.js';
+import {
+  invalidPaths,
+  useSetupDraft,
+  useSetupSubmit,
+  type Draft,
+  type ProfileUpdate,
+} from './setup-draft.js';
 
-interface Draft {
-  readonly profile: Profile;
-  readonly names: Readonly<Record<string, string>>;
-  readonly location: SavedLocation | null;
-}
-
-type ProfileUpdate = (change: (profile: Profile) => Profile) => void;
-
-function invalidPaths(profile: Profile): Set<string> {
-  const result = profileSchema.safeParse(profile);
-  return new Set(result.success ? [] : result.error.issues.map((issue) => issue.path.join('.')));
-}
-
-/** Trimmed names for current members only. */
-function cleanNames(draft: Draft): Record<string, string> {
-  return Object.fromEntries(
-    draft.profile.members.map((m) => [m.id, (draft.names[m.id] ?? '').trim()]),
-  );
-}
-
-/** The form's draft and every change it supports. */
-function useSetupDraft(initial: Draft) {
-  const [draft, setDraft] = useState(initial);
-  const update: ProfileUpdate = (change) => {
-    setDraft((d) => ({ ...d, profile: change(d.profile) }));
-  };
-  const changeMember = (member: Member, name: string) => {
-    setDraft((d) => ({
-      ...d,
-      names: { ...d.names, [member.id]: name },
-      profile: {
-        ...d.profile,
-        members: d.profile.members.map((m) => (m.id === member.id ? member : m)),
-      },
-    }));
-  };
-  const addMember = () => {
-    update((p) => ({
-      ...p,
-      members: [...p.members, { id: nextMemberId(p.members), ageGroup: 'adult', conditions: [] }],
-    }));
-  };
-  const removeMember = (id: string) => {
-    update((p) => ({
-      ...p,
-      members: p.members.filter((m) => m.id !== id),
-      exercise: p.exercise.memberId === id ? { ...p.exercise, memberId: null } : p.exercise,
-    }));
-  };
-  return { draft, setDraft, update, changeMember, addMember, removeMember };
-}
-
-function LifestyleSections({
-  draft,
-  invalid,
-  update,
-}: {
+interface LifestyleSectionsProps {
   readonly draft: Draft;
   readonly invalid: InvalidFields;
   readonly update: ProfileUpdate;
-}) {
+}
+
+function LifestyleSections({ draft, invalid, update }: LifestyleSectionsProps) {
   const t = useMessages();
   const { members } = draft.profile;
   const memberOptions = {
@@ -142,67 +94,21 @@ function SetupActions({ showError }: { readonly showError: boolean }) {
   );
 }
 
-/** The top of the setup screen: what SmogSense does, and the one-click example family. */
-function SetupHero({
-  headingRef,
-  onDemo,
-}: {
+interface SetupFormProps {
   readonly headingRef: RefObject<HTMLHeadingElement | null>;
-  readonly onDemo: () => void;
-}) {
-  const t = useMessages().setup;
-  return (
-    <div className="hero grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-center">
-      <div className="grid gap-3">
-        <p className="eyebrow">{t.eyebrow}</p>
-        <h1 ref={headingRef} tabIndex={-1} className="text-3xl font-bold sm:text-4xl">
-          {t.title}
-        </h1>
-        <p className="muted text-lg">{t.intro}</p>
-      </div>
-      <div className="grid gap-4">
-        <ul className="flex flex-wrap gap-2">
-          {t.features.map((feature) => (
-            <li key={feature} className="feature">
-              <span aria-hidden="true">✓</span>
-              {feature}
-            </li>
-          ))}
-        </ul>
-        <button type="button" className="btn-primary justify-self-start" onClick={onDemo}>
-          {t.demo}
-        </button>
-      </div>
-    </div>
-  );
 }
 
 /** The household form: location, members and lifestyle, validated before the plan is built. */
-export function SetupForm({
-  headingRef,
-}: {
-  readonly headingRef: RefObject<HTMLHeadingElement | null>;
-}) {
+export function SetupForm({ headingRef }: SetupFormProps) {
   const state = useAppState();
-  const dispatch = useAppDispatch();
-  const [submitted, setSubmitted] = useState(false);
   const form = useSetupDraft({
     profile: state.household?.profile ?? EMPTY_PROFILE,
     names: state.household?.names ?? {},
     location: state.location,
   });
   const { draft } = form;
+  const { submitted, submit } = useSetupSubmit(draft);
   const invalid = submitted ? invalidPaths(draft.profile) : new Set<string>();
-
-  const submit = (event: SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setSubmitted(true);
-    const parsed = profileSchema.safeParse(draft.profile);
-    if (parsed.success && draft.location !== null) {
-      const household = { profile: parsed.data, names: cleanNames(draft) };
-      dispatch({ type: 'save_setup', household, location: draft.location });
-    }
-  };
 
   return (
     <form className="grid gap-5" noValidate onSubmit={submit}>

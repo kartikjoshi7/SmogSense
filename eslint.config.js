@@ -76,10 +76,10 @@ export default tseslint.config(
 
   {
     rules: {
-      complexity: ['error', 10],
+      complexity: ['error', 8],
       // A function fits on one screen and a module holds one topic that reads in one sitting.
-      'max-lines-per-function': codeLines(60),
-      'max-lines': codeLines(250),
+      'max-lines-per-function': codeLines(40),
+      'max-lines': codeLines(150),
       'max-depth': ['error', 3],
       'max-params': ['error', 4],
       'no-nested-ternary': 'error',
@@ -156,7 +156,7 @@ export default tseslint.config(
     files: ['**/*.test.ts', '**/*.test.tsx', 'e2e/**/*.ts'],
     rules: {
       'max-lines-per-function': 'off',
-      'max-lines': codeLines(250),
+      'max-lines': codeLines(200),
     },
   },
 

@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { CHAT_LIMITS, PLACE_QUERY_CHARS } from './limits.js';
 import { languageSchema, uiLanguageSchema } from './languages.js';
-import { planSchema, recommendationIdSchema } from './plan.js';
+import { planSchema } from './plan.js';
+import { recommendationIdSchema } from './recommendation.js';
 import { coordinatesSchema } from './primitives.js';
 import { profileSchema } from './profile.js';
 

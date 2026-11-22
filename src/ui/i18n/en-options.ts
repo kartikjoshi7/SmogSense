@@ -1,0 +1,85 @@
+import type {
+  AgeGroup,
+  Airtightness,
+  CommuteAlternative,
+  CommuteMode,
+  Condition,
+  CookingFuel,
+  ExerciseActivity,
+  Heating,
+  Incense,
+  MaskType,
+} from '../../shared/profile.js';
+import type { Labels } from './labels.js';
+
+/** English names for the choices the setup form offers. */
+export const options = {
+  ageGroup: {
+    infant: 'Infant (0–2)',
+    child: 'Child (3–12)',
+    teen: 'Teen (13–17)',
+    adult: 'Adult',
+    senior: 'Senior (65+)',
+  } satisfies Labels<AgeGroup>,
+  condition: {
+    asthma: 'Asthma',
+    copd: 'COPD',
+    heart: 'Heart disease',
+    pregnancy: 'Pregnancy',
+  } satisfies Labels<Condition>,
+  commuteMode: {
+    none: 'Doesn’t commute',
+    walk: 'Walk',
+    cycle: 'Cycle',
+    two_wheeler: 'Two-wheeler',
+    auto: 'Auto-rickshaw',
+    bus: 'Bus',
+    metro: 'Metro',
+    car_petrol: 'Car (petrol)',
+    car_diesel: 'Car (diesel)',
+    car_cng: 'Car (CNG)',
+    car_ev: 'Car (electric)',
+  } satisfies Labels<CommuteMode>,
+  alternative: {
+    metro: 'Metro',
+    bus: 'Bus',
+    carpool: 'Carpool',
+    cycle: 'Cycle',
+    walk: 'Walk',
+    wfh: 'Work from home',
+  } satisfies Labels<CommuteAlternative>,
+  activity: {
+    none: 'No regular exercise',
+    walk: 'Walk',
+    run: 'Run',
+    cycle: 'Cycle',
+    yoga: 'Yoga',
+    sports: 'Sports',
+  } satisfies Labels<ExerciseActivity>,
+  airtightness: {
+    leaky: 'Draughty',
+    average: 'Average',
+    sealed: 'Well sealed',
+  } satisfies Labels<Airtightness>,
+  cookingFuel: {
+    lpg: 'LPG',
+    png: 'Piped gas (PNG)',
+    induction: 'Induction / electric',
+    biomass: 'Wood or dung',
+    kerosene: 'Kerosene',
+  } satisfies Labels<CookingFuel>,
+  incense: { never: 'Never', sometimes: 'Sometimes', daily: 'Daily' } satisfies Labels<Incense>,
+  heating: {
+    none: 'No heating',
+    electric: 'Electric heater',
+    gas: 'Gas heater',
+    kerosene: 'Kerosene heater',
+    coal_wood: 'Coal or wood fire (angithi)',
+  } satisfies Labels<Heating>,
+  mask: {
+    none: 'No mask',
+    cloth: 'Cloth mask',
+    surgical: 'Surgical mask',
+    n95: 'N95 / FFP2',
+  } satisfies Labels<MaskType>,
+};

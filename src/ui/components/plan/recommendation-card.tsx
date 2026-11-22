@@ -1,4 +1,4 @@
-import type { Impact } from '../../../shared/plan.js';
+import type { Impact } from '../../../shared/recommendation.js';
 import type { Messages } from '../../i18n/en.js';
 import { useMessages } from '../../state/app-context.js';
 import { ReadAloudButton } from '../common/read-aloud.js';
@@ -23,14 +23,13 @@ function impactBadges(impact: Impact, t: Messages['plan']): string[] {
   return badges;
 }
 
-/** One recommendation: what to do, its measured impact, why, how, and for whom. */
-export function RecommendationCard({
-  item,
-  memberNames,
-}: {
+interface RecommendationCardProps {
   readonly item: ShownRecommendation;
   readonly memberNames: readonly string[];
-}) {
+}
+
+/** One recommendation: what to do, its measured impact, why, how, and for whom. */
+export function RecommendationCard({ item, memberNames }: RecommendationCardProps) {
   const t = useMessages().plan;
   const headingId = `rec-${item.rec.id}`;
   return (

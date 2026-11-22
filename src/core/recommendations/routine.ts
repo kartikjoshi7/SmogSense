@@ -1,98 +1,8 @@
-import {
-  ACTION_BAND,
-  COMMUTE_MODES,
-  MASK_REDUCTION,
-  MIN_WORTHWHILE_REDUCTION_PCT,
-} from '../constants.js';
+import { ACTION_BAND, COMMUTE_MODES, MASK_REDUCTION } from '../constants.js';
 import { commutes, dailyCommuteDoseUg } from '../emissions.js';
-import { exerciseDoseUg, reduction } from '../exposure.js';
-import { currentRoom, indoorPm25 } from '../indoor.js';
-import { outdoorExertionUnsafe } from '../risk.js';
+import { reduction } from '../exposure.js';
 import { candidate, type Candidate, type PlanContext } from './context.js';
-
-function exerciserIds(ctx: PlanContext): string[] {
-  const id = ctx.profile.exercise.memberId;
-  return id === null ? [] : [id];
-}
-
-function exerciseDose(ctx: PlanContext, concentration: number): number {
-  return exerciseDoseUg(ctx.profile.exercise, ctx.profile.members, concentration);
-}
-
-function exerciseIndoors(ctx: PlanContext): Candidate {
-  const { usualHour, durationMin, canMoveIndoors } = ctx.profile.exercise;
-  // Doses use the unrounded mean, as the what-if slider does; only the quoted fact is rounded.
-  const outdoorMean = ctx.exerciseWindow?.usualMeanPm25 ?? ctx.ambientPm25;
-  const outdoor = Math.round(outdoorMean);
-  const indoor = indoorPm25(currentRoom(ctx.profile.home, outdoorMean));
-  const dose = reduction(exerciseDose(ctx, outdoorMean), exerciseDose(ctx, indoor));
-  return candidate(
-    {
-      id: 'exercise_indoors',
-      category: 'routine',
-      effort: canMoveIndoors ? 'low' : 'medium',
-      memberIds: exerciserIds(ctx),
-      impact: {
-        exposureReductionPct: dose.percent,
-        doseBeforeUg: dose.before,
-        doseAfterUg: dose.after,
-      },
-      facts: { usualHour, durationMin, outdoorPm25: outdoor, indoorPm25: indoor },
-    },
-    [usualHour],
-  );
-}
-
-function exerciseAtCleanWindow(ctx: PlanContext): Candidate[] {
-  const window = ctx.exerciseWindow;
-  if (window === null) {
-    return [];
-  }
-  const { usualMeanPm25, reductionPct } = window;
-  if (
-    usualMeanPm25 === null ||
-    reductionPct === null ||
-    reductionPct < MIN_WORTHWHILE_REDUCTION_PCT
-  ) {
-    return [];
-  }
-  const dose = reduction(exerciseDose(ctx, usualMeanPm25), exerciseDose(ctx, window.meanPm25));
-  const { usualHour, durationMin } = ctx.profile.exercise;
-  return [
-    candidate(
-      {
-        id: 'exercise_window',
-        category: 'routine',
-        effort: 'low',
-        memberIds: exerciserIds(ctx),
-        impact: {
-          exposureReductionPct: dose.percent,
-          doseBeforeUg: dose.before,
-          doseAfterUg: dose.after,
-        },
-        facts: {
-          usualHour,
-          bestHour: window.startHour,
-          durationMin,
-          usualPm25: Math.round(usualMeanPm25),
-          bestPm25: Math.round(window.meanPm25),
-        },
-      },
-      [window.startHour],
-    ),
-  ];
-}
-
-/** Move exercise to the cleanest daylight window, or indoors when outdoor exertion is unsafe. */
-function exercise(ctx: PlanContext): Candidate[] {
-  if (ctx.profile.exercise.activity === 'none') {
-    return [];
-  }
-  if (outdoorExertionUnsafe(ctx.advice, ctx.severity)) {
-    return [exerciseIndoors(ctx)];
-  }
-  return exerciseAtCleanWindow(ctx);
-}
+import { exerciseCandidates } from './exercise.js';
 
 /** On smoggy days, an N95 on the daily commute — with the dose it saves on each round trip. */
 function commuteProtection(ctx: PlanContext): Candidate[] {
@@ -169,7 +79,7 @@ function drivingHabits(ctx: PlanContext): Candidate[] {
 /** Low-emission, low-exposure changes to the daily routine. */
 export function routineCandidates(ctx: PlanContext): Candidate[] {
   return [
-    ...exercise(ctx),
+    ...exerciseCandidates(ctx),
     ...commuteProtection(ctx),
     ...ventilateBriefly(ctx),
     ...drivingHabits(ctx),

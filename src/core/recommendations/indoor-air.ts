@@ -1,4 +1,4 @@
-import type { Level, RecommendationOf } from '../../shared/plan.js';
+import type { Level, RecommendationOf } from '../../shared/recommendation.js';
 import { PURIFIER_NIGHT_HOUR, SMOKY_FUELS } from '../constants.js';
 import { reduction } from '../exposure.js';
 import { indoorHacks, type IndoorHack, type IndoorHackId } from '../indoor.js';

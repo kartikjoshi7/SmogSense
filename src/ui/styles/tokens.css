@@ -1,0 +1,52 @@
+/*
+ * Design tokens for light and dark themes. Every text colour meets WCAG AA on the surfaces it is
+ * used on (checked with the WCAG formula; the end-to-end axe run checks the rendered pages). Every
+ * AQI band pairs a background tint with a text colour that meets AA on it, and is always named.
+ */
+:root {
+  color-scheme: light dark;
+  --bg: #f3f6f5;
+  --glow: rgb(15 118 110 / 0.12);
+  --fg: #0f1a17;
+  --muted: #4b5b56;
+  --surface: #ffffff;
+  --surface-2: #f6f9f8;
+  --border: #dde5e2;
+  --shadow: 0 1px 2px rgb(15 26 23 / 0.06), 0 8px 24px -12px rgb(15 26 23 / 0.18);
+  --primary: #0f766e;
+  --primary-fg: #ffffff;
+  --accent-soft: #e3f3ef;
+  --accent-strong: #0b5d56;
+  --focus: #b4530a;
+  --error: #a3221c;
+  --band-0: #d8f3dc;
+  --band-1: #fdf0b8;
+  --band-2: #fddcb5;
+  --band-3: #f9c4c0;
+  --band-4: #e3cff5;
+  --band-5: #f2c1d1;
+  --band-fg: #1b1b1b;
+  --bar: #8a9a95;
+  --bar-clean: #0f766e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0a110f;
+    --glow: rgb(45 212 191 / 0.1);
+    --fg: #e8efec;
+    --muted: #a3b3ad;
+    --surface: #111a17;
+    --surface-2: #16211d;
+    --border: #24332e;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -16px rgb(0 0 0 / 0.7);
+    --primary: #2dd4bf;
+    --primary-fg: #042f2a;
+    --accent-soft: #0f2e28;
+    --accent-strong: #7ee8d3;
+    --focus: #ffb26b;
+    --error: #ff9a91;
+    --bar: #6f817b;
+    --bar-clean: #2dd4bf;
+  }
+}

@@ -1,14 +1,9 @@
-import {
-  ApiError,
-  ThinkingLevel,
-  type GenerateContentConfig,
-  type GenerateContentParameters,
-} from '@google/genai';
-import { z, type ZodType } from 'zod';
+import { ApiError, type GenerateContentParameters } from '@google/genai';
 import { API_STATUS } from '../../shared/api.js';
 import { SETTINGS, type EnvConfig } from '../config.js';
 import * as logger from '../logger.js';
-import { fail, ok, type Result } from '../../core/result.js';
+import { fail, type Result } from '../../core/result.js';
+import { parseReply, requestConfig, type AiRequest } from './gemini-request.js';
 
 /**
  * No model gave a usable answer: no key, budget spent, every model rate-limited or failing, or
@@ -16,14 +11,6 @@ import { fail, ok, type Result } from '../../core/result.js';
  * for each model is logged.
  */
 type AiFailure = 'unavailable';
-
-interface AiRequest<T> {
-  readonly system: string;
-  readonly prompt: string;
-  /** The JSON shape the model must return; also used to validate the reply. */
-  readonly schema: ZodType<T>;
-  readonly maxOutputTokens: number;
-}
 
 /** The only way the rest of the server talks to a language model. */
 export interface AiClient {
@@ -47,51 +34,6 @@ export interface GeminiOptions {
 
 /** Why one model's attempt failed: a 429 (the model cools down) or anything else. */
 type ModelFailure = 'rate_limited' | 'failed';
-
-/** Why a reply was rejected, for the logs. */
-type ReplyProblem = 'empty' | 'not_json' | 'off_schema';
-
-/** Each reply schema in JSON Schema form, converted on first use: the schemas never change. */
-const jsonSchemas = new WeakMap<ZodType, object>();
-
-function jsonSchemaOf(schema: ZodType): object {
-  const known = jsonSchemas.get(schema);
-  if (known !== undefined) {
-    return known;
-  }
-  const { $schema: _schemaUri, ...jsonSchema } = z.toJSONSchema(schema);
-  jsonSchemas.set(schema, jsonSchema);
-  return jsonSchema;
-}
-
-function requestConfig<T>(
-  request: AiRequest<T>,
-  thinking: GeminiOptions['thinkingLevel'],
-): GenerateContentConfig {
-  return {
-    systemInstruction: request.system,
-    responseMimeType: 'application/json',
-    responseJsonSchema: jsonSchemaOf(request.schema),
-    temperature: SETTINGS.aiTemperature,
-    maxOutputTokens: request.maxOutputTokens,
-    abortSignal: AbortSignal.timeout(SETTINGS.aiTimeoutMs),
-    ...(thinking === 'OFF' ? {} : { thinkingConfig: { thinkingLevel: ThinkingLevel[thinking] } }),
-  };
-}
-
-function parseReply<T>(text: string | undefined, schema: ZodType<T>): Result<T, ReplyProblem> {
-  if (text === undefined) {
-    return fail('empty');
-  }
-  let json: unknown;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    return fail('not_json');
-  }
-  const parsed = schema.safeParse(json);
-  return parsed.success ? ok(parsed.data) : fail('off_schema');
-}
 
 /** One attempt with one model: the validated reply, or why it failed (each failure is logged). */
 async function callModel<T>(

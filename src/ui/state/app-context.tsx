@@ -22,14 +22,13 @@ const MESSAGES: Readonly<Record<AppState['lang'], Messages>> = { en, hi };
 const StateContext = createContext<AppState | null>(null);
 const DispatchContext = createContext<Dispatch<AppAction> | null>(null);
 
-/** Holds app state, persists it (noting when it cannot), and keeps the page's `lang` in sync. */
-export function AppProvider({
-  store,
-  children,
-}: {
+interface AppProviderProps {
   readonly store: KeyValueStore | null;
   readonly children: ReactNode;
-}) {
+}
+
+/** Holds app state, persists it (noting when it cannot), and keeps the page's `lang` in sync. */
+export function AppProvider({ store, children }: AppProviderProps) {
   const [state, dispatch] = useReducer(appReducer, store, (s) => initialState(loadState(s)));
 
   // Saved only when a saved field changes, not on every transient change such as `editing`.

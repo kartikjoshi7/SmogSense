@@ -1,12 +1,6 @@
 import type { AirData } from '../../shared/air.js';
-import type {
-  CleanestHour,
-  IndexReading,
-  OutdoorAdvice,
-  Recommendation,
-  Sensitivity,
-  Severity,
-} from '../../shared/plan.js';
+import type { CleanestHour, IndexReading, Sensitivity, Severity } from '../../shared/plan.js';
+import type { OutdoorAdvice, Recommendation } from '../../shared/recommendation.js';
 import type { Profile } from '../../shared/profile.js';
 import type { ActivityWindow } from '../windows.js';
 

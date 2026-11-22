@@ -1,4 +1,8 @@
-import type { Level, RecommendationCategory, RecommendationId } from '../../shared/plan.js';
+import type {
+  Level,
+  RecommendationCategory,
+  RecommendationId,
+} from '../../shared/recommendation.js';
 import type { CommuteAlternative } from '../../shared/profile.js';
 import { ACTION_BAND, ACTIVE_ALTERNATIVES, SMOKY_FUELS } from '../constants.js';
 import { commuteSwaps, type CommuteSwap } from '../emissions.js';

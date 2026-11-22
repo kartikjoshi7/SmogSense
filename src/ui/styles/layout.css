@@ -1,0 +1,97 @@
+/* Page chrome, the setup screen's layout and its action bar. */
+@layer components {
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0.5rem;
+    z-index: 100;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    background: var(--primary);
+    color: var(--primary-fg);
+  }
+  .skip-link:focus {
+    left: 0.5rem;
+  }
+
+  /* ------------------------------------------------------------ Page chrome */
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: blur(10px);
+  }
+  .brand-mark {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    background: var(--primary);
+    color: var(--primary-fg);
+  }
+  .hero {
+    border-radius: 1.5rem;
+    padding: 1.75rem;
+    background: radial-gradient(600px 220px at 0% 0%, var(--glow), transparent 70%), var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .eyebrow {
+    color: var(--accent-strong);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .feature {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  /* The setup steps flow into two balanced columns on wide screens, in reading order. */
+  .setup-steps {
+    display: grid;
+    gap: 1.25rem;
+  }
+  @media (min-width: 1024px) {
+    .setup-steps {
+      display: block;
+      columns: 2;
+      column-gap: 1.25rem;
+    }
+    .setup-steps > * {
+      break-inside: avoid;
+      margin-bottom: 1.25rem;
+    }
+  }
+  /* The setup form's actions; on tablets and up they stay in view at the bottom of the screen. */
+  .action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  @media (min-width: 768px) {
+    .action-bar {
+      position: sticky;
+      bottom: 1rem;
+      z-index: 10;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+    }
+  }
+}

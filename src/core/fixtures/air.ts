@@ -77,3 +77,8 @@ export function makeAir(options: AirFixtureOptions = {}): AirData {
     nowIndex: 24 + (options.nowHour ?? 6),
   };
 }
+
+/** Multipliers on the Delhi day for a severe, a poor and a moderate day. */
+export const SEVERE = 2.4;
+export const POOR = 0.8;
+export const MODERATE = 0.55;

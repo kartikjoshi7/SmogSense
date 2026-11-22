@@ -1,4 +1,5 @@
-import type { RecommendationId, Sensitivity, Severity } from '../../shared/plan.js';
+import type { Sensitivity, Severity } from '../../shared/plan.js';
+import type { RecommendationId } from '../../shared/recommendation.js';
 import {
   CO2_RANK_WEIGHT,
   EFFORT_PENALTY,

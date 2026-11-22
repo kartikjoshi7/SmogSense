@@ -20,16 +20,14 @@ function sessionAt(plan: Plan, exercise: Exercise, members: readonly Member[], h
     : { pm25: Math.round(pm25), dose: exerciseDoseUg(exercise, members, pm25) };
 }
 
-/** "What if we went at another time?" — move a slider and see the dose change instantly. */
-export function WhatIf({
-  plan,
-  exercise,
-  members,
-}: {
+interface WhatIfProps {
   readonly plan: Plan;
   readonly exercise: Exercise;
   readonly members: readonly Member[];
-}) {
+}
+
+/** "What if we went at another time?" — move a slider and see the dose change instantly. */
+export function WhatIf({ plan, exercise, members }: WhatIfProps) {
   const t = useMessages().whatIf;
   const sliderId = useId();
   const resultId = useId();

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Language } from '../../shared/languages.js';
-import { planSchema, recommendationIdSchema, type Plan } from '../../shared/plan.js';
+import { planSchema, type Plan } from '../../shared/plan.js';
+import { recommendationIdSchema } from '../../shared/recommendation.js';
 import { makeAir } from '../fixtures/air.js';
 import { SHARMA_FAMILY } from '../fixtures/profiles.js';
 import {

@@ -7,19 +7,32 @@ function focusable(root: HTMLElement): HTMLElement[] {
   return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE));
 }
 
-/** Keep Tab and Shift+Tab cycling inside the dialog, pulling focus back in if it escaped. */
-function trapTab(event: KeyboardEvent, root: HTMLElement): void {
+/**
+ * Where Tab (or Shift+Tab, `backwards`) must send focus instead of its default: the far end when
+ * focus escaped the dialog or is on the edge it would leave by, else null. Undefined when the
+ * dialog has nothing focusable.
+ */
+function wrapTarget(backwards: boolean, root: HTMLElement): HTMLElement | undefined | null {
   const items = focusable(root);
   const first = items[0];
   const last = items.at(-1);
   const active = document.activeElement;
-  const outside = !(active instanceof Node) || !root.contains(active);
-  if (outside || (event.shiftKey && active === first)) {
+  if (
+    !(active instanceof Node) ||
+    !root.contains(active) ||
+    active === (backwards ? first : last)
+  ) {
+    return backwards ? last : first;
+  }
+  return null;
+}
+
+/** Keep Tab and Shift+Tab cycling inside the dialog, pulling focus back in if it escaped. */
+function trapTab(event: KeyboardEvent, root: HTMLElement): void {
+  const target = wrapTarget(event.shiftKey, root);
+  if (target !== null) {
     event.preventDefault();
-    (event.shiftKey ? last : first)?.focus();
-  } else if (!event.shiftKey && active === last) {
-    event.preventDefault();
-    first?.focus();
+    target?.focus();
   }
 }
 
@@ -55,21 +68,18 @@ function useModalFocus(ref: RefObject<HTMLDivElement | null>, onClose: () => voi
   }, [ref]);
 }
 
-/**
- * A modal dialog: focus moves inside on open, Tab is trapped, Esc closes it, and focus returns
- * to the element that opened it.
- */
-export function Dialog({
-  title,
-  closeLabel,
-  onClose,
-  children,
-}: {
+interface DialogProps {
   readonly title: string;
   readonly closeLabel: string;
   readonly onClose: () => void;
   readonly children: ReactNode;
-}) {
+}
+
+/**
+ * A modal dialog: focus moves inside on open, Tab is trapped, Esc closes it, and focus returns
+ * to the element that opened it.
+ */
+export function Dialog({ title, closeLabel, onClose, children }: DialogProps) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
   useModalFocus(ref, onClose);

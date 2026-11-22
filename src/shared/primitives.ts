@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CLOCK_HOURS, LATITUDE, LONGITUDE, type Range } from './limits.js';
+import { CLOCK_HOURS, INDEX_VALUES, LATITUDE, LONGITUDE, type Range } from './limits.js';
 
 /** A number within a range, and a whole number when the range says so. */
 export function rangeSchema({ min, max, whole = false }: Range) {
@@ -18,3 +18,9 @@ export const coordinatesSchema = z.object({
   lat: rangeSchema(LATITUDE),
   lon: rangeSchema(LONGITUDE),
 });
+
+/** An index value on either scale. */
+export const indexValueSchema = rangeSchema(INDEX_VALUES);
+
+/** A PM2.5 concentration in µg/m³, rounded for display. */
+export const pm25Schema = z.number().min(0);

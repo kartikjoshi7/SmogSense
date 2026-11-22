@@ -1,4 +1,4 @@
-import type { RecommendationId } from '../shared/plan.js';
+import type { RecommendationId } from '../shared/recommendation.js';
 import type { Home, SmokyHeating } from '../shared/profile.js';
 import {
   AIR_CHANGES_PER_H,

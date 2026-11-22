@@ -33,19 +33,16 @@ function CurrentPollutants({ current }: { readonly current: Pollutants }) {
   );
 }
 
-/** The headline reading: index, category in words, what it means today, and how to react. */
-export function AqiCard({
-  plan,
-  headline,
-  summary,
-  source,
-}: {
+interface AqiCardProps {
   readonly plan: Plan;
   readonly headline: string;
   readonly summary: string;
   /** Who wrote the headline and summary: the AI, or standard guidance. */
   readonly source: TextSource;
-}) {
+}
+
+/** The headline reading: index, category in words, what it means today, and how to react. */
+export function AqiCard({ plan, headline, summary, source }: AqiCardProps) {
   const t = useMessages();
   const { lang } = useAppState();
   const { index, severity } = plan;

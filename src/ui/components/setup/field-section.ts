@@ -15,6 +15,19 @@ export function useRangeError(invalid: InvalidFields) {
   };
 }
 
+/**
+ * A change handler for one field of a setup step: `set('usualHour')` reports
+ * `{ usualHour: value }` through the step's `onChange`.
+ */
+export function fieldSetter<T>(onChange: (patch: Partial<T>) => void) {
+  return <K extends keyof T>(key: K) =>
+    (value: T[K]): void => {
+      const patch: Partial<T> = {};
+      patch[key] = value;
+      onChange(patch);
+    };
+}
+
 /** One setup step's value, its invalid fields and how it reports a change. */
 export interface Section<T> {
   readonly value: T;

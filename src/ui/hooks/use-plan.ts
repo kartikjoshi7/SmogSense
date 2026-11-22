@@ -12,7 +12,7 @@ type Loaded =
   | { readonly status: 'ready'; readonly plan: Plan };
 
 /** A loaded plan also carries its AI wording, once it arrives; standard guidance shows until then. */
-type PlanState =
+export type PlanState =
   | Exclude<Loaded, { readonly status: 'ready' }>
   | (Extract<Loaded, { readonly status: 'ready' }> & {
       readonly explanation: ExplainResponse | null;

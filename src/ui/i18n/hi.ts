@@ -1,5 +1,6 @@
 import type { Messages } from './en.js';
-import { options, setup } from './hi-setup.js';
+import { options } from './hi-options.js';
+import { setup } from './hi-setup.js';
 
 /** Hindi interface text; the `Messages` type guarantees the same keys as English. */
 export const hi: Messages = {

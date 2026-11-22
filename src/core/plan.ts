@@ -1,5 +1,6 @@
 import type { AirData, HourlyReading, Pollutants } from '../shared/air.js';
-import type { IndexReading, Plan, RecommendationId, TimelineEntry } from '../shared/plan.js';
+import type { IndexReading, Plan, TimelineEntry } from '../shared/plan.js';
+import type { RecommendationId } from '../shared/recommendation.js';
 import type { Profile } from '../shared/profile.js';
 import { computeIndex } from './aqi.js';
 import { PLAN_HORIZON_HOURS } from './constants.js';

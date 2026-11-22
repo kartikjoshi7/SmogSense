@@ -1,17 +1,16 @@
 import { useSpeech } from '../../hooks/use-speech.js';
 import { useMessages } from '../../state/app-context.js';
 
+interface ReadAloudButtonProps {
+  readonly text: string;
+  readonly subject?: string;
+}
+
 /**
  * Reads text aloud in the interface language; hidden where speech synthesis is unsupported.
  * `subject` names what is read, so a screen reader's list of buttons can tell the cards apart.
  */
-export function ReadAloudButton({
-  text,
-  subject,
-}: {
-  readonly text: string;
-  readonly subject?: string;
-}) {
+export function ReadAloudButton({ text, subject }: ReadAloudButtonProps) {
   const t = useMessages();
   const speech = useSpeech(text);
   if (speech === null) {

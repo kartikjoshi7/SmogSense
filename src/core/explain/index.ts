@@ -1,12 +1,7 @@
 import type { Audience, TextSource } from '../../shared/api.js';
 import type { Language, UiLanguage } from '../../shared/languages.js';
-import type {
-  AqiCategory,
-  AqiScale,
-  Plan,
-  RecommendationId,
-  RecommendationOf,
-} from '../../shared/plan.js';
+import type { AqiCategory, AqiScale, Plan } from '../../shared/plan.js';
+import type { RecommendationId, RecommendationOf } from '../../shared/recommendation.js';
 import { pack as en } from './en.js';
 import type { Explanation, LanguagePack } from './format.js';
 import { pack as hi } from './hi.js';

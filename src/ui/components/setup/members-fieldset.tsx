@@ -2,7 +2,33 @@ import { useId } from 'react';
 import { MEMBER_NAME_CHARS, PROFILE_LIMITS } from '../../../shared/limits.js';
 import type { Member } from '../../../shared/profile.js';
 import { useMessages } from '../../state/app-context.js';
-import { CheckboxGroup, SelectField, StepLegend } from '../common/fields.js';
+import { CheckboxGroup } from '../common/choice-fields.js';
+import { SelectField, StepLegend } from '../common/fields.js';
+
+interface NameFieldProps {
+  readonly name: string;
+  readonly onChange: (name: string) => void;
+}
+
+/** A member's name, which stays on this device. */
+function NameField({ name, onChange }: NameFieldProps) {
+  const t = useMessages().setup.household;
+  const id = useId();
+  return (
+    <div className="field">
+      <label htmlFor={id}>{t.name}</label>
+      <input
+        id={id}
+        value={name}
+        maxLength={MEMBER_NAME_CHARS}
+        autoComplete="off"
+        onChange={(e) => {
+          onChange(e.target.value);
+        }}
+      />
+    </div>
+  );
+}
 
 interface MemberRowProps {
   readonly member: Member;
@@ -15,7 +41,6 @@ interface MemberRowProps {
 
 function MemberRow({ member, name, position, canRemove, onChange, onRemove }: MemberRowProps) {
   const t = useMessages();
-  const nameId = useId();
   const shownName = name === '' ? t.setup.household.member(position) : name;
   // Each member's fields form a group named after the member, so a screen reader says whose
   // age group or conditions are being edited.
@@ -23,18 +48,12 @@ function MemberRow({ member, name, position, canRemove, onChange, onRemove }: Me
     <li>
       <fieldset className="grid gap-3 rounded-xl border border-[var(--border)] p-3 sm:grid-cols-2">
         <legend className="text-sm font-semibold">{shownName}</legend>
-        <div className="field">
-          <label htmlFor={nameId}>{t.setup.household.name}</label>
-          <input
-            id={nameId}
-            value={name}
-            maxLength={MEMBER_NAME_CHARS}
-            autoComplete="off"
-            onChange={(e) => {
-              onChange(member, e.target.value);
-            }}
-          />
-        </div>
+        <NameField
+          name={name}
+          onChange={(text) => {
+            onChange(member, text);
+          }}
+        />
         <SelectField
           label={t.setup.household.ageGroup}
           value={member.ageGroup}
@@ -61,6 +80,14 @@ function MemberRow({ member, name, position, canRemove, onChange, onRemove }: Me
   );
 }
 
+interface MembersFieldsetProps {
+  readonly members: readonly Member[];
+  readonly names: Readonly<Record<string, string>>;
+  readonly onChange: (member: Member, name: string) => void;
+  readonly onAdd: () => void;
+  readonly onRemove: (id: string) => void;
+}
+
 /** Household members: age group and health conditions, with names kept on the device. */
 export function MembersFieldset({
   members,
@@ -68,13 +95,7 @@ export function MembersFieldset({
   onChange,
   onAdd,
   onRemove,
-}: {
-  readonly members: readonly Member[];
-  readonly names: Readonly<Record<string, string>>;
-  readonly onChange: (member: Member, name: string) => void;
-  readonly onAdd: () => void;
-  readonly onRemove: (id: string) => void;
-}) {
+}: MembersFieldsetProps) {
   const t = useMessages().setup.household;
   return (
     <fieldset className="card grid gap-3">

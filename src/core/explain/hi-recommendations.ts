@@ -1,47 +1,6 @@
-import type { OutdoorAdvice } from '../../shared/plan.js';
-import type { CookingFuel, MaskType, SmokyHeating } from '../../shared/profile.js';
-import { clock, templateKit, type ImpactPhrases, type LanguagePack } from './format.js';
-
-const MASK: Readonly<Record<MaskType, string>> = {
-  none: 'बिना मास्क',
-  cloth: 'कपड़े के मास्क',
-  surgical: 'सर्जिकल मास्क',
-  n95: 'N95 मास्क',
-};
-
-const FUEL: Readonly<Record<CookingFuel, string>> = {
-  lpg: 'LPG',
-  png: 'पाइप वाली गैस',
-  induction: 'इंडक्शन',
-  biomass: 'लकड़ी या उपले',
-  kerosene: 'केरोसिन',
-};
-
-const HEATER: Readonly<Record<SmokyHeating, string>> = {
-  kerosene: 'केरोसिन हीटर',
-  coal_wood: 'कोयले या लकड़ी की अंगीठी',
-};
-
-const SENSITIVE_ADVICE: Readonly<Record<OutdoorAdvice, string>> = {
-  ok: 'बाहर उन पर नज़र रखें',
-  reduce: 'बाहर कम और हल्का समय बिताएँ',
-  avoid: 'बाहर मेहनत वाले काम से बचें',
-  stay_indoors: 'उन्हें घर के अंदर रखें',
-};
-
-const PHRASES: ImpactPhrases = {
-  indoorChange: (before, after, percent) =>
-    `घर के अंदर PM2.5 लगभग ${before} से घटकर ${after} µg/m³ हो जाता है (${percent}% कम)।`,
-  co2Saved: (kg, exposureClause) => `इससे हर हफ़्ते ${kg} kg CO₂ बचता है${exposureClause}।`,
-  exposureDown: (percent) => ` और रास्ते में साँस से जाने वाला PM2.5 ${percent}% घटता है`,
-  exposureUp: (percent) => `; रास्ते में प्रदूषण ${percent}% बढ़ता है, इसलिए N95 पहनें`,
-  saferCommute: (percent, extraKg) =>
-    extraKg > 0
-      ? `धुंध वाले दिनों में इससे रास्ते में साँस से जाने वाला PM2.5 ${percent}% घटता है, पर हर हफ़्ते लगभग ${extraKg} kg CO₂ ज़्यादा बनता है।`
-      : `धुंध वाले दिनों में इससे रास्ते में साँस से जाने वाला PM2.5 ${percent}% घटता है।`,
-};
-
-const { indoor, swap, qualitative } = templateKit(PHRASES);
+import { clock, type LanguagePack } from './format.js';
+import { homeTemplates } from './hi-home.js';
+import { FUEL, MASK, qualitative, SENSITIVE_ADVICE, swap } from './hi-words.js';
 
 /** Hindi text for each recommendation, written from its own facts and impact. */
 export const recommendations: LanguagePack['recommendations'] = {
@@ -87,59 +46,7 @@ export const recommendations: LanguagePack['recommendations'] = {
     'कम छोटे सफ़र का मतलब कम ईंधन और आसपास कम धुआँ।',
     ['हफ़्ते के काम एक ही रास्ते पर रखें।', 'हवा ठीक हो तो छोटे कामों के लिए पैदल जाएँ।'],
   ),
-  run_purifier: (rec) => ({
-    title: rec.facts.purifiersOwned > 0 ? 'प्यूरीफ़ायर तेज़ चलाएँ' : 'एयर प्यूरीफ़ायर लगाएँ',
-    why: `आपके ${rec.facts.roomAreaM2} m² के कमरे में प्यूरीफ़ायर से PM2.5 लगभग ${rec.impact.indoorBeforeUgM3} से ${rec.impact.indoorAfterUgM3} µg/m³ हो जाता है (${rec.impact.exposureReductionPct}% कम)।`,
-    steps: [
-      'इसे उस कमरे में रखें जहाँ परिवार सोता है, दरवाज़ा बंद रखें।',
-      'रात भर और सबसे ज़्यादा धुंध के समय तेज़ चलाएँ।',
-      'फ़िल्टर समय पर बदलें।',
-    ],
-  }),
-  seal_gaps: indoor('दरवाज़ों-खिड़कियों की दरारें बंद करें', 'कम रिसाव से धुंध बाहर रहती है।', [
-    'दरवाज़े की दरार पर वेदर-स्ट्रिप या लपेटा तौलिया लगाएँ।',
-    'बेकार वेंट और खुले हिस्से बंद करें।',
-  ]),
-  keep_windows_shut: indoor('धुंध के समय खिड़कियाँ बंद रखें', 'खुली खिड़कियों से बाहर की धुंध सीधे अंदर आती है।', [
-    'सुबह और शाम के सबसे खराब समय में बंद रखें।',
-    'सिर्फ़ सबसे साफ़ समय पर थोड़ी देर हवा आने दें।',
-  ]),
-  stop_incense: indoor('अगरबत्ती, धूप और मच्छर कॉइल कुछ दिन बंद करें', 'जलते समय ये बहुत बारीक धुआँ छोड़ते हैं।', [
-    'कॉइल की जगह इलेक्ट्रिक रिपेलेंट या मच्छरदानी लगाएँ।',
-    'अगरबत्ती जलाएँ तो थोड़ी देर ही।',
-  ]),
-  no_indoor_smoking: indoor('धूम्रपान घर से बाहर करें', 'तंबाकू का धुआँ घर में PM2.5 का बड़ा स्रोत है।', [
-    'दरवाज़े-खिड़कियों से दूर, बाहर धूम्रपान करें।',
-    'मेहमानों से भी यही कहें।',
-    'छोड़ने में मदद के लिए डॉक्टर से बात करें।',
-  ]),
-  cooking_ventilation: (rec) => ({
-    title: 'खाना बनाते समय धुआँ बाहर निकालें',
-    why: rec.facts.hasExhaust
-      ? `${FUEL[rec.facts.cookingFuel]} पर खाना बनाने से घर में बारीक धुआँ भर जाता है।`
-      : 'एग्ज़ॉस्ट फ़ैन या चिमनी के बिना तड़के और तलने का धुआँ घर में ही रहता है।',
-    steps: [
-      rec.facts.hasExhaust
-        ? 'खाना बनाते समय और बाद में कुछ देर एग्ज़ॉस्ट या चिमनी चलाएँ।'
-        : 'खाना बनाते समय रसोई की खिड़की खोलें और बाकी कमरों का दरवाज़ा बंद रखें।',
-      'ढक्कन लगाएँ और आँच धीमी रखें।',
-      'तलते समय बच्चों और बुज़ुर्गों को रसोई से दूर रखें।',
-    ],
-  }),
-  wet_mopping: qualitative(
-    'झाड़ू की जगह गीला पोछा लगाएँ',
-    'सूखी झाड़ू से जमी धूल और कालिख फिर हवा में उड़ती है।',
-    ['फ़र्श पर पोछा और सतहों पर गीला कपड़ा लगाएँ।', 'धुंध के मौसम में रोज़ करें।'],
-  ),
-  safer_heating: (rec) => ({
-    title: 'बिना धुएँ के कमरा गरम करें',
-    why: `${HEATER[rec.facts.heating]} में ईंधन कमरे के अंदर ही जलता है। इसके बिना घर के अंदर PM2.5 लगभग ${rec.impact.indoorBeforeUgM3} से घटकर ${rec.impact.indoorAfterUgM3} µg/m³ हो जाता है (${rec.impact.exposureReductionPct}% कम)।`,
-    steps: [
-      'इसकी जगह बिजली का हीटर, गरम कपड़े और कंबल इस्तेमाल करें।',
-      'बंद कमरे में सोते समय आग या हीटर कभी जलता न छोड़ें: इसकी कार्बन मोनोऑक्साइड जान ले सकती है।',
-      'अगर इस्तेमाल करना ही पड़े, तो खिड़की थोड़ी खुली रखें और सोने से पहले बुझा दें।',
-    ],
-  }),
+  ...homeTemplates,
   switch_to_metro: swap('काम पर मेट्रो से जाएँ', [
     'स्टेशन तक आने-जाने का रास्ता देख लें।',
     'हफ़्ते में दो दिन से शुरुआत करें।',

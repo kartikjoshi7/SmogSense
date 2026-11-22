@@ -1,0 +1,114 @@
+/* Tabs, tags, time chips and the AQI band colours and symbols. */
+@layer components {
+  /* ------------------------------------------------------------ Tabs, tags and lists */
+  .tab {
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--fg);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .tab[aria-selected='true'] {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--primary-fg);
+  }
+  .tag {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.8rem;
+  }
+  .tag-ai {
+    border-color: var(--primary);
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+  }
+  .tag-impact {
+    border-color: transparent;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-weight: 700;
+  }
+  .time-chip {
+    display: inline-block;
+    min-width: 3.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 0.5rem;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  /* ------------------------------------------------------------ AQI bands */
+  .band-0 {
+    background: var(--band-0);
+    color: var(--band-fg);
+  }
+  .band-1 {
+    background: var(--band-1);
+    color: var(--band-fg);
+  }
+  .band-2 {
+    background: var(--band-2);
+    color: var(--band-fg);
+  }
+  .band-3 {
+    background: var(--band-3);
+    color: var(--band-fg);
+  }
+  .band-4 {
+    background: var(--band-4);
+    color: var(--band-fg);
+  }
+  .band-5 {
+    background: var(--band-5);
+    color: var(--band-fg);
+  }
+  .band-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.55);
+    font-size: 2.25rem;
+    line-height: 1;
+  }
+  .stat {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+    background: rgb(255 255 255 / 0.5);
+  }
+  .aqi-number {
+    font-size: clamp(3.5rem, 12vw, 5.5rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  /* One symbol per band, beside the category name, so the level never rests on colour alone. */
+  .band-0 .band-icon::before {
+    content: '☺';
+  }
+  .band-1 .band-icon::before {
+    content: '◔';
+  }
+  .band-2 .band-icon::before {
+    content: '◑';
+  }
+  .band-3 .band-icon::before {
+    content: '◕';
+  }
+  .band-4 .band-icon::before {
+    content: '●';
+  }
+  .band-5 .band-icon::before {
+    content: '⚠';
+  }
+}

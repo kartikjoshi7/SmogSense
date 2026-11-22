@@ -1,4 +1,5 @@
-import type { OutdoorAdvice, Sensitivity, Severity } from '../shared/plan.js';
+import type { Sensitivity, Severity } from '../shared/plan.js';
+import type { OutdoorAdvice } from '../shared/recommendation.js';
 import type { Member } from '../shared/profile.js';
 import { OUTDOOR_ADVICE_BAND, SENSITIVE_ADVICE_SHIFT } from './constants.js';
 

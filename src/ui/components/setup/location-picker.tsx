@@ -14,15 +14,13 @@ function placeLabel(place: Place): string {
   return [place.name, place.region, place.country].filter((part) => part !== null).join(', ');
 }
 
-function PlaceResults({
-  places,
-  chooseLabel,
-  onPick,
-}: {
+interface PlaceResultsProps {
   readonly places: readonly Place[];
   readonly chooseLabel: (place: string) => string;
   readonly onPick: (location: SavedLocation) => void;
-}) {
+}
+
+function PlaceResults({ places, chooseLabel, onPick }: PlaceResultsProps) {
   return (
     <ul className="grid gap-2">
       {places.map((place) => (
@@ -69,19 +67,65 @@ function statusText(
   return state.invalid ? t.required : '';
 }
 
-/** Choose a location by GPS or by searching for a city; the choice is announced politely. */
-export function LocationPicker({
-  value,
-  onChange,
-  invalid,
-}: {
-  readonly value: SavedLocation | null;
-  readonly onChange: (location: SavedLocation) => void;
-  readonly invalid: boolean;
-}) {
+interface PlaceSearchProps {
+  /** The live status line, which describes the field. */
+  readonly statusId: string;
+  /** The form was submitted without a place, so the field is marked invalid. */
+  readonly missing: boolean;
+  readonly onSearch: (query: string) => void;
+}
+
+/** The city search box and its button; Enter in the box searches too. */
+function PlaceSearch({ statusId, missing, onSearch }: PlaceSearchProps) {
   const t = useMessages().setup.location;
   const inputId = useId();
   const [query, setQuery] = useState('');
+  return (
+    <div className="field">
+      <label htmlFor={inputId}>{t.search}</label>
+      <div className="flex gap-2">
+        <input
+          id={inputId}
+          type="search"
+          className="flex-1"
+          value={query}
+          maxLength={PLACE_QUERY_CHARS.max}
+          aria-invalid={missing}
+          aria-describedby={statusId}
+          onChange={(e) => {
+            setQuery(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              onSearch(query);
+            }
+          }}
+        />
+        <button
+          type="button"
+          className="btn-secondary"
+          disabled={!isSearchable(query)}
+          onClick={() => {
+            onSearch(query);
+          }}
+        >
+          {t.searchButton}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+interface LocationPickerProps {
+  readonly value: SavedLocation | null;
+  readonly onChange: (location: SavedLocation) => void;
+  readonly invalid: boolean;
+}
+
+/** Choose a location by GPS or by searching for a city; the choice is announced politely. */
+export function LocationPicker({ value, onChange, invalid }: LocationPickerProps) {
+  const t = useMessages().setup.location;
   const { places, status, search, locate } = useLocationSearch(onChange);
   const announcement = statusText(t, { value, status, found: places.length, invalid });
   const statusId = useId();
@@ -94,37 +138,7 @@ export function LocationPicker({
       <button type="button" className="btn-secondary justify-self-start" onClick={locate}>
         {t.useMine}
       </button>
-      <div className="field">
-        <label htmlFor={inputId}>{t.search}</label>
-        <div className="flex gap-2">
-          <input
-            id={inputId}
-            type="search"
-            className="flex-1"
-            value={query}
-            maxLength={PLACE_QUERY_CHARS.max}
-            aria-invalid={missing}
-            aria-describedby={statusId}
-            onChange={(e) => {
-              setQuery(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                void search(query);
-              }
-            }}
-          />
-          <button
-            type="button"
-            className="btn-secondary"
-            disabled={!isSearchable(query)}
-            onClick={() => void search(query)}
-          >
-            {t.searchButton}
-          </button>
-        </div>
-      </div>
+      <PlaceSearch statusId={statusId} missing={missing} onSearch={(query) => void search(query)} />
       <PlaceResults places={places} chooseLabel={t.choose} onPick={onChange} />
       <p id={statusId} role="status" className={missing ? 'field-error' : 'muted'}>
         {announcement}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Recommendation } from '../../shared/plan.js';
+import type { Recommendation } from '../../shared/recommendation.js';
 import { rank, type RankingContext } from './rank.js';
 
 type Unranked = Omit<Recommendation, 'priority'>;

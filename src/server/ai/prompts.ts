@@ -1,6 +1,7 @@
 import type { Audience, ChatTurn } from '../../shared/api.js';
 import { ENGLISH_NAMES, type Language } from '../../shared/languages.js';
-import type { Plan, Recommendation } from '../../shared/plan.js';
+import type { Plan } from '../../shared/plan.js';
+import type { Recommendation } from '../../shared/recommendation.js';
 import type { Profile } from '../../shared/profile.js';
 import { SETTINGS } from '../config.js';
 

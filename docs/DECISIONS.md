@@ -54,7 +54,7 @@ cite fact ids: more tokens, and the citations themselves would still need checki
 **Cost.** A correct reply that writes a number the plan does not contain (a sum of two figures,
 say) is thrown away; the user then sees standard guidance, labelled as such.
 
-**Carried by** `src/server/ai/grounding.ts` and `src/server/ai/ai-service.ts`. **Checked by**
+**Carried by** `src/server/ai/grounding.ts`, `explanation.ts` and `text-replies.ts`. **Checked by**
 `grounding.test.ts` (invented numbers, rounding, units, every Indian script) and
 `ai-service.test.ts`.
 
@@ -104,7 +104,7 @@ misspelt key silently printed 0 or an empty string, and only a test of that exac
 notice.
 
 **Decision.** The facts are a Zod discriminated union on the recommendation id
-(`src/shared/plan.ts`), and each id also fixes the shape of its impact: a dose, an indoor
+(`src/shared/recommendation.ts`), and each id also fixes the shape of its impact: a dose, an indoor
 change, a commute swap, a share of particles, or a qualitative level. Each language's templates
 are typed per id, so reading a fact or figure the recommendation does not carry fails the type
 check. The facts stopped being a loose record in `0a3281c`; the impact, which a later review
@@ -116,8 +116,8 @@ as zeros and empty text. Plain TypeScript interfaces without a schema: types and
 **Cost.** Adding a recommendation touches the schema, the engine and both language packs; the
 compiler lists every place.
 
-**Carried by** `src/shared/plan.ts`, `src/core/explain/en-recommendations.ts` and
-`src/core/explain/hi-recommendations.ts`. **Checked by** the type check and `explain.test.ts`.
+**Carried by** `src/shared/recommendation.ts` and the catalogues in `src/core/explain/` (`en-*.ts`,
+`hi-*.ts`). **Checked by** the type check and `explain.test.ts`.
 
 ## 6. One exception to a pure engine: `shared/limits.ts`
 
@@ -156,7 +156,7 @@ prevents.
 upgrade path, are in [Security › Rate limits](SECURITY.md#rate-limits-caches-and-budgets).
 
 **Carried by** `src/server/cache.ts` and `src/server/middleware/rate-limit.ts`. **Checked by**
-`cache.test.ts`, `rate-limit.test.ts` and `app.test.ts`.
+`cache.test.ts`, `rate-limit.test.ts`, `app.test.ts` and `routes/ai.test.ts`.
 
 ## 8. The time zone picks the AQI scale
 

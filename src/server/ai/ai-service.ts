@@ -1,87 +1,32 @@
 import { createHash } from 'node:crypto';
-import { z, type ZodType } from 'zod';
-import {
-  explainRecommendation,
-  fallbackChatAnswer,
-  fallbackCommunityNotice,
-  planHeadline,
-  planSummary,
-} from '../../core/explain/index.js';
+import { communityPlan } from '../../core/plan.js';
+import { fail } from '../../core/result.js';
 import type {
   ChatResponse,
   CommunityResponse,
   ExplainResponse,
   TextSource,
 } from '../../shared/api.js';
-import { communityPlan } from '../../core/plan.js';
-import { fail } from '../../core/result.js';
-import type { Language } from '../../shared/languages.js';
-import { CHAT_LIMITS } from '../../shared/limits.js';
-import type { Plan, Recommendation } from '../../shared/plan.js';
-import { createAllowance } from '../allowance.js';
+import { createAllowance, type Allowance } from '../allowance.js';
 import { TtlCache } from '../cache.js';
 import { SETTINGS } from '../config.js';
 import * as logger from '../logger.js';
+import { writeExplanation } from './explanation.js';
 import type { AiClient } from './gemini-client.js';
-import { allowedNumbers, isGrounded } from './grounding.js';
 import {
-  SYSTEM_INSTRUCTION,
   chatPrompt,
   communityPrompt,
-  explainPrompt,
   type ChatInput,
   type ExplainInput,
   type NoticeInput,
 } from './prompts.js';
-
-const LIMITS = SETTINGS.aiReplyChars;
-
-const explanationReply = z.object({
-  headline: z.string().min(1).max(LIMITS.headline),
-  summary: z.string().min(1).max(LIMITS.summary),
-  items: z.array(
-    z.object({
-      id: z.string(),
-      why: z.string().min(1).max(LIMITS.why),
-      steps: z.array(z.string().min(1).max(LIMITS.step)).max(SETTINGS.aiMaxSteps),
-    }),
-  ),
-});
-type ExplanationReply = z.infer<typeof explanationReply>;
-
-/** An answer may be sent back as chat history, so it is no longer than a history turn. */
-const chatReply = z.object({ answer: z.string().min(1).max(CHAT_LIMITS.turnChars) });
-const noticeReply = z.object({ notice: z.string().min(1).max(LIMITS.notice) });
+import { writeAnswer, writeNotice } from './text-replies.js';
 
 /** Gemini-written explanations, answers and notices, always backed by standard guidance. */
 export interface AiService {
   explain(input: ExplainInput, caller: string): Promise<ExplainResponse>;
   chat(input: ChatInput, caller: string): Promise<ChatResponse>;
   communityNotice(input: NoticeInput, caller: string): Promise<CommunityResponse>;
-}
-
-/** Record AI text that was dropped for quoting numbers the plan does not contain. */
-function logUngrounded(kind: 'explain' | 'chat' | 'notice', rejected: number): void {
-  if (rejected > 0) {
-    logger.warn('AI text failed the grounding check', { kind, rejected });
-  }
-}
-
-/**
- * AI-written text when the model answered and every number in it is a plan fact, else null.
- * A reply dropped by the grounding check is logged.
- */
-function groundedText(
-  kind: 'chat' | 'notice',
-  text: string | null,
-  allowed: ReadonlySet<number>,
-): string | null {
-  if (text === null) {
-    return null;
-  }
-  const passes = isGrounded(text, allowed);
-  logUngrounded(kind, passes ? 0 : 1);
-  return passes ? text : null;
 }
 
 function cacheKey(...parts: readonly unknown[]): string {
@@ -97,110 +42,31 @@ const hasAiText = (response: { readonly source: TextSource }): boolean => respon
 const explanationHasAiText = (response: ExplainResponse): boolean =>
   response.introSource === 'ai' || response.items.some(hasAiText);
 
-function explainItem(
-  rec: Recommendation,
-  lang: Language,
-  ai: { readonly reply: ExplanationReply | null; readonly allowed: ReadonlySet<number> },
-): ExplainResponse['items'][number] {
-  const standard = explainRecommendation(rec, lang);
-  const written = ai.reply?.items.find((item) => item.id === rec.id);
-  return written !== undefined && isGrounded([written.why, ...written.steps].join(' '), ai.allowed)
-    ? { id: rec.id, title: standard.title, why: written.why, steps: written.steps, source: 'ai' }
-    : { id: rec.id, ...standard, steps: [...standard.steps], source: 'fallback' };
-}
-
-/** How many parts of a reply were written but dropped by the grounding check. */
-function droppedParts(
-  reply: ExplanationReply,
-  items: readonly ExplainResponse['items'][number][],
-  introSource: TextSource,
-): number {
-  const droppedItems = items.filter(
-    (item) => item.source === 'fallback' && reply.items.some((written) => written.id === item.id),
-  ).length;
-  return droppedItems + (introSource === 'fallback' ? 1 : 0);
-}
-
-/** Merge a Gemini reply (or none) with standard guidance, keeping only grounded AI text. */
-function composeExplanation(
-  plan: Plan,
-  lang: Language,
-  reply: ExplanationReply | null,
-): ExplainResponse {
-  const allowed = allowedNumbers(plan);
-  const items = plan.recommendations.map((rec) => explainItem(rec, lang, { reply, allowed }));
-  const introGrounded = reply !== null && isGrounded(`${reply.headline} ${reply.summary}`, allowed);
-  const intro = introGrounded ? reply : null;
-  const introSource: TextSource = intro === null ? 'fallback' : 'ai';
-  if (reply !== null) {
-    logUngrounded('explain', droppedParts(reply, items, introSource));
-  }
+/** One cache per kind of response, all sharing the entry cap and the clock. */
+function responseCaches(now: () => number) {
+  const options = { maxEntries: SETTINGS.cacheMaxEntries, now };
   return {
-    headline: intro?.headline ?? planHeadline(plan, lang),
-    summary: intro?.summary ?? planSummary(plan, lang),
-    introSource,
-    items,
+    explanations: new TtlCache<ExplainResponse>({ ...options, ttlMs: SETTINGS.aiCacheTtlMs }),
+    notices: new TtlCache<CommunityResponse>({ ...options, ttlMs: SETTINGS.aiCacheTtlMs }),
+    answers: new TtlCache<ChatResponse>({ ...options, ttlMs: SETTINGS.chatCacheTtlMs }),
   };
 }
 
-/** The explanation of a plan: Gemini's wording where it is grounded, standard guidance elsewhere. */
-async function writeExplanation(client: AiClient, input: ExplainInput): Promise<ExplainResponse> {
-  const reply = await client.generate({
-    system: SYSTEM_INSTRUCTION,
-    prompt: explainPrompt(input),
-    schema: explanationReply,
-    maxOutputTokens: SETTINGS.aiMaxOutputTokens.explain,
-  });
-  return composeExplanation(input.plan, input.lang, reply.ok ? reply.value : null);
-}
-
-/** One text reply the model is asked for: chat answers and notices differ only in these. */
-interface TextRequest<F extends string> {
-  readonly kind: 'chat' | 'notice';
-  readonly field: F;
-  readonly schema: ZodType<Record<F, string>>;
-  readonly prompt: string;
-}
-
-/** The model's text when it answered and every number in it is a plan fact, else null. */
-async function groundedReply<F extends string>(
-  client: AiClient,
-  plan: Plan,
-  request: TextRequest<F>,
-): Promise<string | null> {
-  const reply = await client.generate({
-    system: SYSTEM_INSTRUCTION,
-    prompt: request.prompt,
-    schema: request.schema,
-    maxOutputTokens: SETTINGS.aiMaxOutputTokens[request.kind],
-  });
-  const text = reply.ok ? reply.value[request.field] : null;
-  return groundedText(request.kind, text, allowedNumbers(plan));
-}
-
-/** A grounded answer to a chat question, or the day's top actions when there is none. */
-async function writeAnswer(client: AiClient, input: ChatInput, prompt: string) {
-  const request = { kind: 'chat', field: 'answer', schema: chatReply, prompt } as const;
-  const answer = await groundedReply(client, input.plan, request);
-  const response: ChatResponse =
-    answer === null
-      ? { answer: fallbackChatAnswer(input.plan, input.lang), source: 'fallback' }
-      : { answer, source: 'ai' };
-  return response;
-}
-
-/** A grounded community notice, or the standard notice when there is none. */
-async function writeNotice(client: AiClient, input: NoticeInput, prompt: string) {
-  const request = { kind: 'notice', field: 'notice', schema: noticeReply, prompt } as const;
-  const notice = await groundedReply(client, input.plan, request);
-  const response: CommunityResponse =
-    notice === null
-      ? {
-          notice: fallbackCommunityNotice(input.plan, input.audience, input.lang),
-          source: 'fallback',
-        }
-      : { notice, source: 'ai' };
-  return response;
+/**
+ * The model as one caller sees it. Each call spends that caller's share of the day's model calls;
+ * only a cache miss gets here, so a cached answer costs nothing. Once the share is spent, the
+ * call fails and the caller gets standard text.
+ */
+function meteredModel(client: AiClient, allowance: Allowance, caller: string): AiClient {
+  return {
+    generate(request) {
+      if (allowance.take(caller).ok) {
+        return client.generate(request);
+      }
+      logger.warn('Gemini skipped', { reason: 'client_allowance_spent' });
+      return Promise.resolve(fail('unavailable'));
+    },
+  };
 }
 
 /** Create the AI service with response caches; the Gemini client is injected. */
@@ -208,38 +74,22 @@ export function createAiService(deps: {
   readonly client: AiClient;
   readonly now: () => number;
 }): AiService {
-  const options = { maxEntries: SETTINGS.cacheMaxEntries, now: deps.now };
-  const explanations = new TtlCache<ExplainResponse>({ ...options, ttlMs: SETTINGS.aiCacheTtlMs });
-  const notices = new TtlCache<CommunityResponse>({ ...options, ttlMs: SETTINGS.aiCacheTtlMs });
-  const answers = new TtlCache<ChatResponse>({ ...options, ttlMs: SETTINGS.chatCacheTtlMs });
-  // Each client's share of the day's model calls. Only a cache miss reaches the model, so an
-  // answer from the cache costs nothing; once the share is spent, the client gets standard text.
+  const { explanations, notices, answers } = responseCaches(deps.now);
   const allowance = createAllowance({
     limit: SETTINGS.aiRequestsPerClientPerDay,
     windowMs: SETTINGS.aiDailyWindowMs,
     maxClients: SETTINGS.rateLimitMaxClients,
     now: deps.now,
   });
-  const modelFor = (caller: string): AiClient => ({
-    generate(request) {
-      if (allowance.take(caller).ok) {
-        return deps.client.generate(request);
-      }
-      logger.warn('Gemini skipped', { reason: 'client_allowance_spent' });
-      return Promise.resolve(fail('unavailable'));
-    },
-  });
+  const modelFor = (caller: string) => meteredModel(deps.client, allowance, caller);
 
   return {
     explain(input, caller) {
       // The response carries standard text for every recommendation, so it is keyed on the
       // whole plan, not only on the part the model sees.
       const key = cacheKey('explain', input.lang, input.plan, input.profile.members);
-      return explanations.getOrLoad(
-        key,
-        () => writeExplanation(modelFor(caller), input),
-        explanationHasAiText,
-      );
+      const load = () => writeExplanation(modelFor(caller), input);
+      return explanations.getOrLoad(key, load, explanationHasAiText);
     },
     chat(input, caller) {
       const prompt = chatPrompt(input);

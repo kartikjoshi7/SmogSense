@@ -1,16 +1,16 @@
 import { useId, type ReactNode } from 'react';
 import { clock } from '../../../core/explain/format.js';
 import { CLOCK_HOURS, type Range } from '../../../shared/limits.js';
-import type { Labels } from '../../i18n/labels.js';
+import { entries, type Labels } from '../../i18n/labels.js';
 
-/** Each option's key and text, in the order the table lists them. */
-function entries<K extends string>(labels: Labels<K>): [K, string][] {
-  const pairs: [K, string][] = [];
-  // Over a generic record, `for...in` types each key as K; message objects are plain literals.
-  for (const key in labels) {
-    pairs.push([key, labels[key]]);
-  }
-  return pairs;
+interface SelectFieldProps<K extends string> {
+  readonly label: string;
+  readonly value: K;
+  readonly options: Labels<K>;
+  readonly keysAreLanguages?: boolean;
+  /** Keep the label for screen readers only, where the options name themselves (a language). */
+  readonly hideLabel?: boolean;
+  readonly onChange: (value: K) => void;
 }
 
 /**
@@ -24,15 +24,7 @@ export function SelectField<K extends string>({
   keysAreLanguages = false,
   hideLabel = false,
   onChange,
-}: {
-  readonly label: string;
-  readonly value: K;
-  readonly options: Labels<K>;
-  readonly keysAreLanguages?: boolean;
-  /** Keep the label for screen readers only, where the options name themselves (a language). */
-  readonly hideLabel?: boolean;
-  readonly onChange: (value: K) => void;
-}) {
+}: SelectFieldProps<K>) {
   const id = useId();
   const pairs = entries(options);
   return (
@@ -60,20 +52,16 @@ export function SelectField<K extends string>({
   );
 }
 
-/** A labelled number input within a range; `error` is linked to it and shown below. */
-export function NumberField({
-  label,
-  value,
-  range,
-  onChange,
-  error,
-}: {
+interface NumberFieldProps {
   readonly label: string;
   readonly value: number;
   readonly range: Range;
   readonly onChange: (value: number) => void;
   readonly error?: string | undefined;
-}) {
+}
+
+/** A labelled number input within a range; `error` is linked to it and shown below. */
+export function NumberField({ label, value, range, onChange, error }: NumberFieldProps) {
   const id = useId();
   const errorId = useId();
   return (
@@ -102,16 +90,14 @@ export function NumberField({
   );
 }
 
-/** A labelled select of the 24 clock hours. */
-export function HourField({
-  label,
-  value,
-  onChange,
-}: {
+interface HourFieldProps {
   readonly label: string;
   readonly value: number;
   readonly onChange: (hour: number) => void;
-}) {
+}
+
+/** A labelled select of the 24 clock hours. */
+export function HourField({ label, value, onChange }: HourFieldProps) {
   const id = useId();
   return (
     <div className="field">
@@ -133,69 +119,13 @@ export function HourField({
   );
 }
 
-/** A single labelled checkbox. */
-export function CheckboxField({
-  label,
-  checked,
-  onChange,
-}: {
-  readonly label: string;
-  readonly checked: boolean;
-  readonly onChange: (checked: boolean) => void;
-}) {
-  return (
-    <label className="check">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => {
-          onChange(e.target.checked);
-        }}
-      />
-      <span>{label}</span>
-    </label>
-  );
-}
-
-/** A group of checkboxes with a legend, for choosing any number of options. */
-export function CheckboxGroup<K extends string>({
-  legend,
-  options,
-  values,
-  onChange,
-}: {
-  readonly legend: string;
-  readonly options: Labels<K>;
-  readonly values: readonly K[];
-  readonly onChange: (values: K[]) => void;
-}) {
-  return (
-    <fieldset className="field">
-      <legend>{legend}</legend>
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
-        {entries(options).map(([key, text]) => (
-          <CheckboxField
-            key={key}
-            label={text}
-            checked={values.includes(key)}
-            onChange={(on) => {
-              onChange(on ? [...values, key] : values.filter((v) => v !== key));
-            }}
-          />
-        ))}
-      </div>
-    </fieldset>
-  );
+interface StepLegendProps {
+  readonly step: number;
+  readonly children: ReactNode;
 }
 
 /** A setup step's title with its number; the number is decorative, the title names the group. */
-export function StepLegend({
-  step,
-  children,
-}: {
-  readonly step: number;
-  readonly children: ReactNode;
-}) {
+export function StepLegend({ step, children }: StepLegendProps) {
   return (
     <legend className="text-lg font-semibold">
       <span aria-hidden="true" className="step-badge">

@@ -61,14 +61,37 @@ function NoticeOutcome({ state }: { readonly state: NoticeState }) {
   );
 }
 
-/** Write a short advisory for a housing society, school or workplace, in any supported language. */
-export function CommunityDialog({
-  request,
-  onClose,
-}: {
+interface GenerateButtonProps {
+  readonly busy: boolean;
+  readonly onGenerate: () => void;
+}
+
+/** Never `disabled` while writing: a disabled button drops keyboard focus out of the dialog. */
+function GenerateButton({ busy, onGenerate }: GenerateButtonProps) {
+  const t = useMessages().community;
+  return (
+    <button
+      type="button"
+      className="btn-primary justify-self-start"
+      aria-disabled={busy}
+      onClick={() => {
+        if (!busy) {
+          onGenerate();
+        }
+      }}
+    >
+      {t.generate}
+    </button>
+  );
+}
+
+interface CommunityDialogProps {
   readonly request: PlanRequest;
   readonly onClose: () => void;
-}) {
+}
+
+/** Write a short advisory for a housing society, school or workplace, in any supported language. */
+export function CommunityDialog({ request, onClose }: CommunityDialogProps) {
   const t = useMessages();
   const { lang: uiLang } = useAppState();
   const [audience, setAudience] = useState<Audience>('housing_society');
@@ -92,19 +115,10 @@ export function CommunityDialog({
           keysAreLanguages
           onChange={setLang}
         />
-        {/* Never `disabled` while writing: a disabled button drops keyboard focus out of the dialog. */}
-        <button
-          type="button"
-          className="btn-primary justify-self-start"
-          aria-disabled={state.status === 'generating'}
-          onClick={() => {
-            if (state.status !== 'generating') {
-              void generate(audience, lang);
-            }
-          }}
-        >
-          {t.community.generate}
-        </button>
+        <GenerateButton
+          busy={state.status === 'generating'}
+          onGenerate={() => void generate(audience, lang)}
+        />
         <NoticeOutcome state={state} />
       </div>
     </Dialog>

@@ -1,11 +1,10 @@
 import type { AirData } from '../../shared/air.js';
+import { planSchema, type Plan } from '../../shared/plan.js';
 import {
-  planSchema,
-  type Plan,
   type Recommendation,
   type RecommendationId,
   type RecommendationOf,
-} from '../../shared/plan.js';
+} from '../../shared/recommendation.js';
 import type { Profile } from '../../shared/profile.js';
 import { buildPlan } from '../plan.js';
 

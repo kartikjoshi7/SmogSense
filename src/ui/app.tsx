@@ -7,6 +7,28 @@ import { activeSetup } from './state/app-state.js';
 import { AppProvider, useAppDispatch, useAppState, useMessages } from './state/app-context.js';
 import type { KeyValueStore } from './state/storage.js';
 
+/** The app's name and tagline beside its mark (a decorative wind icon). */
+function Brand() {
+  const t = useMessages().app;
+  return (
+    <div className="flex items-center gap-3">
+      <span className="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor">
+          <path
+            d="M3 8h10a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      </span>
+      <div>
+        <p className="text-lg leading-tight font-bold">{t.name}</p>
+        <p className="muted text-sm leading-tight">{t.tagline}</p>
+      </div>
+    </div>
+  );
+}
+
 function Header() {
   const t = useMessages();
   const state = useAppState();
@@ -14,21 +36,7 @@ function Header() {
   return (
     <header className="app-header">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <span className="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor">
-              <path
-                d="M3 8h10a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </span>
-          <div>
-            <p className="text-lg leading-tight font-bold">{t.app.name}</p>
-            <p className="muted text-sm leading-tight">{t.app.tagline}</p>
-          </div>
-        </div>
+        <Brand />
         <div className="flex flex-wrap items-center gap-3">
           <SelectField
             label={t.app.language}

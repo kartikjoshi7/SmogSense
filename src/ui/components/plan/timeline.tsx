@@ -3,14 +3,13 @@ import type { TimelineEntry } from '../../../shared/plan.js';
 import { useMessages } from '../../state/app-context.js';
 import type { ShownRecommendation } from './explained.js';
 
-/** The day in order from now: when to do what. */
-export function Timeline({
-  entries,
-  items,
-}: {
+interface TimelineProps {
   readonly entries: readonly TimelineEntry[];
   readonly items: readonly ShownRecommendation[];
-}) {
+}
+
+/** The day in order from now: when to do what. */
+export function Timeline({ entries, items }: TimelineProps) {
   const t = useMessages().plan;
   if (entries.length === 0) {
     return null;

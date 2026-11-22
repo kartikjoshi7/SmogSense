@@ -1,4 +1,4 @@
-import { recommendationCategorySchema } from '../../../shared/plan.js';
+import { recommendationCategorySchema } from '../../../shared/recommendation.js';
 import type { Household } from '../../state/storage.js';
 import { memberName } from '../../members.js';
 import { useMessages } from '../../state/app-context.js';
@@ -6,14 +6,13 @@ import { CategoryTabs } from './category-tabs.js';
 import type { ShownRecommendation } from './explained.js';
 import { RecommendationCard } from './recommendation-card.js';
 
-/** The ranked plan, grouped under the problem's own headings, one tab per category. */
-export function PlanSection({
-  items,
-  household,
-}: {
+interface PlanSectionProps {
   readonly items: readonly ShownRecommendation[];
   readonly household: Household;
-}) {
+}
+
+/** The ranked plan, grouped under the problem's own headings, one tab per category. */
+export function PlanSection({ items, household }: PlanSectionProps) {
   const t = useMessages();
   const { members } = household.profile;
   const tabs = recommendationCategorySchema.options.map((category) => {
