@@ -67,8 +67,9 @@ const recommendationBaseSchema = z.object({
 });
 
 /**
- * One kind of recommendation: its id, the shape of its impact and the facts behind it. The facts
- * and the impact are the values its explanations quote, and the only numbers the AI may use for it.
+ * One kind of recommendation: its id, the shape of its impact and the facts behind it (the
+ * household and air values it was decided from). Its standard text quotes some of these, and the
+ * AI is given all of them with the impact.
  */
 function recommendation<
   const Id extends string,
