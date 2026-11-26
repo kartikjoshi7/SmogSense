@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { buildCommunityPlan } from './community-plan.js';
 import { makeAir, MODERATE, SEVERE } from './fixtures/air.js';
 import { SHARMA_FAMILY } from './fixtures/profiles.js';
 import {
@@ -38,13 +39,12 @@ describe('current pollutants', () => {
 });
 
 describe('buildPlan — gaps in the data', () => {
-  it('reports insufficient data instead of guessing', () => {
+  it('reports insufficient data instead of guessing, for a household or a community', () => {
     const pm25Day = Array.from({ length: 24 }, (_, h) => (h < 12 ? null : 100));
+    const failure = { ok: false, error: 'insufficient_data' };
 
-    expect(buildPlan(SHARMA_FAMILY, makeAir({ pm25Day }))).toEqual({
-      ok: false,
-      error: 'insufficient_data',
-    });
+    expect(buildPlan(SHARMA_FAMILY, makeAir({ pm25Day }))).toEqual(failure);
+    expect(buildCommunityPlan(makeAir({ pm25Day }))).toEqual(failure);
   });
 
   it('falls back to the daily mean when no clean window can be found', () => {

@@ -46,6 +46,11 @@ function spanHours(durationMin: number): number {
   return Math.max(1, Math.ceil(durationMin / MINUTES_PER_HOUR));
 }
 
+/** The readings of the next 24 hours from `from`: the stretch every window and outlook uses. */
+export function planHorizon<T>(hourly: readonly T[], from: number): readonly T[] {
+  return hourly.slice(from, from + PLAN_HORIZON_HOURS);
+}
+
 /** Mean PM2.5 over `span` hours from `start`, or null if any of those hours is missing. */
 function spanMean(
   readings: readonly Pick<HourlyReading, 'pm25'>[],
@@ -88,20 +93,24 @@ export function roundTripMeanPm25(
   trip: RoundTrip,
   fallback: number,
 ): number {
+  const ahead = planHorizon(air.hourly, air.nowIndex);
   const legMean = (hour: number): number | null => {
-    const ahead = air.hourly.slice(air.nowIndex, air.nowIndex + PLAN_HORIZON_HOURS);
     const offset = ahead.findIndex((reading) => reading.hour === hour);
-    return offset < 0 ? null : activityMeanPm25(air.hourly, air.nowIndex + offset, trip.tripMin);
+    return offset < 0 ? null : activityMeanPm25(ahead, offset, trip.tripMin);
   };
   const there = legMean(trip.departHour);
   const back = legMean(trip.returnHour);
   return there === null || back === null ? fallback : (there + back) / 2;
 }
 
-/** Every complete window starting in the next 24 hours, with its mean PM2.5. */
+/**
+ * Every complete window inside the next 24 hours, with its mean PM2.5: the same hours the plan's
+ * forecast holds, so the what-if slider in the browser finds the same windows.
+ */
 function candidates(hourly: readonly HourlyReading[], from: number, span: number): Candidate[] {
-  return hourly.slice(from, from + PLAN_HORIZON_HOURS).flatMap((reading, offset) => {
-    const windowPm25 = spanMean(hourly, from + offset, span);
+  const ahead = planHorizon(hourly, from);
+  return ahead.flatMap((reading, offset) => {
+    const windowPm25 = spanMean(ahead, offset, span);
     return windowPm25 === null
       ? []
       : [{ time: reading.time, hour: reading.hour, mean: windowPm25 }];
@@ -155,6 +164,7 @@ export function bestActivityWindow(
 
 /**
  * The daylight hour in the next 24 hours with the lowest PM2.5: the time to air the home briefly.
+ * Its PM2.5 is whole, as quoted to people.
  */
 export function cleanestDaylightHour(
   hourly: readonly HourlyReading[],
@@ -167,5 +177,7 @@ export function cleanestDaylightHour(
     durationMin: MINUTES_PER_HOUR,
     usualHour: null,
   });
-  return best === null ? null : { hour: best.startHour, pm25: best.meanPm25 };
+  return best === null
+    ? null
+    : { hour: best.startHour, pm25: roundTo(best.meanPm25, DECIMALS.quotedPm25) };
 }

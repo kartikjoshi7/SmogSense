@@ -19,7 +19,7 @@ export interface ChatInput extends ExplainInput {
   readonly history: readonly ChatTurn[];
 }
 
-/** What a community notice is written from: the plan and who the notice is for. */
+/** What a community notice is written from: the plan everyone nearby shares, and the audience. */
 export interface NoticeInput {
   readonly plan: Plan;
   readonly audience: Audience;
@@ -66,6 +66,11 @@ export interface PromptFacts extends Pick<
   | 'cleanestHour'
 > {
   readonly recommendations: readonly PromptRecommendation[];
+  /**
+   * PM2.5 for each hour of the next 24, in chat prompts only, so that a question about a time of
+   * day can be answered from the facts.
+   */
+  readonly forecast?: readonly Pick<Plan['forecast'][number], 'hour' | 'pm25'>[];
 }
 
 /** A prompt for Gemini and the facts in it, which the reply is checked against. */
@@ -126,10 +131,13 @@ function asData(text: string): string {
   return text.replace(/[<>]/g, '');
 }
 
-/** Ask a free-form question about today's plan. */
+/** Ask a free-form question about today's plan; its facts add the hourly forecast. */
 export function chatPrompt({ plan, profile, lang, question, history }: ChatInput): Prompt {
   const turns = history.map((turn) => `${turn.role}: ${asData(turn.text)}`).join('\n');
-  const facts = promptFacts(plan, topRecommendations(plan), true);
+  const facts = {
+    ...promptFacts(plan, topRecommendations(plan), true),
+    forecast: plan.forecast.map(({ hour, pm25 }) => ({ hour, pm25 })),
+  };
   const text = [
     `LANGUAGE: ${ENGLISH_NAMES[lang]}`,
     `HOUSEHOLD: ${household(profile)}`,
@@ -143,7 +151,7 @@ export function chatPrompt({ plan, profile, lang, question, history }: ChatInput
 
 /**
  * Ask for a short notice a housing society, school or office can share, from a plan that is
- * the same for every family nearby (`communityPlan`).
+ * the same for every family nearby (`buildCommunityPlan`).
  */
 export function communityPrompt({ plan, audience, lang }: NoticeInput): Prompt {
   const facts = promptFacts(plan, plan.recommendations, false);

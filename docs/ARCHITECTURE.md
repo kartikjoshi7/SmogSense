@@ -21,9 +21,10 @@ enforces the direction and rejects import cycles
 
 ## The engine (`src/core`)
 
-`buildPlan(profile, air)` in `plan.ts` builds the whole plan; the UI also calls the explain
-functions and, for the what-if slider, the exposure functions. `buildPlan`
-returns either a plan or `insufficient_data`; it never throws for bad data.
+`buildPlan(profile, air)` in `plan.ts` builds the whole plan, and `buildCommunityPlan(air)` in
+`community-plan.ts` the plan every family at a place shares, for community notices. The UI also
+calls the explain functions and, for the what-if slider, the exposure and window functions. Both
+builders return either a plan or `insufficient_data`; they never throw for bad data.
 
 How it decides, step by step and module by module, is in the README's
 [Approach and logic](../README.md#approach-and-logic). Besides those modules, `explain/*` holds the
@@ -37,8 +38,8 @@ Hindi templates are typed per id, so a misspelt or missing fact fails the type c
 ## Assumptions behind the numbers
 
 The bounds the engine shares with the API (index 0–500, bands 0–5, clock hours) are in
-`src/shared/limits.ts`. Everything else is in `src/core/constants/`, one file per topic, and this table shows every
-constant there; `src/core/constants.test.ts` fails if one is missing or shows another value.
+`src/shared/limits.ts`. Everything else is in `src/core/constants/`, one file per topic, each with
+its source in a comment; this table lists them as they stand on 26 Nov 2026.
 
 | Constant | Value | Source or reasoning |
 | --- | --- | --- |
@@ -48,7 +49,7 @@ constant there; `src/core/constants.test.ts` fails if one is missing or shows an
 | `INDEX_WINDOW_HOURS` | 24 h | CPCB and EPA average PM over 24 hours |
 | `INDEX_MIN_VALID_HOURS` | 16 h | CPCB's 16-of-24-hours completeness rule |
 | `PLAN_HORIZON_HOURS` | 24 h | The plan covers the next day |
-| `DECIMALS` | pm25Mean 1, windowMean 2, doseUg 1, co2Kg 1 (decimal places) | Display precision for engine figures, not measurement precision |
+| `DECIMALS` | pm25Mean 1, windowMean 2, doseUg 1, co2Kg 1, quotedPm25 0 (decimal places) | Display precision for engine figures, not measurement precision; PM2.5 quoted to people is whole |
 | `FLOAT_ERROR_DECIMALS` | 6 decimal places | Removes float error before EPA truncation, so a mean of 9.0999… still counts as 9.1 |
 | `INVERSION_TRAPPED_BLH_M` | 200 m | Estimate: a boundary layer this low traps pollution near the ground |
 | `INVERSION_CLEARED_BLH_M` | 500 m | Estimate: daytime mixing has cleared the inversion |
@@ -108,7 +109,9 @@ POST /api/explain  { profile, location, lang }
   → 200 { intro | null, items[], planKey }: the UI uses them only if planKey matches its plan
 ```
 
-`/api/chat` and `/api/community` follow the same path as `/api/explain` with their own prompts;
+`/api/chat` and `/api/community` follow the same path as `/api/explain` with their own prompts
+(the chat's facts add the next 24 hours' PM2.5 by hour; a notice is built from the location alone,
+with `buildCommunityPlan`);
 their caches are also keyed on the exact prompt and last 10 and 30 minutes. `GET
 /api/geocode` validates the query and the interface language, calls Open-Meteo's geocoding API
 through the same `fetchJson` wrapper (place names come back in that language) and sets a one-day

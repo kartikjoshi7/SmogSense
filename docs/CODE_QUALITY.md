@@ -14,7 +14,7 @@ all eight on every push.
 | Unused code | `npm run knip` | No unused files, exports or dependencies; `knip --production` also fails on an export that only tests use |
 | Tests and coverage | `npm run coverage` | Vitest with the coverage thresholds in [Testing › Coverage](TESTING.md#coverage) |
 | Build | `npm run build` | The production build |
-| Repository | `npm run check:repo` | One branch (in CI, on GitHub as well as locally), tracked files under 9 MB, no `.env` files, and the sizes under [By the numbers](#by-the-numbers) match the code |
+| Repository | `npm run check:repo` | One branch (in CI, on GitHub as well as locally), tracked files under 9 MB and no `.env` files |
 | Dependencies | `npm audit --audit-level=high` | No high or critical advisories ([Security › Dependencies](SECURITY.md#dependencies)) |
 
 `eslint.config.js` is the one script outside the type check: its plugins ship incomplete type
@@ -46,8 +46,7 @@ Each rule is stated here once; the linked section shows how the code applies it.
   template that reads a figure its recommendation lacks fails the type check
   ([Architecture › The engine](ARCHITECTURE.md#the-engine-srccore)).
 - **Named numbers.** Coefficients and thresholds live in `core/constants/`, one file per topic, each with its source,
-  and `constants.test.ts` fails if [the table of them](ARCHITECTURE.md#assumptions-behind-the-numbers)
-  misses one. Runtime settings live in `server/config.ts` and `ui/settings.ts`; input bounds and
+  and [a table](ARCHITECTURE.md#assumptions-behind-the-numbers) lists them with their sources. Runtime settings live in `server/config.ts` and `ui/settings.ts`; input bounds and
   time units in `shared/limits.ts`.
 - **One place per concept.** One cache (`TtlCache`, also used by the rate limiter), one fetch
   wrapper, one Gemini client, one dialog component, one set of text formatters.
@@ -70,18 +69,8 @@ Counted in the source (tests, fixtures and test helpers excluded):
 | Non-null assertions (`!`) | 0 |
 | `@ts-ignore`, `@ts-expect-error`, `eslint-disable` | 0 |
 
-Sizes, in lines of code as the lint limits count them (blank lines and comments excluded).
-`npm run size` measures them with ESLint's own `max-lines` and `max-lines-per-function` rules
-(`scripts/code-size.mjs`), and `npm run check:repo` fails when this table and the code disagree:
-
-| Measure | Value |
-| --- | --- |
-| Source files / test files | 121 / 55 |
-| Source files without a purpose comment at the top | 0 |
-| Largest source file (lines of code) | 141 (`src/ui/i18n/en.ts`) |
-| Longest function (lines of code) | 40 (in `src/ui/components/setup/location-picker.tsx`) |
-| Largest test file (lines of code) | 200 (`src/ui/app.test.tsx`) |
-| Largest stylesheet (lines of code) | 122 (`src/ui/styles/controls.css`) |
+Sizes are not listed here, so there is nothing to keep up to date by hand: the lint gate fails the
+build on any source file over 150 lines of code (a test file over 200) and any function over 40.
 
 ## Check it yourself
 

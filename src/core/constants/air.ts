@@ -91,8 +91,11 @@ export const INDIA_TIMEZONES: readonly string[] = ['Asia/Kolkata', 'Asia/Calcutt
 /** How far ahead the plan looks, in hours. */
 export const PLAN_HORIZON_HOURS = 24;
 
-/** Decimal places engine figures are rounded to: display precision, not measurement precision. */
-export const DECIMALS = { pm25Mean: 1, windowMean: 2, doseUg: 1, co2Kg: 1 } as const;
+/**
+ * Decimal places engine figures are rounded to: display precision, not measurement precision.
+ * `quotedPm25` is for PM2.5 quoted to people in facts and the summary: whole µg/m³.
+ */
+export const DECIMALS = { pm25Mean: 1, windowMean: 2, doseUg: 1, co2Kg: 1, quotedPm25: 0 } as const;
 
 /**
  * Decimals a 24-hour mean is first rounded to, so float error cannot push it below a breakpoint

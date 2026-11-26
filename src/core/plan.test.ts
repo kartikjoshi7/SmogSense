@@ -1,15 +1,24 @@
 import { describe, expect, it } from 'vitest';
+import type { RecommendationId } from '../shared/recommendation.js';
 import { planHeadline } from './explain/index.js';
 import { makeAir, MODERATE, POOR, SEVERE } from './fixtures/air.js';
 import { HEALTHY_COUPLE, HOMEBOUND_SENIOR, SHARMA_FAMILY } from './fixtures/profiles.js';
 import {
   findRecommendation as find,
+  communityPlanFor,
   idsOf as ids,
   planFor as plan,
 } from './fixtures/recommendations.js';
-import { communityPlan } from './plan.js';
 
 const MUMBAI = { lat: 19.07, lon: 72.88 };
+
+/** The actions every family in Delhi shares on a smoggy day, in the community plan's order. */
+const COMMUNITY_IDS: readonly RecommendationId[] = [
+  'ncr_grap_check',
+  'check_on_neighbours',
+  'report_open_burning',
+  'share_notice',
+];
 
 describe('buildPlan — the Sharma family in Delhi', () => {
   it('declares a smog emergency on a Severe day and puts protection first', () => {
@@ -111,14 +120,15 @@ describe('buildPlan — other households and places', () => {
     expect(find(p, 'exercise_indoors')?.effort).toBe('medium');
   });
 
-  it('gives every family the same plan for a community notice', () => {
+  it('builds the community plan from the air alone: shared actions, normal sensitivity', () => {
     const air = makeAir({ scale: 1.5 });
-    const sharma = communityPlan(plan(SHARMA_FAMILY, air));
-    const couple = communityPlan(plan(HEALTHY_COUPLE, air));
+    const everyone = communityPlanFor(air);
+    const household = ids(plan(SHARMA_FAMILY, air));
 
-    expect(plan(SHARMA_FAMILY, air).severity).not.toBe(plan(HEALTHY_COUPLE, air).severity);
-    expect(sharma).toEqual(couple);
-    expect(ids(sharma)).not.toContain('sensitive_members');
+    expect(ids(everyone)).toEqual(COMMUNITY_IDS);
+    expect(COMMUNITY_IDS.every((id) => household.includes(id))).toBe(true);
+    expect(everyone.householdSensitivity).toBe('normal');
+    expect(everyone.timeline).toEqual([]);
   });
 
   it('uses the US AQI in London and keeps a moderate day calm', () => {

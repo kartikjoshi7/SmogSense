@@ -53,7 +53,7 @@ function ventilateBriefly(ctx: PlanContext): Candidate[] {
         effort: 'low',
         memberIds: [],
         impact: { level: 'low' },
-        facts: { hour: cleanest.hour, pm25: Math.round(cleanest.pm25) },
+        facts: { hour: cleanest.hour, pm25: cleanest.pm25 },
       },
       [cleanest.hour],
     ),

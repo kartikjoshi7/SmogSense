@@ -98,7 +98,9 @@ export type ChatRequest = z.infer<typeof chatRequestSchema>;
 export const chatResponseSchema = z.object({ answer: z.string(), source: textSourceSchema });
 export type ChatResponse = z.infer<typeof chatResponseSchema>;
 
-export const communityRequestSchema = planRequestSchema.extend({
+/** A community notice is the same for every family at a place, so it needs no household profile. */
+export const communityRequestSchema = z.object({
+  location: coordinatesSchema,
   lang: languageSchema,
   audience: audienceSchema,
 });

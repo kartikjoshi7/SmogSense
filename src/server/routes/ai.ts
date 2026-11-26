@@ -10,7 +10,7 @@ import type { AirService } from '../air/air-service.js';
 import { clientKey } from '../allowance.js';
 import { planFailureResponse } from '../http/errors.js';
 import { jsonBody } from '../middleware/validate.js';
-import { loadPlan, planKey } from '../plan-service.js';
+import { loadCommunityPlan, loadPlan, planKey } from '../plan-service.js';
 
 /** Who is asking, for the daily AI allowance: the client IP the platform proxy reports. */
 function caller(c: { readonly req: { header(name: string): string | undefined } }): string {
@@ -18,9 +18,9 @@ function caller(c: { readonly req: { header(name: string): string | undefined } 
 }
 
 /**
- * AI routes. Each rebuilds the plan on the server from the profile and location (so a client
- * can never feed its own "facts" to the model) and always answers, with standard guidance
- * when the model is unavailable.
+ * AI routes. Each rebuilds the plan on the server, from the profile and location or, for a
+ * community notice, from the location alone (so a client can never feed its own "facts" to the
+ * model), and always answers, with standard guidance when the model is unavailable.
  */
 export function aiRoutes(air: AirService, ai: AiService) {
   return new Hono()
@@ -41,8 +41,8 @@ export function aiRoutes(air: AirService, ai: AiService) {
         : planFailureResponse(c, plan.error);
     })
     .post('/community', jsonBody(communityRequestSchema), async (c) => {
-      const { profile, location, lang, audience } = c.req.valid('json');
-      const plan = await loadPlan(air, profile, location);
+      const { location, lang, audience } = c.req.valid('json');
+      const plan = await loadCommunityPlan(air, location);
       return plan.ok
         ? c.json(await ai.communityNotice({ plan: plan.value, audience, lang }, caller(c)))
         : planFailureResponse(c, plan.error);

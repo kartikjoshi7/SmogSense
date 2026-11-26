@@ -6,6 +6,7 @@ import type {
   RecommendationId,
   RecommendationOf,
 } from '../../shared/recommendation.js';
+import { buildCommunityPlan } from '../community-plan.js';
 import { buildPlan } from '../plan.js';
 import { makeAir, SEVERE } from './air.js';
 import { SHARMA_FAMILY } from './profiles.js';
@@ -144,6 +145,15 @@ export function planFor(profile: Profile, air: AirData): Plan {
 /** The Sharma family's plan on the severe Delhi day, which most engine and AI tests read. */
 export function severePlan(): Plan {
   return planFor(SHARMA_FAMILY, makeAir({ scale: SEVERE }));
+}
+
+/** The plan every family shares on a day, checked against the API schema; throws if none. */
+export function communityPlanFor(air: AirData): Plan {
+  const result = buildCommunityPlan(air);
+  if (!result.ok) {
+    throw new Error(`expected a community plan, got ${result.error}`);
+  }
+  return planSchema.parse(result.value);
 }
 
 /** The recommendation ids in a plan, in priority order. */

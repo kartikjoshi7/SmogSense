@@ -41,7 +41,7 @@ Dependencies point one way: `ui → shared, core` · `server → shared, core` �
 
 - The Gemini key is server-side only: `GEMINI_API_KEY`, read in `src/server/config.ts`. It never appears in client code, logs or git. `.env.example` lists variable names only.
 - Every route has Zod validation and a body-size limit, plus rate limiting on AI routes, strict CORS and secure headers. Responses never include stack traces. Logs never include personal data.
-- Household member names stay on the device. Requests send member ids, age groups and conditions only, and prompts to the model never include conditions. The setup form says so.
+- Household member names stay on the device. Requests send member ids, age groups and conditions only (a community notice sends only the place), and prompts to the model never include conditions. The setup form says so.
 - Render AI output as plain text (never `dangerouslySetInnerHTML`). User text goes into prompts as delimited data, kept separate from the system instruction.
 - Outbound requests go only to fixed hosts (Open-Meteo, Gemini), with timeouts.
 
@@ -61,7 +61,7 @@ Dependencies point one way: `ui → shared, core` · `server → shared, core` �
 
 ## Docs rules
 
-- Only claim what the code or tests prove. No hand-made badges, no hand-written line counts (sizes in the docs come from `npm run size`, and `npm run check:repo` checks them), no buzzwords ("enterprise", "neurosymbolic", "triple-redundant"). Update docs in the same change as the code.
+- Only claim what the code or tests prove. No hand-made badges, no counts or sizes that need updating by hand (ESLint enforces the size limits; a figure measured once carries its date), no buzzwords ("enterprise", "neurosymbolic", "triple-redundant"). Update docs in the same change as the code.
 - One `README.md` plus `docs/ARCHITECTURE.md`, `docs/DECISIONS.md` and one doc per judging area (`docs/CODE_QUALITY.md`, `docs/SECURITY.md`, `docs/EFFICIENCY.md`, `docs/TESTING.md`, `docs/ACCESSIBILITY.md`, `docs/ALIGNMENT.md`), with nothing duplicated: each fact lives in one doc and the others link to it.
 - A choice that shapes the code (a layer rule, a library, a data source, a trade-off) gets a record in `docs/DECISIONS.md`: context, decision, what was turned down, what it costs, and the code and tests that carry it.
 

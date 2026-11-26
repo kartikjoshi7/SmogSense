@@ -28,7 +28,7 @@ own functions, with no network call.
 - `gemini-3.5-flash-lite` first, then `gemini-3.8-flash` (`GEMINI_MODELS`), with minimal thinking
   and capped output tokens (900 for a plan, 400 for chat and notices).
 - One call explains the plan's 8 highest-priority items (the rest keep standard text), and the
-  chat prompt carries the same 8. Each reply's JSON Schema is built once and reused for every call.
+  chat prompt carries the same 8 plus the next 24 hours' PM2.5 by hour. Each reply's JSON Schema is built once and reused for every call.
 - AI answers are cached; a response with no AI text is never cached, so the next request can reach
   the model again. An answer from the cache never spends the client's daily AI allowance.
 - A model that answers 429 is skipped for 10 minutes, and a daily budget (`GEMINI_DAILY_BUDGET`,
@@ -37,9 +37,10 @@ own functions, with no network call.
 
 ## What the browser downloads
 
-- Gzip sizes from the last build: main bundle 124.5 kB, CSS 5.2 kB, and lazy chunks of 1.4 kB
+- Gzip sizes from a production build on 26 Nov 2026 (`npm run build` prints them every time):
+  main bundle 124.7 kB, CSS 5.2 kB, and lazy chunks of 1.4 kB
   (chat), 1.1 kB (community) and 0.8 kB (the dialog they share).
-- What the main bundle holds, measured by splitting a build by origin (gzip): React and React DOM
+- What the main bundle holds, measured once by splitting a build by origin (gzip): React and React DOM
   67.4 kB, Zod with the shared schemas 28.7 kB, the engine with its recommendation text in both
   languages 10.4 kB and the UI with its labels 18.8 kB. All the Hindi text, the engine's and the
   UI's, is 9.4 kB. Why Zod is worth its

@@ -5,8 +5,8 @@ import {
   INVERSION_CLEARED_BLH_M,
   INVERSION_STAGNANT_WIND_KMH,
   INVERSION_TRAPPED_BLH_M,
-  PLAN_HORIZON_HOURS,
 } from './constants.js';
+import { planHorizon } from './windows.js';
 
 function isStagnant(reading: HourlyReading): boolean {
   return reading.windKmh !== null && reading.windKmh < INVERSION_STAGNANT_WIND_KMH;
@@ -19,7 +19,7 @@ function isStagnant(reading: HourlyReading): boolean {
  * is then "none" and nothing is reported as trapped.
  */
 export function analyzeInversion(hourly: readonly HourlyReading[], nowIndex: number): Inversion {
-  const horizon = hourly.slice(nowIndex, nowIndex + PLAN_HORIZON_HOURS);
+  const horizon = planHorizon(hourly, nowIndex);
   const current = horizon[0];
   if (current === undefined || current.blhM === null) {
     const hasWind = current !== undefined && current.windKmh !== null;

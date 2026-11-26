@@ -46,7 +46,7 @@ describe('AI routes', () => {
       history: [],
     });
     const notice = await post('/api/community', {
-      ...validPlanRequest,
+      location: validPlanRequest.location,
       lang: 'en',
       audience: 'housing_society',
     });
@@ -73,7 +73,11 @@ describe('AI routes', () => {
     const statuses = await Promise.all([
       post('/api/explain', { ...validPlanRequest, lang: 'en' }, down),
       post('/api/chat', { ...validPlanRequest, lang: 'en', question: 'Hi', history: [] }, down),
-      post('/api/community', { ...validPlanRequest, lang: 'en', audience: 'school' }, down),
+      post(
+        '/api/community',
+        { location: validPlanRequest.location, lang: 'en', audience: 'school' },
+        down,
+      ),
     ]);
 
     expect(statuses.map((r) => r.status)).toEqual([502, 502, 502]);

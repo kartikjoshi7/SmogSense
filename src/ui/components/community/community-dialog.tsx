@@ -1,6 +1,6 @@
 /** The community notice dialog: an advisory for a society, school or workplace. */
 import { useState } from 'react';
-import type { Audience, PlanRequest } from '../../../shared/api.js';
+import type { Audience, Location } from '../../../shared/api.js';
 import { NATIVE_NAMES, type Language } from '../../../shared/languages.js';
 import { useCommunityNotice, type NoticeState } from '../../hooks/use-community-notice.js';
 import { useShareNotice, type ShareStatus } from '../../hooks/use-share-notice.js';
@@ -95,17 +95,18 @@ function GenerateButton({ busy, onGenerate }: GenerateButtonProps) {
 }
 
 interface CommunityDialogProps {
-  readonly request: PlanRequest;
+  /** The place the notice is for: it is the same for every family there. */
+  readonly location: Location;
   readonly onClose: () => void;
 }
 
 /** Write a short advisory for a housing society, school or workplace, in any supported language. */
-export function CommunityDialog({ request, onClose }: CommunityDialogProps) {
+export function CommunityDialog({ location, onClose }: CommunityDialogProps) {
   const t = useMessages();
   const { lang: uiLang } = useAppState();
   const [audience, setAudience] = useState<Audience>('housing_society');
   const [lang, setLang] = useState<Language>(uiLang);
-  const { state, generate } = useCommunityNotice(request);
+  const { state, generate } = useCommunityNotice(location);
 
   return (
     <Dialog title={t.community.title} closeLabel={t.actions.close} onClose={onClose}>

@@ -6,13 +6,10 @@ import { checkA11y } from '../../test/axe.js';
 import { fakeApi } from '../../test/fake-api.js';
 import type { FakeApiOptions } from '../../test/fake-server.js';
 import { renderInApp } from '../../test/render.js';
-import { DEMO_HOUSEHOLD, DEMO_LOCATION } from '../setup/defaults.js';
+import { DEMO_LOCATION } from '../setup/defaults.js';
 import { CommunityDialog } from './community-dialog.js';
 
-const REQUEST = {
-  profile: DEMO_HOUSEHOLD.profile,
-  location: { lat: DEMO_LOCATION.lat, lon: DEMO_LOCATION.lon },
-};
+const LOCATION = { lat: DEMO_LOCATION.lat, lon: DEMO_LOCATION.lon };
 
 afterEach(() => {
   Reflect.deleteProperty(navigator, 'share');
@@ -26,11 +23,11 @@ function stubNavigator(name: 'share' | 'clipboard', value: unknown) {
 function openNotice(options: FakeApiOptions = {}) {
   const fetchMock = fakeApi(options);
   const user = userEvent.setup();
-  const view = renderInApp(<CommunityDialog request={REQUEST} onClose={vi.fn()} />);
+  const view = renderInApp(<CommunityDialog location={LOCATION} onClose={vi.fn()} />);
   const create = () => user.click(screen.getByRole('button', { name: 'Create notice' }));
-  const sent = () => {
+  const sent = (): unknown => {
     const body = fetchMock.mock.calls[0]?.[1]?.body;
-    return communityRequestSchema.parse(typeof body === 'string' ? JSON.parse(body) : null);
+    return typeof body === 'string' ? JSON.parse(body) : null;
   };
   return { user, view, create, sent };
 }
@@ -46,7 +43,11 @@ describe('CommunityDialog', () => {
     await create();
 
     expect(await screen.findByText('Dear residents, please stay indoors.')).toBeInTheDocument();
-    expect(sent()).toMatchObject({ audience: 'workplace', lang: 'ta' });
+    expect(communityRequestSchema.strict().parse(sent())).toEqual({
+      location: LOCATION,
+      audience: 'workplace',
+      lang: 'ta',
+    });
     expect(screen.getByText('AI explanation')).toBeInTheDocument();
     expect(await checkA11y(view.container)).toEqual([]);
   });

@@ -1,5 +1,4 @@
 /** The AI service: cached, per-client-metered Gemini text, always backed by standard guidance. */
-import { communityPlan } from '../../core/plan.js';
 import { fail } from '../../core/result.js';
 import type {
   AiExplanation,
@@ -95,9 +94,8 @@ export function createAiService(deps: {
       return answers.getOrLoad(digestOf('chat', prompt.text), load, hasAiText);
     },
     communityNotice(input, caller) {
-      const everyone = { ...input, plan: communityPlan(input.plan) };
-      const prompt = communityPrompt(everyone);
-      const load = () => writeNotice(modelFor(caller), everyone, prompt);
+      const prompt = communityPrompt(input);
+      const load = () => writeNotice(modelFor(caller), input, prompt);
       return notices.getOrLoad(digestOf('notice', prompt.text), load, hasAiText);
     },
   };

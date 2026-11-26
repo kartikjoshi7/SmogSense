@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { makeAir, SEVERE } from '../../core/fixtures/air.js';
 import { SHARMA_FAMILY } from '../../core/fixtures/profiles.js';
-import { severePlan } from '../../core/fixtures/recommendations.js';
+import { communityPlanFor, severePlan } from '../../core/fixtures/recommendations.js';
 import { fail, ok } from '../../core/result.js';
 import { createAiService } from './ai-service.js';
 import type { AiClient } from './gemini-client.js';
@@ -177,6 +178,20 @@ describe('createAiService', () => {
     expect(logged()).toContainEqual(expect.objectContaining({ kind: 'chat', rejected: 1 }));
   });
 
+  it('accepts a chat answer that quotes the forecast for the hour asked about', async () => {
+    const at4pm = plan.forecast.find((point) => point.hour === 16)?.pm25 ?? 0;
+    const { ai } = service({ answer: `At 4 pm PM2.5 will be about ${String(at4pm)} µg/m³.` });
+    const question = 'Can the children play outside at 4 pm?';
+
+    const reply = await ai.chat(
+      { plan, profile: SHARMA_FAMILY, lang: 'en', question, history: [] },
+      CALLER,
+    );
+
+    expect(at4pm).toBeGreaterThan(24);
+    expect(reply.source).toBe('ai');
+  });
+
   it('charges the daily allowance only for answers the model writes, never for cached ones', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const { ai, generate } = service({ answer: 'Stay inside and keep the windows shut.' });
@@ -194,16 +209,19 @@ describe('createAiService', () => {
   });
 
   it('writes community notices, falling back to a standard one', async () => {
-    const good = service({ notice: `Air quality index ${plan.index.value} today. Stay indoors.` });
+    const everyone = communityPlanFor(makeAir({ scale: SEVERE }));
+    const good = service({
+      notice: `Air quality index ${everyone.index.value} today. Stay indoors.`,
+    });
     const down = service(null);
 
     const fallback = await down.ai.communityNotice(
-      { plan, audience: 'school', lang: 'en' },
+      { plan: everyone, audience: 'school', lang: 'en' },
       CALLER,
     );
 
     expect(
-      await good.ai.communityNotice({ plan, audience: 'school', lang: 'en' }, CALLER),
+      await good.ai.communityNotice({ plan: everyone, audience: 'school', lang: 'en' }, CALLER),
     ).toMatchObject({
       source: 'ai',
     });

@@ -131,8 +131,8 @@ flowchart LR
 | Use | Route | What the model gets and returns |
 | --- | --- | --- |
 | Plan narrator | `POST /api/explain` | The highest-priority recommendations with their numbers, the household's member ids and age groups (never names or health conditions), the language → JSON headline, summary, and `why` + `steps` per item |
-| Ask SmogSense | `POST /api/chat` | The same facts, the answer language, up to 6 earlier turns and the question inside `<user_question>` delimiters → JSON answer |
-| Community notice | `POST /api/community` | The day's facts as they apply to everyone nearby (nothing about the household), the audience and language → JSON notice |
+| Ask SmogSense | `POST /api/chat` | The same facts plus the next 24 hours' PM2.5 by hour, the answer language, up to 6 earlier turns and the question inside `<user_question>` delimiters → JSON answer |
+| Community notice | `POST /api/community` | The day's facts as they apply to everyone nearby (the request sends only the place, never the household), the audience and language → JSON notice |
 
 Every reply must match a JSON schema and pass the numeric grounding check
 ([Security › AI safety](docs/SECURITY.md#ai-safety)). Anything that fails, times out or cannot be
@@ -191,8 +191,7 @@ api/                     the Vercel function that hands /api/* to the Hono app
 src/                     the app in four layers: core, shared, server and ui
 e2e/                     Playwright tests against the production build
 docs/                    one doc per judging area, the architecture, the decisions and screenshots
-scripts/                 check-repo.mjs (one branch, tracked files under 9 MB, no .env files, the
-                         documented code sizes) and code-size.mjs (measures those sizes)
+scripts/                 check-repo.mjs (one branch, tracked files under 9 MB, no .env files)
 .github/workflows/       CI (check and e2e jobs) and CodeQL
 AGENTS.md                the engineering rules every change follows
 .pre-commit-config.yaml  optional checks before each commit, using the npm scripts

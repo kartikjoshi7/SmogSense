@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { makeAir, SEVERE } from '../../core/fixtures/air.js';
 import { SHARMA_FAMILY } from '../../core/fixtures/profiles.js';
-import { severePlan } from '../../core/fixtures/recommendations.js';
-import { communityPlan } from '../../core/plan.js';
+import { communityPlanFor, severePlan } from '../../core/fixtures/recommendations.js';
 import { SYSTEM_INSTRUCTION, chatPrompt, communityPrompt, explainPrompt } from './prompts.js';
 
 describe('prompts', () => {
@@ -25,6 +25,20 @@ describe('prompts', () => {
     expect(plan.recommendations.length).toBeGreaterThan(8);
     expect(prompt).not.toContain(`"id":"${plan.recommendations[8]?.id ?? ''}"`);
     expect(prompt).toContain(`FACTS: ${JSON.stringify(facts)}`);
+    expect(facts.forecast).toBeUndefined();
+  });
+
+  it('gives the chat the hourly forecast, so a question about a time can be answered', () => {
+    const plan = severePlan();
+    const { facts } = chatPrompt({
+      plan,
+      profile: SHARMA_FAMILY,
+      lang: 'en',
+      question: 'Can the children play outside at 4 pm?',
+      history: [],
+    });
+
+    expect(facts.forecast).toEqual(plan.forecast.map(({ hour, pm25 }) => ({ hour, pm25 })));
   });
 
   it('fences the question and strips anything that could close the fence', () => {
@@ -61,7 +75,7 @@ describe('prompts', () => {
 
   it('writes community notices from shared actions only', () => {
     const { text: prompt } = communityPrompt({
-      plan: communityPlan(severePlan()),
+      plan: communityPlanFor(makeAir({ scale: SEVERE })),
       audience: 'school',
       lang: 'en',
     });

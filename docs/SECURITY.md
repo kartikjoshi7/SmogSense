@@ -81,7 +81,9 @@ implements it and the test that checks it.
 - Prompts to Gemini carry member ids and age groups, never conditions: the model learns who needs
   extra care only from the plan (the household's sensitivity level and the members each
   recommendation is for). Community notices are prompted without member ids at all
-  (`ai/prompts.ts`, `prompts.test.ts`). The setup form says all this next to the household fields.
+  (`ai/prompts.ts`, `prompts.test.ts`), and their request carries only the place: the server
+  builds the plan every family there shares (`core/community-plan.ts`), so no profile is sent.
+  The setup form says all this next to the household fields.
 - Locations are rounded to 0.1° (about 11 km) before they reach Open-Meteo or a cache
   (`air/air-service.ts`, `air-service.test.ts`).
 - Logs go through `logger.ts` only, and only failures are logged: upstream failures with the host

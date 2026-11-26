@@ -13,15 +13,14 @@ which also runs the other gates in [Code quality](CODE_QUALITY.md#gates-that-fai
 
 ## What is tested
 
-| Layer | Files | Tests | Environment |
-| --- | --- | --- | --- |
-| `src/core` (engine) | 15 | 223 | Node |
-| `src/shared` (schemas) | 3 | 16 | Node |
-| `src/server` (API, Open-Meteo, Gemini) | 15 | 123 | Node |
-| `api` (Vercel entry) | 1 | 3 | Node |
-| `src/ui` (React) | 17 | 121 | jsdom + Testing Library + axe-core |
-| **Vitest total** | **51** | **486** |  |
-| `e2e` (Playwright) | 4 | 19 | Chromium, production build |
+| Layer | Environment |
+| --- | --- |
+| `src/core` (engine) | Node |
+| `src/shared` (schemas) | Node |
+| `src/server` (API, Open-Meteo, Gemini) | Node |
+| `api` (Vercel entry) | Node |
+| `src/ui` (React) | jsdom + Testing Library + axe-core |
+| `e2e` (Playwright) | Chromium, production build |
 
 **Engine.** Every AQI breakpoint edge on both scales (through `computeIndex`, so float error in
 the 24-hour mean is covered too), the most-sensitive-member rule, severity
@@ -30,8 +29,7 @@ and golden scenarios built on a Delhi forecast shaped like real data: the Sharma
 Very Poor and Moderate days, a healthy couple, a homebound senior, a London household on the US
 AQI, a walker offered the metro as protection on a smoggy day (and not on a clean one), a coal fire
 heating the main room, and
-gaps in the data (too few hours, no boundary-layer height). `constants.test.ts` also fails
-if the assumptions table in `docs/ARCHITECTURE.md` no longer matches the constants in `src/core/constants/`.
+gaps in the data (too few hours, no boundary-layer height).
 
 **Server.** Routes through `app.request()`: validation errors, oversized and malformed bodies,
 CORS, security headers, CDN cache headers, 404s, a safe 500, upstream 502 and sparse-data 503,
@@ -81,14 +79,7 @@ console error, uncaught error or CSP violation fails an end-to-end test. They co
 
 Thresholds in `vitest.config.ts`: 100% lines, branches, functions and statements for `src/core`,
 and 90% for the whole project. `npm run coverage`, and with it `npm run check` and CI, fails
-below them. From the last run:
-
-```
-Statements   : 99.04% ( 1651/1667 )
-Branches     : 96.31% ( 757/786 )
-Functions    : 98.85% ( 603/610 )
-Lines        : 99.18% ( 1576/1589 )
-```
+below them.
 
 `src/core` is at 100% on all four. Test helpers, fixtures and `src/ui/main.tsx` (the file that
 mounts the app) are excluded.

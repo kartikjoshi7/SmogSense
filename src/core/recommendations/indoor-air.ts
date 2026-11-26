@@ -1,8 +1,9 @@
 /** Indoor air hacks, each with a before-and-after estimate for the main room. */
 import type { Level, RecommendationOf } from '../../shared/recommendation.js';
-import { PURIFIER_NIGHT_HOUR, SMOKY_FUELS } from '../constants.js';
+import { DECIMALS, PURIFIER_NIGHT_HOUR, SMOKY_FUELS } from '../constants.js';
 import { reduction } from '../exposure.js';
 import { indoorHacks, type IndoorHack, type IndoorHackId } from '../indoor.js';
+import { roundTo } from '../numbers.js';
 import { candidate, type Candidate, type PlanContext } from './context.js';
 
 const HACK_EFFORT: Readonly<Record<IndoorHackId, Level>> = {
@@ -30,7 +31,10 @@ function hackCandidate(ctx: PlanContext, hack: IndoorHack): Candidate {
       indoorAfterUgM3: change.after,
     },
   };
-  const facts = { outdoorPm25: Math.round(ctx.ambientPm25), roomAreaM2: home.roomAreaM2 };
+  const facts = {
+    outdoorPm25: roundTo(ctx.ambientPm25, DECIMALS.quotedPm25),
+    roomAreaM2: home.roomAreaM2,
+  };
   if (hack.id === 'safer_heating') {
     return candidate({ ...common, id: hack.id, facts: { ...facts, heating: hack.heating } });
   }

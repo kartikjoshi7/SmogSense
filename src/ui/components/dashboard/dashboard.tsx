@@ -69,7 +69,7 @@ function AiDialogs({ open, request, onClose }: AiDialogsProps) {
   return (
     <Suspense fallback={null}>
       {open === 'chat' ? <ChatDialog request={request} onClose={onClose} /> : null}
-      {open === 'notice' ? <CommunityDialog request={request} onClose={onClose} /> : null}
+      {open === 'notice' ? <CommunityDialog location={request.location} onClose={onClose} /> : null}
     </Suspense>
   );
 }
