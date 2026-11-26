@@ -15,8 +15,13 @@ export interface PlanContext {
   readonly severity: Severity;
   /** Members in a sensitive group, who get personal alerts. */
   readonly sensitiveIds: readonly string[];
-  /** Representative outdoor PM2.5 for indoor and commute estimates (24-hour mean). */
+  /**
+   * The 24-hour mean of outdoor PM2.5: the baseline for the home, where the family spends all day.
+   * Activities at a known time use that time's air instead (`commutePm25`, `exerciseWindow`).
+   */
   readonly ambientPm25: number;
+  /** Outdoor PM2.5 at the household's usual commuting hours. */
+  readonly commutePm25: number;
   /** Cleanest daylight window for the household's exercise, if any. */
   readonly exerciseWindow: ActivityWindow | null;
   readonly ventilation: CleanestHour | null;

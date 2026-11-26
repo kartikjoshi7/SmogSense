@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Commute } from '../shared/profile.js';
-import { commuteSwaps, dailyCommuteDoseUg } from './emissions.js';
+import { commutePm25, commuteSwaps, dailyCommuteDoseUg } from './emissions.js';
+import { makeAir } from './fixtures/air.js';
 
 const carCommute: Commute = {
   mode: 'car_petrol',
@@ -78,5 +79,17 @@ describe('commuteSwaps', () => {
     expect(commuteSwaps({ ...carCommute, mode: 'none' }, 125)).toEqual([]);
     expect(commuteSwaps({ ...carCommute, daysPerWeek: 0 }, 125)).toEqual([]);
     expect(commuteSwaps({ ...carCommute, oneWayKm: 0 }, 125)).toEqual([]);
+  });
+});
+
+describe('commutePm25', () => {
+  it('is the air at the usual commuting hours, not the 24-hour mean', () => {
+    expect(commutePm25(carCommute, makeAir(), 125.6)).toBe(140.5);
+  });
+
+  it('is the 24-hour mean for a household that does not commute', () => {
+    const home: Commute = { ...carCommute, mode: 'none' };
+
+    expect(commutePm25(home, makeAir(), 125.6)).toBe(125.6);
   });
 });

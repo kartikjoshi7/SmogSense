@@ -1,4 +1,6 @@
 /** Commute emissions and in-transit exposure, and the commute swaps worth suggesting. */
+import type { AirData } from '../shared/air.js';
+import { MINUTES_PER_HOUR } from '../shared/limits.js';
 import type { Commute, CommuteAlternative, CommuteMode } from '../shared/profile.js';
 import {
   CAR_MODES,
@@ -12,6 +14,7 @@ import {
 } from './constants.js';
 import { inhaledDoseUg, reduction } from './exposure.js';
 import { roundTo } from './numbers.js';
+import { roundTripMeanPm25 } from './windows.js';
 
 /** A realistic change to the commute and what it does to emissions and exposure. */
 export interface CommuteSwap {
@@ -24,6 +27,19 @@ export interface CommuteSwap {
 /** Whether the household commutes at all: a mode, a distance and at least one day a week. */
 export function commutes(commute: Commute): boolean {
   return commute.mode !== 'none' && commute.daysPerWeek > 0 && commute.oneWayKm > 0;
+}
+
+/**
+ * The PM2.5 on the household's commute: the mean over both trips at their usual hours. Uses
+ * `ambient` (the 24-hour mean) when the household does not commute or the forecast lacks the hours.
+ */
+export function commutePm25(commute: Commute, air: AirData, ambient: number): number {
+  if (!commutes(commute)) {
+    return ambient;
+  }
+  const tripMin = (commute.oneWayKm / COMMUTE_MODES[commute.mode].speedKmh) * MINUTES_PER_HOUR;
+  const { departHour, returnHour } = commute;
+  return roundTripMeanPm25(air, { departHour, returnHour, tripMin }, ambient);
 }
 
 /** Kilograms at the precision every CO₂ figure is shown at. */

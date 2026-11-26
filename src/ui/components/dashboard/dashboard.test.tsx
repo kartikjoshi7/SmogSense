@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { createRef, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { makeAir } from '../../../core/fixtures/air.js';
@@ -7,6 +7,7 @@ import type { AirData } from '../../../shared/air.js';
 import { AppProvider } from '../../state/app-context.js';
 import { checkA11y } from '../../test/axe.js';
 import { fakeApi, memoryStore } from '../../test/fake-api.js';
+import { FAKE_AI } from '../../test/fake-server.js';
 import { renderInApp } from '../../test/render.js';
 import { DEMO_HOUSEHOLD, DEMO_LOCATION } from '../setup/defaults.js';
 import { Dashboard } from './dashboard.js';
@@ -119,13 +120,13 @@ describe('Dashboard requests', () => {
     view.rerender(dashboard('Mumbai'));
 
     await act(async () => {
-      answers[1]?.({ plan: mumbai });
+      answers[1]?.({ plan: mumbai, planKey: 'mumbai' });
       await Promise.resolve();
     });
     const shown = { selector: '.aqi-number' };
     expect(await screen.findByText(String(mumbai.index.value), shown)).toBeInTheDocument();
     await act(async () => {
-      answers[0]?.({ plan: delhi });
+      answers[0]?.({ plan: delhi, planKey: 'delhi' });
       await Promise.resolve();
     });
 
@@ -134,5 +135,31 @@ describe('Dashboard requests', () => {
     // The number is never shown without the scale it is on.
     expect(screen.getByText('India AQI')).toBeInTheDocument();
     expect(await checkA11y(view.container)).toEqual([]);
+  });
+});
+
+describe('Dashboard explanations', () => {
+  it('shows AI wording only on the plan it was written for', async () => {
+    const fetchMock = fakeApi();
+    const reply = fetchMock.getMockImplementation();
+    fetchMock.mockImplementation(async (input, init) => {
+      const res = await (reply?.(input, init) ?? Promise.reject(new Error('no fake API')));
+      if (input !== '/api/explain') {
+        return res;
+      }
+      // The air data changed between the two requests: this wording is for another plan.
+      return Response.json({ ...(await res.json()), planKey: 'another-plan' });
+    });
+    showDashboard();
+
+    // The plan shows at once; then wait until the explanation request has answered.
+    expect(await screen.findByText('Writing explanations…')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText('Writing explanations…')).not.toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(FAKE_AI.headline)).not.toBeInTheDocument();
+    expect(screen.queryAllByText('AI explanation')).toEqual([]);
+    expect(screen.getAllByText('Standard guidance').length).toBeGreaterThan(0);
   });
 });

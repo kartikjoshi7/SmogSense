@@ -4,6 +4,7 @@ import {
   chatResponseSchema,
   communityResponseSchema,
   explainResponseSchema,
+  planResponseSchema,
 } from '../../shared/api.js';
 import { createAiService } from '../ai/ai-service.js';
 import { app, parsedOrDown, validPlanRequest } from '../test/app-harness.js';
@@ -22,13 +23,19 @@ describe('AI routes', () => {
     });
   }
 
-  it('explains the plan with standard guidance when the model is unavailable', async () => {
-    const res = await post('/api/explain', { ...validPlanRequest, lang: 'hi' });
+  it('sends no AI text when the model is unavailable, keyed to the plan it is for', async () => {
+    const target = app();
+    const plan = await target.request('/api/plan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(validPlanRequest),
+    });
+    const res = await post('/api/explain', { ...validPlanRequest, lang: 'hi' }, target);
     const body = explainResponseSchema.parse(await res.json());
 
     expect(res.status).toBe(200);
-    expect(body.introSource).toBe('fallback');
-    expect(body.items.length).toBeGreaterThan(5);
+    expect(body).toMatchObject({ intro: null, items: [] });
+    expect(body.planKey).toBe(planResponseSchema.parse(await plan.json()).planKey);
   });
 
   it('answers chat questions and writes community notices', async () => {

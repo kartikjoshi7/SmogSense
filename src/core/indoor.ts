@@ -57,13 +57,18 @@ export function indoorPm25(room: RoomConditions): number {
   return Math.round(gains / losses);
 }
 
+/** The clean-air rate of the family's own purifiers, or null when they have none. */
+function ownedCadr(home: Home): number | null {
+  return home.purifierCount > 0 ? home.purifierCadrM3h : null;
+}
+
 /** The household's main room as it is today, without indoor smoke sources. */
 export function currentRoom(home: Home, outdoorPm25: number): RoomConditions {
   return {
     outdoorPm25,
     areaM2: home.roomAreaM2,
     airChangesPerH: AIR_CHANGES_PER_H[home.airtightness],
-    cadrM3h: home.purifierCount > 0 ? home.purifierCadrM3h : 0,
+    cadrM3h: ownedCadr(home) ?? 0,
     sourceUgPerH: 0,
   };
 }
@@ -83,7 +88,7 @@ function hack<Id extends IndoorHackId>(
  */
 export function indoorHacks(home: Home, outdoorPm25: number): IndoorHack[] {
   const room = currentRoom(home, outdoorPm25);
-  const cadr = home.purifierCount > 0 ? home.purifierCadrM3h : DEFAULT_PURIFIER_CADR_M3H;
+  const cadr = ownedCadr(home) ?? DEFAULT_PURIFIER_CADR_M3H;
   const hacks: IndoorHack[] = [
     hack('run_purifier', { ...room, cadrM3h: 0 }, { ...room, cadrM3h: cadr }),
     hack('keep_windows_shut', { ...room, airChangesPerH: AIR_CHANGES_PER_H.windows_open }, room),

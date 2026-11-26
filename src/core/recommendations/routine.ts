@@ -12,7 +12,7 @@ function commuteProtection(ctx: PlanContext): Candidate[] {
     return [];
   }
   const dose = (reductionShare: number): number =>
-    dailyCommuteDoseUg(commute.mode, commute.oneWayKm, ctx.ambientPm25, reductionShare);
+    dailyCommuteDoseUg(commute.mode, commute.oneWayKm, ctx.commutePm25, reductionShare);
   const saved = reduction(dose(MASK_REDUCTION[mask]), dose(MASK_REDUCTION.n95));
   return [
     candidate(

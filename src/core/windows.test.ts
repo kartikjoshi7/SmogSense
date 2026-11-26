@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { makeAir } from './fixtures/air.js';
-import { activityMeanPm25, bestActivityWindow, ventilationHour } from './windows.js';
+import {
+  activityMeanPm25,
+  bestActivityWindow,
+  roundTripMeanPm25,
+  ventilationHour,
+} from './windows.js';
 
 describe('bestActivityWindow', () => {
   it('moves a 6 am walk to the cleanest daylight hour, 14:00, with 56% less PM2.5', () => {
@@ -145,5 +150,30 @@ describe('activityMeanPm25', () => {
         120,
       ),
     ).toBeNull();
+  });
+});
+
+describe('roundTripMeanPm25', () => {
+  const trip = { departHour: 8, returnHour: 18, tripMin: 45 };
+
+  it('averages the air at the usual hour of each leg (145 at 08:00, 136 at 18:00)', () => {
+    expect(roundTripMeanPm25(makeAir(), trip, 125.6)).toBe(140.5);
+  });
+
+  it('uses the fallback when a leg starts at an hour with no reading', () => {
+    const air = makeAir();
+    const gap = {
+      ...air,
+      hourly: air.hourly.map((r) => (r.hour === 18 ? { ...r, pm25: null } : r)),
+    };
+
+    expect(roundTripMeanPm25(gap, trip, 125.6)).toBe(125.6);
+  });
+
+  it('uses the fallback when the forecast ends before a leg starts', () => {
+    const air = makeAir();
+    const short = { ...air, hourly: air.hourly.slice(0, air.nowIndex + 6) };
+
+    expect(roundTripMeanPm25(short, trip, 125.6)).toBe(125.6);
   });
 });

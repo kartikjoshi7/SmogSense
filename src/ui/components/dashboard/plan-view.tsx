@@ -1,6 +1,7 @@
 /** The loaded plan: the reading, the AI actions, the day in detail and every recommendation. */
 import { planHeadline, planSummary } from '../../../core/explain/index.js';
-import type { ExplainResponse } from '../../../shared/api.js';
+import type { ExplainResponse, TextSource } from '../../../shared/api.js';
+import type { UiLanguage } from '../../../shared/languages.js';
 import type { Plan } from '../../../shared/plan.js';
 import { useAppState, useMessages } from '../../state/app-context.js';
 import type { Household } from '../../state/storage.js';
@@ -11,6 +12,18 @@ import { WhatIf } from '../plan/what-if.js';
 import { AqiCard } from './aqi-card.js';
 import { ForecastChart } from './forecast-chart.js';
 import { InversionCard } from './inversion-card.js';
+
+/** The reading's headline and summary: the AI's when it wrote them, else standard guidance. */
+function introFor(
+  plan: Plan,
+  explanation: ExplainResponse | null,
+  lang: UiLanguage,
+): { headline: string; summary: string; source: TextSource } {
+  const intro = explanation?.intro ?? null;
+  return intro === null
+    ? { headline: planHeadline(plan, lang), summary: planSummary(plan, lang), source: 'fallback' }
+    : { ...intro, source: 'ai' };
+}
 
 /** The AI dialog the dashboard has open, if any. */
 export type OpenDialog = 'chat' | 'notice' | null;
@@ -60,12 +73,7 @@ export function PlanView({ plan, explanation, household, onOpen }: PlanViewProps
   const { exercise, members } = household.profile;
   return (
     <>
-      <AqiCard
-        plan={plan}
-        headline={explanation?.headline ?? planHeadline(plan, lang)}
-        summary={explanation?.summary ?? planSummary(plan, lang)}
-        source={explanation?.introSource ?? 'fallback'}
-      />
+      <AqiCard plan={plan} {...introFor(plan, explanation, lang)} />
       <PlanActions onOpen={onOpen} />
       <div className="grid gap-5 lg:grid-cols-12 lg:items-start">
         <div className="grid gap-5 md:grid-cols-2 lg:col-span-5 lg:grid-cols-1">

@@ -16,7 +16,7 @@ function exerciseDose(ctx: PlanContext, concentration: number): number {
 
 function exerciseIndoors(ctx: PlanContext): Candidate {
   const { usualHour, durationMin, canMoveIndoors } = ctx.profile.exercise;
-  // Doses use the unrounded mean, as the what-if slider does; only the quoted fact is rounded.
+  // Doses use the window mean (2 decimals), as the what-if slider does; the quoted fact is whole.
   const outdoorMean = ctx.exerciseWindow?.usualMeanPm25 ?? ctx.ambientPm25;
   const outdoor = Math.round(outdoorMean);
   const indoor = indoorPm25(currentRoom(ctx.profile.home, outdoorMean));

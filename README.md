@@ -248,7 +248,10 @@ To check a change the way CI does, run `npm run check`, `npm run check:repo` and
 - **Heating.** A coal or wood fire (angithi) or a kerosene heater counts as a smoke source in the
   room, at an order-of-magnitude emission rate; gas heaters, which give off little PM2.5, are not
   modelled.
-- **Not modelled yet.** Commute doses use the 24-hour mean rather than the hours of travel.
+- **Exposure baselines.** An activity at a known time uses the air at that time: exercise at its
+  usual hour, the commute at its usual departure and return hours. The home, where the family
+  spends the whole day, uses the 24-hour mean, and the indoor figures say they are the day's
+  average. When the forecast lacks an hour, the 24-hour mean stands in.
 - **Not medical advice.** Every figure is a planning estimate. The model is instructed not to
   diagnose and to send anyone with symptoms to a doctor, and the footer says the same.
 - **Languages.** The interface and the plan's explanations are in English and Hindi. Chat answers

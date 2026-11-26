@@ -1,16 +1,16 @@
 /** The AI service: cached, per-client-metered Gemini text, always backed by standard guidance. */
-import { createHash } from 'node:crypto';
 import { communityPlan } from '../../core/plan.js';
 import { fail } from '../../core/result.js';
 import type {
+  AiExplanation,
   ChatResponse,
   CommunityResponse,
-  ExplainResponse,
   TextSource,
 } from '../../shared/api.js';
 import { createAllowance, type Allowance } from '../allowance.js';
 import { TtlCache } from '../cache.js';
 import { SETTINGS } from '../config.js';
+import { digestOf } from '../hash.js';
 import * as logger from '../logger.js';
 import { writeExplanation } from './explanation.js';
 import type { AiClient } from './gemini-client.js';
@@ -25,13 +25,9 @@ import { writeAnswer, writeNotice } from './text-replies.js';
 
 /** Gemini-written explanations, answers and notices, always backed by standard guidance. */
 export interface AiService {
-  explain(input: ExplainInput, caller: string): Promise<ExplainResponse>;
+  explain(input: ExplainInput, caller: string): Promise<AiExplanation>;
   chat(input: ChatInput, caller: string): Promise<ChatResponse>;
   communityNotice(input: NoticeInput, caller: string): Promise<CommunityResponse>;
-}
-
-function cacheKey(...parts: readonly unknown[]): string {
-  return createHash('sha256').update(JSON.stringify(parts)).digest('hex');
 }
 
 /**
@@ -40,14 +36,14 @@ function cacheKey(...parts: readonly unknown[]): string {
  */
 const hasAiText = (response: { readonly source: TextSource }): boolean => response.source === 'ai';
 
-const explanationHasAiText = (response: ExplainResponse): boolean =>
-  response.introSource === 'ai' || response.items.some(hasAiText);
+const explanationHasAiText = (response: AiExplanation): boolean =>
+  response.intro !== null || response.items.length > 0;
 
 /** One cache per kind of response, all sharing the entry cap and the clock. */
 function responseCaches(now: () => number) {
   const options = { maxEntries: SETTINGS.cacheMaxEntries, now };
   return {
-    explanations: new TtlCache<ExplainResponse>({ ...options, ttlMs: SETTINGS.aiCacheTtlMs }),
+    explanations: new TtlCache<AiExplanation>({ ...options, ttlMs: SETTINGS.aiCacheTtlMs }),
     notices: new TtlCache<CommunityResponse>({ ...options, ttlMs: SETTINGS.aiCacheTtlMs }),
     answers: new TtlCache<ChatResponse>({ ...options, ttlMs: SETTINGS.chatCacheTtlMs }),
   };
@@ -88,20 +84,20 @@ export function createAiService(deps: {
     explain(input, caller) {
       // The response carries standard text for every recommendation, so it is keyed on the
       // whole plan, not only on the part the model sees.
-      const key = cacheKey('explain', input.lang, input.plan, input.profile.members);
+      const key = digestOf('explain', input.lang, input.plan, input.profile.members);
       const load = () => writeExplanation(modelFor(caller), input);
       return explanations.getOrLoad(key, load, explanationHasAiText);
     },
     chat(input, caller) {
       const prompt = chatPrompt(input);
       const load = () => writeAnswer(modelFor(caller), input, prompt);
-      return answers.getOrLoad(cacheKey('chat', prompt), load, hasAiText);
+      return answers.getOrLoad(digestOf('chat', prompt), load, hasAiText);
     },
     communityNotice(input, caller) {
       const everyone = { ...input, plan: communityPlan(input.plan) };
       const prompt = communityPrompt(everyone);
       const load = () => writeNotice(modelFor(caller), everyone, prompt);
-      return notices.getOrLoad(cacheKey('notice', prompt), load, hasAiText);
+      return notices.getOrLoad(digestOf('notice', prompt), load, hasAiText);
     },
   };
 }

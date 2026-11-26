@@ -9,7 +9,7 @@ passes through the caches, with their keys and times, is in
 
 `POST /api/plan` runs the decision engine on the air data and makes no model call, so the plan
 appears with standard guidance at once; `POST /api/explain` replaces that text item by item when
-Gemini answers. The "what if" slider recomputes exercise exposure in the browser with the engine's
+Gemini answers, and it sends only the parts the AI wrote: the browser already has the standard text. The "what if" slider recomputes exercise exposure in the browser with the engine's
 own functions, with no network call.
 
 ## Upstream data

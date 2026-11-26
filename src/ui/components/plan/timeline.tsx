@@ -1,4 +1,5 @@
 /** The day's timeline: when to do what, from now on. */
+import { useId } from 'react';
 import { clock } from '../../../core/explain/format.js';
 import type { TimelineEntry } from '../../../shared/plan.js';
 import { useMessages } from '../../state/app-context.js';
@@ -11,13 +12,14 @@ interface TimelineProps {
 
 /** The day in order from now: when to do what. */
 export function Timeline({ entries, items }: TimelineProps) {
+  const headingId = useId();
   const t = useMessages().plan;
   if (entries.length === 0) {
     return null;
   }
   return (
-    <section aria-labelledby="timeline-heading" className="card">
-      <h2 id="timeline-heading" className="text-xl font-semibold">
+    <section aria-labelledby={headingId} className="card">
+      <h2 id={headingId} className="text-xl font-semibold">
         {t.timeline}
       </h2>
       <ol className="mt-3 grid gap-2">

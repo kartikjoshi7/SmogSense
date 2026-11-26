@@ -5,7 +5,7 @@ import type { AirService } from '../air/air-service.js';
 import { SETTINGS } from '../config.js';
 import { geocodeFailureResponse, planFailureResponse } from '../http/errors.js';
 import { jsonBody, queryParams } from '../middleware/validate.js';
-import { loadPlan } from '../plan-service.js';
+import { loadPlan, planKey } from '../plan-service.js';
 
 const GEOCODE_MAX_AGE = SETTINGS.geocodeCdnMaxAgeSeconds;
 const GEOCODE_CACHE_CONTROL = `public, s-maxage=${GEOCODE_MAX_AGE}, stale-while-revalidate=${GEOCODE_MAX_AGE}`;
@@ -25,6 +25,8 @@ export function dataRoutes(air: AirService) {
     .post('/plan', jsonBody(planRequestSchema), async (c) => {
       const { profile, location } = c.req.valid('json');
       const plan = await loadPlan(air, profile, location);
-      return plan.ok ? c.json({ plan: plan.value }) : planFailureResponse(c, plan.error);
+      return plan.ok
+        ? c.json({ plan: plan.value, planKey: planKey(plan.value) })
+        : planFailureResponse(c, plan.error);
     });
 }

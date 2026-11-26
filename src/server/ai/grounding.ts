@@ -121,7 +121,7 @@ export function isGrounded(text: string, allowed: ReadonlySet<number>): boolean 
 /** The kinds of text the model writes, each with its own output budget. */
 export type ReplyKind = keyof typeof SETTINGS.aiMaxOutputTokens;
 
-/** Record AI text that was dropped for quoting numbers the plan does not contain. */
+/** Log how many parts of an AI reply were dropped for quoting numbers the plan does not contain. */
 export function logUngrounded(kind: ReplyKind, rejected: number): void {
   if (rejected > 0) {
     logger.warn('AI text failed the grounding check', { kind, rejected });

@@ -1,4 +1,5 @@
 /** The card that explains the winter inversion and when it should clear. */
+import { useId } from 'react';
 import { clock } from '../../../core/explain/format.js';
 import type { Inversion } from '../../../shared/plan.js';
 import { useMessages } from '../../state/app-context.js';
@@ -9,6 +10,7 @@ interface InversionCardProps {
 
 /** Explains the winter inversion: why pollution sits low in the morning and when it should lift. */
 export function InversionCard({ inversion }: InversionCardProps) {
+  const headingId = useId();
   const t = useMessages().inversion;
   let text = inversion.basis === 'none' ? t.unknown : t.clear;
   if (inversion.trappedNow) {
@@ -16,8 +18,8 @@ export function InversionCard({ inversion }: InversionCardProps) {
       inversion.clearsAtHour === null ? t.trappedAllDay : t.trapped(clock(inversion.clearsAtHour));
   }
   return (
-    <section aria-labelledby="inversion-heading" className="card">
-      <h2 id="inversion-heading" className="text-xl font-semibold">
+    <section aria-labelledby={headingId} className="card">
+      <h2 id={headingId} className="text-xl font-semibold">
         {t.title}
       </h2>
       <p className="mt-2">{text}</p>

@@ -10,10 +10,11 @@ import type { SavedLocation } from '../state/storage.js';
 type Loaded =
   | { readonly status: 'loading' }
   | { readonly status: 'error'; readonly error: ApiError }
-  | { readonly status: 'ready'; readonly plan: Plan };
+  | { readonly status: 'ready'; readonly plan: Plan; readonly planKey: string };
 
 /**
- * A loaded plan also carries its AI wording, once it arrives; standard guidance shows until then.
+ * A loaded plan also carries its AI wording, once it arrives and only if it was written for this
+ * plan; standard guidance shows until then, and instead of wording written for another plan.
  */
 export type PlanState =
   | Exclude<Loaded, { readonly status: 'ready' }>
@@ -40,7 +41,7 @@ function usePlanRequest(request: PlanRequest, attempt: number) {
     void api.plan(request, controller.signal).then((result) => {
       if (!controller.signal.aborted) {
         const value: Loaded = result.ok
-          ? { status: 'ready', plan: result.value.plan }
+          ? { status: 'ready', ...result.value }
           : { status: 'error', error: result.error };
         setLoaded({ key, value });
       }
@@ -54,12 +55,12 @@ function usePlanRequest(request: PlanRequest, attempt: number) {
 }
 
 /** The AI explanation of a loaded plan in one language; a new language only asks for new text. */
-function useExplanation(plan: Plan | null, request: PlanRequest, lang: UiLanguage) {
+function useExplanation(planKey: string | null, request: PlanRequest, lang: UiLanguage) {
   const [explained, setExplained] = useState<Tagged<ExplainResponse | null> | null>(null);
   const key = JSON.stringify([request, lang]);
 
   useEffect(() => {
-    if (plan === null) {
+    if (planKey === null) {
       return undefined;
     }
     const controller = new AbortController();
@@ -71,11 +72,19 @@ function useExplanation(plan: Plan | null, request: PlanRequest, lang: UiLanguag
     return () => {
       controller.abort();
     };
-  }, [key, plan, request, lang]);
+  }, [key, planKey, request, lang]);
 
   return explained?.key === key
     ? { done: true, value: explained.value }
     : { done: false, value: null };
+}
+
+/**
+ * AI wording counts only for the plan it was written for: the air data can change between the
+ * plan request and the explanation request, and wording for another plan is dropped.
+ */
+function forPlan(explanation: ExplainResponse | null, planKey: string): ExplainResponse | null {
+  return explanation?.planKey === planKey ? explanation : null;
 }
 
 /**
@@ -93,10 +102,18 @@ export function usePlan(profile: Profile, location: SavedLocation, lang: UiLangu
     [profile, lat, lon],
   );
   const loaded = usePlanRequest(request, attempt);
-  const explanation = useExplanation(loaded.status === 'ready' ? loaded.plan : null, request, lang);
+  const explanation = useExplanation(
+    loaded.status === 'ready' ? loaded.planKey : null,
+    request,
+    lang,
+  );
   const state: PlanState =
     loaded.status === 'ready'
-      ? { ...loaded, explanation: explanation.value, explaining: !explanation.done }
+      ? {
+          ...loaded,
+          explanation: forPlan(explanation.value, loaded.planKey),
+          explaining: !explanation.done,
+        }
       : loaded;
 
   return {

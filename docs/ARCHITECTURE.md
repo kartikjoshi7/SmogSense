@@ -95,7 +95,7 @@ POST /api/plan  { profile, location }
       round the location → TtlCache (key: lat, lon, UTC quarter hour; 15 min) → on a miss,
       Open-Meteo air quality + weather forecast in parallel (timeouts and retries: Security)
       → Zod-validated, merged by local hour (without the forecast: no inversion or daylight data)
-  → buildPlan(profile, air) → 200 { plan } | 502 data unavailable | 503 not enough data
+  → buildPlan(profile, air) → 200 { plan, planKey } | 502 data unavailable | 503 not enough data
 
 POST /api/explain  { profile, location, lang }
   same middleware with the AI rate limit → loadPlan
@@ -103,8 +103,8 @@ POST /api/explain  { profile, location, lang }
   → on a miss, one unit of the caller's daily allowance (none left: standard guidance)
   → GeminiClient.generate: each model in order, skipping cooled-down ones, within the daily budget,
     JSON schema in the request, Zod on the reply (a rejected reply is logged with its reason)
-  → grounded AI text per item, standard guidance for the rest (dropped AI text is logged)
-  → 200 { headline, summary, introSource, items[] }
+  → only the grounded parts: the intro and each item with at least one step (drops are counted in the log)
+  → 200 { intro | null, items[], planKey }: the UI uses them only if planKey matches its plan
 ```
 
 `/api/chat` and `/api/community` follow the same path as `/api/explain` with their own prompts;
@@ -146,7 +146,9 @@ status, in the interface language.
   one `Dialog` component.
 - **Instant text:** the plan first renders with standard guidance from `src/core/explain`, then
   AI wording replaces it item by item ([Efficiency](EFFICIENCY.md#the-plan-never-waits-for-the-ai)
-  explains why).
+  explains why). The server sends only AI-written parts, and the UI uses them only when their
+  `planKey` matches the plan on screen: the air data can change between the two requests, and
+  wording written for another plan is dropped (`hooks/use-plan.ts`).
 - **What-if:** the slider calls the engine's own `activityMeanPm25` and `exerciseDoseUg`, so its
   doses match the plan's exercise advice exactly.
 

@@ -29,6 +29,7 @@ interface WhatIfProps {
 
 /** "What if we went at another time?" — move a slider and see the dose change instantly. */
 export function WhatIf({ plan, exercise, members }: WhatIfProps) {
+  const headingId = useId();
   const t = useMessages().whatIf;
   const sliderId = useId();
   const resultId = useId();
@@ -36,8 +37,8 @@ export function WhatIf({ plan, exercise, members }: WhatIfProps) {
   const chosen = sessionAt(plan, exercise, members, hour);
   const usual = sessionAt(plan, exercise, members, exercise.usualHour);
   return (
-    <section aria-labelledby="whatif-heading" className="card grid gap-2">
-      <h2 id="whatif-heading" className="text-xl font-semibold">
+    <section aria-labelledby={headingId} className="card grid gap-2">
+      <h2 id={headingId} className="text-xl font-semibold">
         {t.title}
       </h2>
       {/* The visible time is left out of the name, which stays the same as the value changes. */}

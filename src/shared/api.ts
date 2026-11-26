@@ -49,7 +49,10 @@ export const planRequestSchema = z.object({
 });
 export type PlanRequest = z.infer<typeof planRequestSchema>;
 
-export const planResponseSchema = z.object({ plan: planSchema });
+/** Which plan a reply belongs to: a fingerprint the server gives each plan it builds. */
+const planKeySchema = z.string().min(1);
+
+export const planResponseSchema = z.object({ plan: planSchema, planKey: planKeySchema });
 
 /** Who a community notice is written for. */
 const audienceSchema = z.enum(['housing_society', 'school', 'workplace']);
@@ -62,21 +65,20 @@ export type TextSource = z.infer<typeof textSourceSchema>;
 export const explainRequestSchema = planRequestSchema.extend({ lang: languageSchema });
 export type ExplainRequest = z.infer<typeof explainRequestSchema>;
 
-const explainedItemSchema = z.object({
-  id: recommendationIdSchema,
-  title: z.string(),
-  why: z.string(),
-  steps: z.array(z.string()),
-  source: textSourceSchema,
+/**
+ * The AI's wording for a plan: only the parts that passed the grounding check. The UI shows
+ * standard guidance for everything else, so the server never sends text the UI can build itself.
+ */
+const aiExplanationSchema = z.object({
+  /** The headline and summary, or null when the AI's did not pass. */
+  intro: z.object({ headline: z.string(), summary: z.string() }).nullable(),
+  items: z.array(
+    z.object({ id: recommendationIdSchema, why: z.string(), steps: z.array(z.string()) }),
+  ),
 });
+export type AiExplanation = z.infer<typeof aiExplanationSchema>;
 
-export const explainResponseSchema = z.object({
-  headline: z.string(),
-  summary: z.string(),
-  /** Whether the headline and summary were written by the AI or are standard guidance. */
-  introSource: textSourceSchema,
-  items: z.array(explainedItemSchema),
-});
+export const explainResponseSchema = aiExplanationSchema.extend({ planKey: planKeySchema });
 export type ExplainResponse = z.infer<typeof explainResponseSchema>;
 
 const chatTurnSchema = z.object({

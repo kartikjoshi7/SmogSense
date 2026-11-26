@@ -5,6 +5,7 @@ import type { Profile } from '../shared/profile.js';
 import type { RecommendationId } from '../shared/recommendation.js';
 import { computeIndex } from './aqi.js';
 import { PLAN_HORIZON_HOURS } from './constants.js';
+import { commutePm25 } from './emissions.js';
 import { analyzeInversion } from './inversion.js';
 import { alternativeCandidates } from './recommendations/alternatives.js';
 import { communityCandidates } from './recommendations/community.js';
@@ -52,6 +53,7 @@ function buildContext(profile: Profile, air: AirData, index: IndexReading): Plan
     severity: severityMode(index.band, sensitivity),
     sensitiveIds: sensitiveMemberIds(profile.members),
     ambientPm25: index.pm25Mean24h,
+    commutePm25: commutePm25(profile.commute, air, index.pm25Mean24h),
     exerciseWindow:
       exercise.activity === 'none'
         ? null

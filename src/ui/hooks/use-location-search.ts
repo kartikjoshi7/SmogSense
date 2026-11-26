@@ -40,6 +40,11 @@ export function useLocationSearch(onLocate: (location: SavedLocation) => void) {
   };
 
   const locate = () => {
+    // Some browsers and embedded views have no geolocation at all: treat it like a refusal.
+    if (!('geolocation' in navigator)) {
+      setStatus('denied');
+      return;
+    }
     setStatus('locating');
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {

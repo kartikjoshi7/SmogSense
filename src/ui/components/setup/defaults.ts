@@ -1,5 +1,6 @@
 /** The empty household a new setup starts from, and the example family. */
 import { DEFAULT_PURIFIER_CADR_M3H } from '../../../core/constants.js';
+import { DEMO_PROFILE } from '../../../shared/demo.js';
 import type { Profile } from '../../../shared/profile.js';
 import type { Household, SavedLocation } from '../../state/storage.js';
 
@@ -37,30 +38,7 @@ export const EMPTY_PROFILE: Profile = {
 
 /** The example family used in the demo: Riya commutes, Aarav has asthma, Dadaji has COPD. */
 export const DEMO_HOUSEHOLD: Household = {
-  profile: {
-    members: [
-      { id: 'm1', ageGroup: 'adult', conditions: [] },
-      { id: 'm2', ageGroup: 'child', conditions: ['asthma'] },
-      { id: 'm3', ageGroup: 'senior', conditions: ['copd'] },
-    ],
-    commute: {
-      mode: 'car_petrol',
-      oneWayKm: 18,
-      departHour: 8,
-      returnHour: 18,
-      daysPerWeek: 5,
-      alternatives: ['metro', 'carpool'],
-    },
-    exercise: {
-      activity: 'walk',
-      memberId: 'm3',
-      usualHour: 6,
-      durationMin: 30,
-      canMoveIndoors: true,
-    },
-    home: { ...EMPTY_PROFILE.home, incense: 'sometimes' },
-    mask: 'cloth',
-  },
+  profile: DEMO_PROFILE,
   names: { m1: 'Riya', m2: 'Aarav', m3: 'Dadaji' },
 };
 

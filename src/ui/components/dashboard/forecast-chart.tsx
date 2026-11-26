@@ -62,10 +62,12 @@ function MissingBar({ x, width, height }: MissingBarProps) {
 
 interface ForecastBarsProps {
   readonly plan: Plan;
+  /** The chart's heading, which names the SVG. */
+  readonly headingId: string;
   readonly descriptionId: string;
 }
 
-function ForecastBars({ plan, descriptionId }: ForecastBarsProps) {
+function ForecastBars({ plan, headingId, descriptionId }: ForecastBarsProps) {
   const values = plan.forecast.flatMap((p) => (p.pm25 === null ? [] : [p.pm25]));
   const max = Math.max(1, ...values);
   const barWidth = WIDTH / Math.max(1, plan.forecast.length);
@@ -74,7 +76,7 @@ function ForecastBars({ plan, descriptionId }: ForecastBarsProps) {
     <svg
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       role="img"
-      aria-labelledby="forecast-heading"
+      aria-labelledby={headingId}
       aria-describedby={descriptionId}
       className="w-full"
     >
@@ -115,13 +117,14 @@ interface ForecastChartProps {
 export function ForecastChart({ plan }: ForecastChartProps) {
   const t = useMessages().forecast;
   const [asTable, setAsTable] = useState(false);
+  const headingId = useId();
   const descriptionId = useId();
   const cleanest = plan.cleanestHour;
   const missing = plan.forecast.filter((point) => point.pm25 === null).length;
   return (
-    <section aria-labelledby="forecast-heading" className="card grid gap-3">
+    <section aria-labelledby={headingId} className="card grid gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="forecast-heading" className="text-xl font-semibold">
+        <h2 id={headingId} className="text-xl font-semibold">
           {t.title}
         </h2>
         <button
@@ -141,7 +144,7 @@ export function ForecastChart({ plan }: ForecastChartProps) {
       {asTable ? (
         <ForecastTable plan={plan} />
       ) : (
-        <ForecastBars plan={plan} descriptionId={descriptionId} />
+        <ForecastBars plan={plan} headingId={headingId} descriptionId={descriptionId} />
       )}
     </section>
   );

@@ -1,5 +1,5 @@
 /** Clean-air windows: when to exercise and when to air the home, from the hourly forecast. */
-import type { Daylight, HourlyReading } from '../shared/air.js';
+import type { AirData, Daylight, HourlyReading } from '../shared/air.js';
 import { HOURS_PER_DAY, MINUTES_PER_HOUR } from '../shared/limits.js';
 import type { CleanestHour } from '../shared/plan.js';
 import { DECIMALS, PLAN_HORIZON_HOURS } from './constants.js';
@@ -15,6 +15,7 @@ export interface WindowSearch {
   readonly usualHour: number | null;
 }
 
+/** The best window for an activity. Both means are rounded to `DECIMALS.windowMean` places. */
 export interface ActivityWindow {
   readonly startHour: number;
   readonly meanPm25: number;
@@ -69,6 +70,32 @@ export function activityMeanPm25(
 ): number | null {
   const windowPm25 = spanMean(readings, start, spanHours(durationMin));
   return windowPm25 === null ? null : roundTo(windowPm25, DECIMALS.windowMean);
+}
+
+/** The usual times of a round trip, and how long each way takes. */
+export interface RoundTrip {
+  readonly departHour: number;
+  readonly returnHour: number;
+  readonly tripMin: number;
+}
+
+/**
+ * Mean PM2.5 over both legs of a round trip, each starting at its usual hour in the next 24 hours.
+ * Returns `fallback` (the 24-hour mean) when the forecast lacks either leg's hours.
+ */
+export function roundTripMeanPm25(
+  air: Pick<AirData, 'hourly' | 'nowIndex'>,
+  trip: RoundTrip,
+  fallback: number,
+): number {
+  const legMean = (hour: number): number | null => {
+    const ahead = air.hourly.slice(air.nowIndex, air.nowIndex + PLAN_HORIZON_HOURS);
+    const offset = ahead.findIndex((reading) => reading.hour === hour);
+    return offset < 0 ? null : activityMeanPm25(air.hourly, air.nowIndex + offset, trip.tripMin);
+  };
+  const there = legMean(trip.departHour);
+  const back = legMean(trip.returnHour);
+  return there === null || back === null ? fallback : (there + back) / 2;
 }
 
 /** Every complete window starting in the next 24 hours, with its mean PM2.5. */

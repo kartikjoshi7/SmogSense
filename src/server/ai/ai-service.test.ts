@@ -56,8 +56,8 @@ function explainWith(reply: unknown) {
   return service(reply).ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'en' }, CALLER);
 }
 
-describe('merging the model’s explanation with standard guidance', () => {
-  it('uses grounded AI text item by item and standard guidance for the rest', async () => {
+describe('keeping only the grounded parts of the model’s explanation', () => {
+  it('keeps grounded items and drops the rest, item by item', async () => {
     const logged = warnings();
     const response = await explainWith({
       headline: 'Smog emergency today',
@@ -72,13 +72,14 @@ describe('merging the model’s explanation with standard guidance', () => {
       ],
     });
 
-    expect(response.headline).toBe('Smog emergency today');
-    expect(response.items[0]).toMatchObject({
-      source: 'ai',
-      why: 'A purifier takes the room from 201 to 28 µg/m³.',
-    });
-    expect(response.items[1]?.source).toBe('fallback');
-    expect(response.items[0]?.title).toBe('Use an air purifier');
+    expect(response.intro?.headline).toBe('Smog emergency today');
+    expect(response.items).toEqual([
+      {
+        id: first?.id,
+        why: 'A purifier takes the room from 201 to 28 µg/m³.',
+        steps: ['Run it on high.'],
+      },
+    ]);
     expect(logged()).toEqual([
       expect.objectContaining({
         message: 'AI text failed the grounding check',
@@ -88,7 +89,7 @@ describe('merging the model’s explanation with standard guidance', () => {
     ]);
   });
 
-  it('keeps the standard headline when the AI one quotes an unsupported number', async () => {
+  it('drops the headline and summary when they quote an unsupported number', async () => {
     const logged = warnings();
     const response = await explainWith({
       headline: 'AQI 999!',
@@ -96,26 +97,31 @@ describe('merging the model’s explanation with standard guidance', () => {
       items: [],
     });
 
-    expect(response.headline).toBe(
-      'Smog emergency: stay indoors and protect sensitive family members',
-    );
-    expect(response.introSource).toBe('fallback');
+    expect(response.intro).toBeNull();
     expect(logged()).toEqual([expect.objectContaining({ kind: 'explain', rejected: 1 })]);
   });
 
-  it('words the top recommendations with AI text and the rest with standard guidance', async () => {
+  it('keeps the AI text for the recommendations the model was asked about', async () => {
     const logged = warnings();
     const top = plan.recommendations.slice(0, 8);
-    const items = top.map((rec) => ({ id: rec.id, why: 'Do this today.', steps: [] }));
+    const items = top.map((rec) => ({ id: rec.id, why: 'Do this today.', steps: ['Start now.'] }));
 
     const response = await explainWith({ headline: 'Today', summary: 'Stay in.', items });
 
     expect(plan.recommendations.length).toBeGreaterThan(top.length);
-    expect(response.introSource).toBe('ai');
-    expect(response.items.map((item) => item.source)).toEqual(
-      plan.recommendations.map((_, i) => (i < top.length ? 'ai' : 'fallback')),
-    );
+    expect(response.intro).toEqual({ headline: 'Today', summary: 'Stay in.' });
+    expect(response.items.map((item) => item.id)).toEqual(top.map((rec) => rec.id));
     expect(logged()).toEqual([]);
+  });
+
+  it('drops an item the model wrote without any steps', async () => {
+    const logged = warnings();
+    const item = { id: first?.id ?? '', why: 'Run the purifier tonight.', steps: [] };
+
+    const response = await explainWith({ headline: 'Today', summary: 'Stay in.', items: [item] });
+
+    expect(response.items).toEqual([]);
+    expect(logged()).toEqual([expect.objectContaining({ kind: 'explain', rejected: 1 })]);
   });
 });
 
@@ -145,15 +151,13 @@ describe('createAiService', () => {
     expect(generate).toHaveBeenCalledTimes(2);
   });
 
-  it('falls back to standard guidance without caching the fallback', async () => {
+  it('sends no AI text when the model is unavailable, and caches nothing', async () => {
     const { ai, generate } = service(null);
 
     const response = await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'hi' }, CALLER);
     await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'hi' }, CALLER);
 
-    expect(response.introSource).toBe('fallback');
-    expect(response.items.every((item) => item.source === 'fallback')).toBe(true);
-    expect(response.items).toHaveLength(plan.recommendations.length);
+    expect(response).toEqual({ intro: null, items: [] });
     expect(generate).toHaveBeenCalledTimes(2);
   });
 

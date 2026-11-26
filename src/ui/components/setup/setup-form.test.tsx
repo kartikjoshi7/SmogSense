@@ -83,6 +83,16 @@ describe('setup form', () => {
     expect(screen.getByText('Location: My current location')).toBeInTheDocument();
   });
 
+  it('suggests a city search in a browser without geolocation', async () => {
+    const user = setup();
+    Reflect.deleteProperty(navigator, 'geolocation');
+    await user.click(screen.getByRole('button', { name: 'Use my location' }));
+
+    expect(
+      screen.getByText('Location is unavailable. Search for your city instead.'),
+    ).toBeInTheDocument();
+  });
+
   it('asks for a location and valid numbers before building a plan', async () => {
     const user = setup();
     const distance = screen.getByRole('spinbutton', { name: 'One-way distance (km)' });

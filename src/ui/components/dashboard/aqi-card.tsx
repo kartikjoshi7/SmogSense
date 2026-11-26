@@ -1,4 +1,5 @@
 /** The headline card: the index, what it means today and this hour's pollutants. */
+import { useId } from 'react';
 import { categoryLabel, scaleLabel } from '../../../core/explain/index.js';
 import type { Pollutants } from '../../../shared/air.js';
 import type { TextSource } from '../../../shared/api.js';
@@ -48,13 +49,14 @@ interface AqiCardProps {
 
 /** The headline reading: index, category in words, what it means today, and how to react. */
 export function AqiCard({ plan, headline, summary, source }: AqiCardProps) {
+  const headingId = useId();
   const t = useMessages();
   const { lang } = useAppState();
   const { index, severity } = plan;
   const urgent = severity === 'restrict' || severity === 'emergency';
   return (
     <section
-      aria-labelledby="aqi-heading"
+      aria-labelledby={headingId}
       className={`card band-${index.band} grid gap-6 lg:grid-cols-2 lg:items-center`}
     >
       <div>
@@ -66,7 +68,7 @@ export function AqiCard({ plan, headline, summary, source }: AqiCardProps) {
           <span className="text-2xl font-bold">{categoryLabel(index.category, lang)}</span>
         </p>
         <h2
-          id="aqi-heading"
+          id={headingId}
           className={urgent ? 'mt-3 text-lg font-bold' : 'mt-3 text-lg font-semibold'}
         >
           {headline}

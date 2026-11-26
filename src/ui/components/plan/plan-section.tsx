@@ -1,4 +1,5 @@
 /** The ranked recommendations, one tab per category. */
+import { useId } from 'react';
 import { recommendationCategorySchema } from '../../../shared/recommendation.js';
 import { memberName } from '../../members.js';
 import { useMessages } from '../../state/app-context.js';
@@ -14,6 +15,7 @@ interface PlanSectionProps {
 
 /** The ranked plan, grouped under the problem's own headings, one tab per category. */
 export function PlanSection({ items, household }: PlanSectionProps) {
+  const headingId = useId();
   const t = useMessages();
   const { members } = household.profile;
   const tabs = recommendationCategorySchema.options.map((category) => {
@@ -40,8 +42,8 @@ export function PlanSection({ items, household }: PlanSectionProps) {
     };
   });
   return (
-    <section aria-labelledby="plan-heading" className="grid gap-3">
-      <h2 id="plan-heading" className="text-xl font-semibold">
+    <section aria-labelledby={headingId} className="grid gap-3">
+      <h2 id={headingId} className="text-xl font-semibold">
         {t.plan.title}
       </h2>
       <CategoryTabs label={t.plan.title} items={tabs} />

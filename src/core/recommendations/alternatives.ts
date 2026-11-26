@@ -83,7 +83,7 @@ function cleanCookingFuel(ctx: PlanContext): Candidate[] {
  */
 export function alternativeCandidates(ctx: PlanContext): Candidate[] {
   const unsafe = outdoorExertionUnsafe(ctx.advice, ctx.severity);
-  const swaps = commuteSwaps(ctx.profile.commute, ctx.ambientPm25)
+  const swaps = commuteSwaps(ctx.profile.commute, ctx.commutePm25)
     .filter((s) => !(unsafe && ACTIVE_ALTERNATIVES.includes(s.alternative)))
     .flatMap((s) => {
       const category = swapCategory(ctx, s);

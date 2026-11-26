@@ -10,7 +10,7 @@ import type { AirService } from '../air/air-service.js';
 import { clientKey } from '../allowance.js';
 import { planFailureResponse } from '../http/errors.js';
 import { jsonBody } from '../middleware/validate.js';
-import { loadPlan } from '../plan-service.js';
+import { loadPlan, planKey } from '../plan-service.js';
 
 /** Who is asking, for the daily AI allowance: the client IP the platform proxy reports. */
 function caller(c: { readonly req: { header(name: string): string | undefined } }): string {
@@ -27,9 +27,11 @@ export function aiRoutes(air: AirService, ai: AiService) {
     .post('/explain', jsonBody(explainRequestSchema), async (c) => {
       const { profile, location, lang } = c.req.valid('json');
       const plan = await loadPlan(air, profile, location);
-      return plan.ok
-        ? c.json(await ai.explain({ plan: plan.value, profile, lang }, caller(c)))
-        : planFailureResponse(c, plan.error);
+      if (!plan.ok) {
+        return planFailureResponse(c, plan.error);
+      }
+      const explanation = await ai.explain({ plan: plan.value, profile, lang }, caller(c));
+      return c.json({ ...explanation, planKey: planKey(plan.value) });
     })
     .post('/chat', jsonBody(chatRequestSchema), async (c) => {
       const { profile, location, lang, question, history } = c.req.valid('json');
