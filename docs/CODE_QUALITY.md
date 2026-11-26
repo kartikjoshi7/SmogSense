@@ -76,7 +76,7 @@ Sizes, in lines of code as the lint limits count them (blank lines and comments 
 
 | Measure | Value |
 | --- | --- |
-| Source files / test files | 120 / 54 |
+| Source files / test files | 121 / 55 |
 | Source files without a purpose comment at the top | 0 |
 | Largest source file (lines of code) | 141 (`src/ui/i18n/en.ts`) |
 | Longest function (lines of code) | 40 (in `src/ui/components/setup/location-picker.tsx`) |

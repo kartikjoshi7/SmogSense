@@ -1,10 +1,11 @@
 /** City search and GPS lookup, each with its own status. */
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { geocodeQuerySchema, type Place } from '../../shared/api.js';
 import { api } from '../api/client.js';
 import { UI_SETTINGS } from '../settings.js';
 import { useAppState } from '../state/app-context.js';
 import type { SavedLocation } from '../state/storage.js';
+import { useLatestRequest } from './use-latest-request.js';
 
 export type SearchStatus = 'idle' | 'searching' | 'done' | 'failed' | 'locating' | 'denied';
 
@@ -21,18 +22,16 @@ export function useLocationSearch(onLocate: (location: SavedLocation) => void) {
   const { lang } = useAppState();
   const [places, setPlaces] = useState<Place[]>([]);
   const [status, setStatus] = useState<SearchStatus>('idle');
-  const running = useRef<AbortController | null>(null);
+  const nextSignal = useLatestRequest();
 
   const search = async (query: string) => {
     if (!isSearchable(query)) {
       return;
     }
-    running.current?.abort();
-    const controller = new AbortController();
-    running.current = controller;
+    const signal = nextSignal();
     setStatus('searching');
-    const result = await api.geocode(query.trim(), lang, controller.signal);
-    if (controller.signal.aborted) {
+    const result = await api.geocode(query.trim(), lang, signal);
+    if (signal.aborted) {
       return;
     }
     setPlaces(result.ok ? result.value.places : []);

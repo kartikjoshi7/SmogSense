@@ -4,6 +4,7 @@ import { replyLanguage } from '../../core/explain/index.js';
 import type { Audience, PlanRequest, TextSource } from '../../shared/api.js';
 import type { Language } from '../../shared/languages.js';
 import { api, failureKind } from '../api/client.js';
+import { useLatestRequest } from './use-latest-request.js';
 
 export type NoticeState =
   /** "busy" when the server's AI rate limit was reached, "error" for any other failure. */
@@ -16,13 +17,21 @@ export type NoticeState =
       readonly lang: Language;
     };
 
-/** Ask the server for a community notice and track its progress. */
+/**
+ * Ask the server for a community notice and track its progress. A new request cancels the one
+ * still running, so the notice shown is always for the latest audience and language.
+ */
 export function useCommunityNotice(request: PlanRequest) {
   const [state, setState] = useState<NoticeState>({ status: 'idle' });
+  const nextSignal = useLatestRequest();
 
   const generate = async (audience: Audience, lang: Language) => {
     setState({ status: 'generating' });
-    const result = await api.community({ ...request, lang, audience });
+    const signal = nextSignal();
+    const result = await api.community({ ...request, lang, audience }, signal);
+    if (signal.aborted) {
+      return;
+    }
     setState(
       result.ok
         ? { status: 'ready', ...result.value, lang: replyLanguage(result.value.source, lang) }

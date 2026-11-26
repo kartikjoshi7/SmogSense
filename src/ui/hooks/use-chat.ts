@@ -5,6 +5,7 @@ import type { PlanRequest, TextSource } from '../../shared/api.js';
 import type { Language } from '../../shared/languages.js';
 import { CHAT_LIMITS } from '../../shared/limits.js';
 import { api, failureKind } from '../api/client.js';
+import { useLatestRequest } from './use-latest-request.js';
 
 /** One turn of the conversation as shown. Answers say who wrote them and in which language. */
 export type ChatMessage =
@@ -20,17 +21,25 @@ export type ChatMessage =
 /** "busy" when the server's AI rate limit was reached, "error" for any other failure. */
 export type ChatStatus = 'idle' | 'sending' | 'error' | 'busy';
 
-/** The conversation so far and a way to ask the next question; resolves true once answered. */
+/**
+ * The conversation so far and a way to ask the next question; resolves true once answered. A
+ * question still waiting when the chat closes is cancelled.
+ */
 function useChat(request: PlanRequest) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [status, setStatus] = useState<ChatStatus>('idle');
+  const nextSignal = useLatestRequest();
 
   const ask = async (question: string, lang: Language): Promise<boolean> => {
     setStatus('sending');
     const history = messages
       .slice(-CHAT_LIMITS.historyTurns)
       .map(({ role, text }) => ({ role, text }));
-    const result = await api.chat({ ...request, lang, question, history });
+    const signal = nextSignal();
+    const result = await api.chat({ ...request, lang, question, history }, signal);
+    if (signal.aborted) {
+      return false;
+    }
     if (!result.ok) {
       setStatus(failureKind(result.error));
       return false;

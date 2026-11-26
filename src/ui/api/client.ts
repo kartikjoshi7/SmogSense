@@ -74,6 +74,8 @@ export const api = {
     post('/api/plan', body, planResponseSchema, signal),
   explain: (body: ExplainRequest, signal?: AbortSignal) =>
     post('/api/explain', body, explainResponseSchema, signal),
-  chat: (body: ChatRequest) => post('/api/chat', body, chatResponseSchema),
-  community: (body: CommunityRequest) => post('/api/community', body, communityResponseSchema),
+  chat: (body: ChatRequest, signal?: AbortSignal) =>
+    post('/api/chat', body, chatResponseSchema, signal),
+  community: (body: CommunityRequest, signal?: AbortSignal) =>
+    post('/api/community', body, communityResponseSchema, signal),
 };
