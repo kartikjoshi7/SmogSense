@@ -52,6 +52,7 @@ export type Severity = z.infer<typeof severitySchema>;
 const inversionSchema = z.object({
   trappedNow: z.boolean(),
   clearsAtHour: hourSchema.nullable(),
+  /** Lowest and highest boundary layer of the next 24 hours (m), for the AI's explanation. */
   minBlhM: z.number().min(0).nullable(),
   maxBlhM: z.number().min(0).nullable(),
   /** What the judgement rests on; "none" when neither boundary-layer nor wind data exists. */

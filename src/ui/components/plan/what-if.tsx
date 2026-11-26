@@ -1,7 +1,9 @@
 /** The what-if slider: move the exercise hour and see the dose change. */
 import { useId, useState } from 'react';
+import { DECIMALS } from '../../../core/constants.js';
 import { clock } from '../../../core/explain/format.js';
 import { exerciseDoseUg } from '../../../core/exposure.js';
+import { roundTo } from '../../../core/numbers.js';
 import { activityMeanPm25 } from '../../../core/windows.js';
 import { CLOCK_HOURS } from '../../../shared/limits.js';
 import type { Plan } from '../../../shared/plan.js';
@@ -18,7 +20,10 @@ function sessionAt(plan: Plan, exercise: Exercise, members: readonly Member[], h
   const pm25 = start === -1 ? null : activityMeanPm25(plan.forecast, start, exercise.durationMin);
   return pm25 === null
     ? null
-    : { pm25: Math.round(pm25), dose: exerciseDoseUg(exercise, members, pm25) };
+    : {
+        pm25: roundTo(pm25, DECIMALS.quotedPm25),
+        dose: exerciseDoseUg(exercise, members, pm25),
+      };
 }
 
 interface WhatIfProps {

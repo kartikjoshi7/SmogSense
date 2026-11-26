@@ -141,9 +141,11 @@ describe('buildPlan — other households and places', () => {
     const p = plan(SHARMA_FAMILY, air);
 
     expect(p).toMatchObject({ severity: 'normal', index: { scale: 'us_aqi', value: 56 } });
-    for (const id of ['exercise_window', 'n95_outdoors', 'sensitive_members'] as const) {
+    const calm = ['exercise_window', 'n95_outdoors', 'sensitive_members', 'run_purifier'] as const;
+    for (const id of [...calm, 'keep_windows_shut', 'seal_gaps'] as const) {
       expect(ids(p), id).not.toContain(id);
     }
+    expect(ids(p)).toContain('stop_incense');
     expect(ids(p)).not.toContain('ncr_grap_check');
     expect(planHeadline(p, 'en')).toBe('A normal day: no extra precautions needed');
   });

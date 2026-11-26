@@ -1,8 +1,8 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { EMPTY_PROFILE } from '../../../core/empty-profile.js';
 import { checkA11y } from '../../test/axe.js';
 import { renderInApp } from '../../test/render.js';
-import { EMPTY_PROFILE } from './defaults.js';
 import { CommuteFieldset, ExerciseFieldset } from './lifestyle-fieldsets.js';
 
 const VALID = new Set<string>();

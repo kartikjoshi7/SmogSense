@@ -1,6 +1,6 @@
 /** Indoor air hacks, each with a before-and-after estimate for the main room. */
 import type { Level, RecommendationOf } from '../../shared/recommendation.js';
-import { DECIMALS, PURIFIER_NIGHT_HOUR, SMOKY_FUELS } from '../constants.js';
+import { ACTION_BAND, DECIMALS, PURIFIER_NIGHT_HOUR, SMOKY_FUELS } from '../constants.js';
 import { reduction } from '../exposure.js';
 import { indoorHacks, type IndoorHack, type IndoorHackId } from '../indoor.js';
 import { roundTo } from '../numbers.js';
@@ -81,8 +81,21 @@ const wetMopping: Candidate = candidate({
   facts: {},
 });
 
-/** Indoor air hacks with before/after estimates for the family's main room. */
+/** Hacks that keep outdoor smog out of the room; the others remove smoke made indoors. */
+const KEEP_SMOG_OUT: ReadonlySet<IndoorHackId> = new Set([
+  'run_purifier',
+  'keep_windows_shut',
+  'seal_gaps',
+]);
+
+/**
+ * Indoor air hacks with before/after estimates for the family's main room. Those that keep
+ * outdoor smog out start at `ACTION_BAND.keepSmogOut`; removing indoor smoke always helps.
+ */
 export function indoorAirCandidates(ctx: PlanContext): Candidate[] {
-  const hacks = indoorHacks(ctx.profile.home, ctx.ambientPm25).map((h) => hackCandidate(ctx, h));
+  const smoggy = ctx.index.band >= ACTION_BAND.keepSmogOut;
+  const hacks = indoorHacks(ctx.profile.home, ctx.ambientPm25)
+    .filter((hack) => smoggy || !KEEP_SMOG_OUT.has(hack.id))
+    .map((hack) => hackCandidate(ctx, hack));
   return [...hacks, ...cookingVentilation(ctx), wetMopping];
 }

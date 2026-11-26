@@ -1,5 +1,6 @@
 /** The setup form: every step, the actions and validation before saving. */
 import type { RefObject } from 'react';
+import { EMPTY_PROFILE } from '../../../core/empty-profile.js';
 import {
   invalidPaths,
   useSetupDraft,
@@ -9,7 +10,7 @@ import {
 } from '../../hooks/use-setup-draft.js';
 import { memberName } from '../../members.js';
 import { useAppDispatch, useAppState, useMessages } from '../../state/app-context.js';
-import { DEMO_HOUSEHOLD, DEMO_LOCATION, EMPTY_PROFILE } from './defaults.js';
+import { DEMO_HOUSEHOLD, DEMO_LOCATION } from './defaults.js';
 import { HomeFieldset } from './home-fieldset.js';
 import { CommuteFieldset, ExerciseFieldset } from './lifestyle-fieldsets.js';
 import { LocationPicker } from './location-picker.js';

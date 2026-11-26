@@ -20,6 +20,14 @@ describe('profileSchema', () => {
     expect(profileSchema.safeParse({ ...SHARMA_FAMILY, members }).success).toBe(false);
   });
 
+  it('rejects a condition or a commute alternative listed twice', () => {
+    const members = [{ id: 'm1', ageGroup: 'child', conditions: ['asthma', 'asthma'] }];
+    const commute = { ...SHARMA_FAMILY.commute, alternatives: ['metro', 'metro'] };
+
+    expect(profileSchema.safeParse({ ...SHARMA_FAMILY, members }).success).toBe(false);
+    expect(profileSchema.safeParse({ ...SHARMA_FAMILY, commute }).success).toBe(false);
+  });
+
   it('rejects an exercising member who is not in the household', () => {
     const exercise = { ...SHARMA_FAMILY.exercise, memberId: 'm9' };
 

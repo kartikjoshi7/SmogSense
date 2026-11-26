@@ -10,6 +10,9 @@ import { hourSchema, rangeSchema } from './primitives.js';
 const memberIdSchema = z.string().regex(/^m[1-9]\d{0,2}$/, 'Member ids are m1, m2 and so on');
 
 const ageGroupSchema = z.enum(['infant', 'child', 'teen', 'adult', 'senior']);
+
+/** True when no value appears twice in the list. */
+const allDistinct = (values: readonly unknown[]): boolean => new Set(values).size === values.length;
 export type AgeGroup = z.infer<typeof ageGroupSchema>;
 
 const conditionSchema = z.enum(['asthma', 'copd', 'heart', 'pregnancy']);
@@ -19,7 +22,7 @@ const memberSchema = z.object({
   id: memberIdSchema,
   ageGroup: ageGroupSchema,
   /** Each condition at most once. */
-  conditions: z.array(conditionSchema).max(conditionSchema.options.length),
+  conditions: z.array(conditionSchema).refine(allDistinct, 'Each condition at most once'),
 });
 export type Member = z.infer<typeof memberSchema>;
 
@@ -49,7 +52,9 @@ export const commuteSchema = z.object({
   returnHour: hourSchema,
   daysPerWeek: rangeSchema(PROFILE_LIMITS.daysPerWeek),
   /** Each alternative at most once. */
-  alternatives: z.array(commuteAlternativeSchema).max(commuteAlternativeSchema.options.length),
+  alternatives: z
+    .array(commuteAlternativeSchema)
+    .refine(allDistinct, 'Each alternative at most once'),
 });
 export type Commute = z.infer<typeof commuteSchema>;
 
@@ -111,7 +116,7 @@ export const profileSchema = z
     home: homeSchema,
     mask: maskTypeSchema,
   })
-  .refine((p) => new Set(p.members.map((m) => m.id)).size === p.members.length, {
+  .refine((p) => allDistinct(p.members.map((m) => m.id)), {
     message: 'Member ids must be unique',
     path: ['members'],
   })

@@ -1,7 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { EMPTY_PROFILE } from '../../../core/empty-profile.js';
 import { renderInApp } from '../../test/render.js';
-import { EMPTY_PROFILE } from './defaults.js';
 import { HomeFieldset } from './home-fieldset.js';
 
 const VALID = new Set<string>();

@@ -57,7 +57,10 @@ export function indoorPm25(room: RoomConditions): number {
   return Math.round(gains / losses);
 }
 
-/** The clean-air rate of the family's own purifiers, or null when they have none. */
+/**
+ * The clean-air rate of a purifier in the main room, or null when the family has none. The
+ * model is that one room, so one purifier counts however many the family owns.
+ */
 function ownedCadr(home: Home): number | null {
   return home.purifierCount > 0 ? home.purifierCadrM3h : null;
 }
@@ -97,6 +100,7 @@ export function indoorHacks(home: Home, outdoorPm25: number): IndoorHack[] {
     const tighter = AIR_CHANGES_PER_H[TIGHTER_ENVELOPE[home.airtightness]];
     hacks.push(hack('seal_gaps', room, { ...room, airChangesPerH: tighter }));
   }
+  // The room is modelled on a day incense is burnt, so "sometimes" counts the same as "daily".
   if (home.incense !== 'never') {
     hacks.push(
       hack('stop_incense', { ...room, sourceUgPerH: INDOOR_SOURCE_UG_PER_H.incense }, room),

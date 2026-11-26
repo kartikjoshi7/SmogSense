@@ -82,8 +82,10 @@ How `buildPlan(profile, air)` in `src/core/plan.ts` decides:
    sensitive household enters emergency mode one band early.
 4. **Winter inversion** (`inversion.ts`): a low boundary layer means pollution is trapped; the
    engine says when daytime mixing should clear it, falls back to wind speed and says so, and
-   says it cannot tell when there is no weather data.
-5. **Candidates** (`recommendations/*`): 27 possible actions in five groups. Each is kept only if it
+   says it cannot tell when there is no weather data. This explains the day (the summary and the
+   inversion card); it does not change which actions are chosen.
+5. **Candidates** (`recommendations/*`): one possible action per recommendation id in
+   `shared/recommendation.ts`, in five groups. Each is kept only if it
    fits the household (no carpool advice for someone who takes the metro) and carries its own
    numbers: exposure cut (`exposure.ts`, `windows.ts`), indoor PM2.5 before and after (`indoor.ts`,
    a mass-balance room model) and CO₂ saved per week (`emissions.ts`).

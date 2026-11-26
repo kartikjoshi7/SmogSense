@@ -124,7 +124,9 @@ function evaluateSwap(
 /**
  * Commute changes the household said it could make, filtered to those that apply (cycling
  * up to 8 km, walking up to 2 km, carpooling only for cars) and that either save CO₂ or cut the
- * commute dose by at least `MIN_WORTHWHILE_REDUCTION_PCT`.
+ * commute dose by at least `MIN_WORTHWHILE_REDUCTION_PCT`. Doses are worked out in the air on the
+ * way (`ambientPm25`, rounded to 0.1 µg like every dose); a percentage compares two ways of
+ * travelling in that same air, so the air changes it only through that rounding.
  */
 export function commuteSwaps(commute: Commute, ambientPm25: number): CommuteSwap[] {
   if (!commutes(commute)) {

@@ -77,7 +77,7 @@ its source in a comment; this table lists them as they stand on 26 Nov 2026.
 | `SEVERITY_BAND` | caution 2, restrict 3, emergency 5, sensitiveEmergency 4 | Band at which each severity mode starts; a highly sensitive household reaches emergency one band early |
 | `OUTDOOR_ADVICE_BAND` | reduce 3, avoid 4, stayIndoors 5 | Band at which each outdoor advice starts for most people, following the CPCB and EPA health advice |
 | `SENSITIVE_ADVICE_SHIFT` | 1 band | Sensitive groups are advised one category sooner, as CPCB and EPA do |
-| `ACTION_BAND` | commuteMask 2, alertSensitive 2, maskEveryone 3, reportOpenBurning 3, checkOnNeighbours 4, grapCheck 4 | Band (0–5) at which each action starts to apply |
+| `ACTION_BAND` | commuteMask 2, alertSensitive 2, keepSmogOut 2, maskEveryone 3, reportOpenBurning 3, checkOnNeighbours 4, grapCheck 4 | Band (0–5) at which each action starts to apply |
 | `SENSITIVITY_WEIGHT` | normal 1, elevated 1.5, high 2 | Ranking design choice |
 | `CO2_RANK_WEIGHT` | 2 points per weekly kg | Ranking design choice |
 | `EFFORT_PENALTY` | low 0, medium 5, high 15 | Ranking design choice |

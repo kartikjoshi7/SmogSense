@@ -31,7 +31,7 @@ answers questions about it and turns it into community notices.
 checked, and there would be no plan when it is unavailable. Retrieval over health guidelines: it
 improves wording but still leaves the numbers unchecked.
 
-**Cost.** The assistant only ever suggests the 27 actions the engine knows. A new kind of advice
+**Cost.** The assistant only ever suggests the actions the engine knows (one per recommendation id). A new kind of advice
 means new engine code and tests, not a new prompt.
 
 **Carried by** `src/core/plan.ts` and `src/core/recommendations/*`. **Checked by** `plan.test.ts`

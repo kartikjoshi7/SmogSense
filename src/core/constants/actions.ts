@@ -37,6 +37,7 @@ export const SENSITIVE_ADVICE_SHIFT = 1;
 export const ACTION_BAND = {
   commuteMask: 2,
   alertSensitive: 2,
+  keepSmogOut: 2,
   maskEveryone: 3,
   reportOpenBurning: 3,
   checkOnNeighbours: 4,
