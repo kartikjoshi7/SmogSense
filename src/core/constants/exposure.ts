@@ -66,11 +66,14 @@ export interface CommuteModeFactors {
   readonly co2KgPerKm: number;
   /** Breathing rate while travelling, m³/h. */
   readonly breathingM3h: number;
-  /** True for modes whose traveller controls the engine (engine-off and errand advice apply). */
-  readonly isPrivateMotor: boolean;
+  /**
+   * The vehicle the traveller drives, if any: engine-off and errand advice apply to both kinds,
+   * carpooling only to a car.
+   */
+  readonly ownVehicle: 'car' | 'two_wheeler' | null;
 }
 
-const CAR = { exposureMultiplier: 0.6, speedKmh: 22, isPrivateMotor: true } as const;
+const CAR = { exposureMultiplier: 0.6, speedKmh: 22, ownVehicle: 'car' } as const;
 const PASSENGER_BREATHING = BREATHING_RATE_M3H.light;
 
 /** Every commute mode's exposure, speed and emission factors in one table. */
@@ -80,42 +83,42 @@ export const COMMUTE_MODES: Readonly<Record<CommuteMode, CommuteModeFactors>> = 
     speedKmh: 5,
     co2KgPerKm: 0,
     breathingM3h: BREATHING_RATE_M3H.moderate,
-    isPrivateMotor: false,
+    ownVehicle: null,
   },
   cycle: {
     exposureMultiplier: 1.2,
     speedKmh: 12,
     co2KgPerKm: 0,
     breathingM3h: BREATHING_RATE_M3H.cycling,
-    isPrivateMotor: false,
+    ownVehicle: null,
   },
   two_wheeler: {
     exposureMultiplier: 1.4,
     speedKmh: 25,
     co2KgPerKm: 0.05,
     breathingM3h: PASSENGER_BREATHING,
-    isPrivateMotor: true,
+    ownVehicle: 'two_wheeler',
   },
   auto: {
     exposureMultiplier: 1.5,
     speedKmh: 20,
     co2KgPerKm: 0.08,
     breathingM3h: PASSENGER_BREATHING,
-    isPrivateMotor: false,
+    ownVehicle: null,
   },
   bus: {
     exposureMultiplier: 1.2,
     speedKmh: 15,
     co2KgPerKm: 0.03,
     breathingM3h: PASSENGER_BREATHING,
-    isPrivateMotor: false,
+    ownVehicle: null,
   },
   metro: {
     exposureMultiplier: 0.7,
     speedKmh: 30,
     co2KgPerKm: 0.02,
     breathingM3h: PASSENGER_BREATHING,
-    isPrivateMotor: false,
+    ownVehicle: null,
   },
   car_petrol: { ...CAR, co2KgPerKm: 0.17, breathingM3h: PASSENGER_BREATHING },
   car_diesel: { ...CAR, co2KgPerKm: 0.16, breathingM3h: PASSENGER_BREATHING },
@@ -126,12 +129,9 @@ export const COMMUTE_MODES: Readonly<Record<CommuteMode, CommuteModeFactors>> = 
     speedKmh: 5,
     co2KgPerKm: 0,
     breathingM3h: BREATHING_RATE_M3H.sedentary,
-    isPrivateMotor: false,
+    ownVehicle: null,
   },
 };
-
-/** Modes that are cars, where carpooling applies. */
-export const CAR_MODES: readonly CommuteMode[] = ['car_petrol', 'car_diesel', 'car_cng', 'car_ev'];
 
 /** Trips on each commuting day: there and back. */
 export const TRIPS_PER_COMMUTE_DAY = 2;

@@ -11,7 +11,9 @@ import type { Level } from '../../shared/recommendation.js';
 /**
  * The AQI band (0–5) at which each severity mode starts. A household with high sensitivity (an
  * infant, a senior or anyone with a heart or lung condition or a pregnancy) is in emergency mode
- * one band earlier.
+ * one band earlier. Children alone do not bring the emergency forward: they get each outdoor advice
+ * one band sooner instead (`SENSITIVE_ADVICE_SHIFT`), so on a band-4 day a family with children is
+ * told to keep them indoors while the plan stays in restrict mode.
  */
 export const SEVERITY_BAND = {
   caution: 2,

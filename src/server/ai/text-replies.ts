@@ -3,11 +3,10 @@ import { z, type ZodType } from 'zod';
 import { fallbackChatAnswer, fallbackCommunityNotice } from '../../core/explain/index.js';
 import type { ChatResponse, CommunityResponse } from '../../shared/api.js';
 import { CHAT_LIMITS } from '../../shared/limits.js';
-import type { Plan } from '../../shared/plan.js';
 import { SETTINGS } from '../config.js';
 import type { AiClient } from './gemini-client.js';
 import { allowedNumbers, isGrounded, logUngrounded, type ReplyKind } from './grounding.js';
-import { SYSTEM_INSTRUCTION, type ChatInput, type NoticeInput } from './prompts.js';
+import { SYSTEM_INSTRUCTION, type ChatInput, type NoticeInput, type Prompt } from './prompts.js';
 
 /** A text reply: a chat answer or a community notice. */
 type TextKind = Exclude<ReplyKind, 'explain'>;
@@ -17,7 +16,7 @@ const chatReply = z.object({ answer: z.string().min(1).max(CHAT_LIMITS.turnChars
 const noticeReply = z.object({ notice: z.string().min(1).max(SETTINGS.aiReplyChars.notice) });
 
 /**
- * AI-written text when the model answered and every number in it is a plan fact, else null.
+ * AI-written text when the model answered and every number in it was in the prompt, else null.
  * A reply dropped by the grounding check is logged.
  */
 function groundedText(
@@ -38,33 +37,32 @@ interface TextRequest<F extends string> {
   readonly kind: TextKind;
   readonly field: F;
   readonly schema: ZodType<Record<F, string>>;
-  readonly prompt: string;
+  readonly prompt: Prompt;
 }
 
-/** The model's text when it answered and every number in it is a plan fact, else null. */
+/** The model's text when it answered and every number in it was in the prompt, else null. */
 async function groundedReply<F extends string>(
   client: AiClient,
-  plan: Plan,
   request: TextRequest<F>,
 ): Promise<string | null> {
   const reply = await client.generate({
     system: SYSTEM_INSTRUCTION,
-    prompt: request.prompt,
+    prompt: request.prompt.text,
     schema: request.schema,
     maxOutputTokens: SETTINGS.aiMaxOutputTokens[request.kind],
   });
   const text = reply.ok ? reply.value[request.field] : null;
-  return groundedText(request.kind, text, allowedNumbers(plan));
+  return groundedText(request.kind, text, allowedNumbers(request.prompt.facts));
 }
 
 /** A grounded answer to a chat question, or the day's top actions when there is none. */
 export async function writeAnswer(
   client: AiClient,
   input: ChatInput,
-  prompt: string,
+  prompt: Prompt,
 ): Promise<ChatResponse> {
   const request = { kind: 'chat', field: 'answer', schema: chatReply, prompt } as const;
-  const answer = await groundedReply(client, input.plan, request);
+  const answer = await groundedReply(client, request);
   return answer === null
     ? { answer: fallbackChatAnswer(input.plan, input.lang), source: 'fallback' }
     : { answer, source: 'ai' };
@@ -74,10 +72,10 @@ export async function writeAnswer(
 export async function writeNotice(
   client: AiClient,
   input: NoticeInput,
-  prompt: string,
+  prompt: Prompt,
 ): Promise<CommunityResponse> {
   const request = { kind: 'notice', field: 'notice', schema: noticeReply, prompt } as const;
-  const notice = await groundedReply(client, input.plan, request);
+  const notice = await groundedReply(client, request);
   return notice === null
     ? {
         notice: fallbackCommunityNotice(input.plan, input.audience, input.lang),

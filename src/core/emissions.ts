@@ -3,7 +3,6 @@ import type { AirData } from '../shared/air.js';
 import { MINUTES_PER_HOUR } from '../shared/limits.js';
 import type { Commute, CommuteAlternative, CommuteMode } from '../shared/profile.js';
 import {
-  CAR_MODES,
   CARPOOL_OCCUPANTS,
   COMMUTE_MODES,
   DECIMALS,
@@ -100,7 +99,7 @@ function evaluateSwap(
     };
   }
   if (alternative === 'carpool') {
-    const carpooling = CAR_MODES.includes(mode);
+    const carpooling = COMMUTE_MODES[mode].ownVehicle === 'car';
     return carpooling
       ? {
           alternative,

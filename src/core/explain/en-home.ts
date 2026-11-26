@@ -6,7 +6,7 @@ import type { LanguagePack } from './format.js';
 export const homeTemplates = {
   run_purifier: (rec) => ({
     title: rec.facts.purifiersOwned > 0 ? 'Run your purifier on high' : 'Use an air purifier',
-    why: `In your ${rec.facts.roomAreaM2} m² room, the day's average PM2.5 drops from about ${rec.impact.indoorBeforeUgM3} to ${rec.impact.indoorAfterUgM3} µg/m³ (${rec.impact.exposureReductionPct}% less) with a purifier running.`,
+    why: `In your ${rec.facts.roomAreaM2} m² room, a purifier brings PM2.5 down from about ${rec.impact.indoorBeforeUgM3} to ${rec.impact.indoorAfterUgM3} µg/m³ (${rec.impact.exposureReductionPct}% less), going by the past 24 hours' outdoor air.`,
     steps: [
       'Keep it in the room where the family sleeps, with the door closed.',
       'Run it on high overnight and during the smoggiest hours.',
@@ -41,7 +41,7 @@ export const homeTemplates = {
   ),
   safer_heating: (rec) => ({
     title: 'Heat the room without smoke',
-    why: `${HEATER[rec.facts.heating]} burns its fuel inside the room. Without it, the day's average indoor PM2.5 drops from about ${rec.impact.indoorBeforeUgM3} to ${rec.impact.indoorAfterUgM3} µg/m³ (${rec.impact.exposureReductionPct}% less).`,
+    why: `${HEATER[rec.facts.heating]} burns its fuel inside the room. Without it, indoor PM2.5 drops from about ${rec.impact.indoorBeforeUgM3} to ${rec.impact.indoorAfterUgM3} µg/m³ (${rec.impact.exposureReductionPct}% less), going by the past 24 hours' outdoor air.`,
     steps: [
       'Use an electric heater, warm layers and blankets instead.',
       'Never leave a fire or heater burning in a closed room while people sleep: its carbon monoxide can kill.',

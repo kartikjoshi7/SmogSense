@@ -1,19 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { makeAir } from '../../core/fixtures/air.js';
 import { SHARMA_FAMILY } from '../../core/fixtures/profiles.js';
-import { buildPlan } from '../../core/plan.js';
+import { severePlan } from '../../core/fixtures/recommendations.js';
 import { fail, ok } from '../../core/result.js';
-import type { Plan } from '../../shared/plan.js';
 import { createAiService } from './ai-service.js';
 import type { AiClient } from './gemini-client.js';
-
-function severePlan(): Plan {
-  const result = buildPlan(SHARMA_FAMILY, makeAir({ scale: 2.4 }));
-  if (!result.ok) {
-    throw new Error(result.error);
-  }
-  return result.value;
-}
 
 /**
  * A model stand-in: replies with `value` (validated by the request's own schema), or is down when
@@ -68,7 +58,7 @@ describe('keeping only the grounded parts of the model’s explanation', () => {
           why: 'A purifier takes the room from 201 to 28 µg/m³.',
           steps: ['Run it on high.'],
         },
-        { id: second?.id ?? '', why: 'This cuts 73% of exposure.', steps: [] },
+        { id: second?.id ?? '', why: 'This cuts 73% of exposure.', steps: ['Shut the windows.'] },
       ],
     });
 
@@ -101,10 +91,12 @@ describe('keeping only the grounded parts of the model’s explanation', () => {
     expect(logged()).toEqual([expect.objectContaining({ kind: 'explain', rejected: 1 })]);
   });
 
-  it('keeps the AI text for the recommendations the model was asked about', async () => {
+  it('keeps AI text only for the recommendations the prompt sent', async () => {
     const logged = warnings();
     const top = plan.recommendations.slice(0, 8);
-    const items = top.map((rec) => ({ id: rec.id, why: 'Do this today.', steps: ['Start now.'] }));
+    const items = plan.recommendations
+      .slice(0, top.length + 1)
+      .map((rec) => ({ id: rec.id, why: 'Do this today.', steps: ['Start now.'] }));
 
     const response = await explainWith({ headline: 'Today', summary: 'Stay in.', items });
 
@@ -114,14 +106,14 @@ describe('keeping only the grounded parts of the model’s explanation', () => {
     expect(logged()).toEqual([]);
   });
 
-  it('drops an item the model wrote without any steps', async () => {
+  it('treats an item without steps as not written, not as a grounding failure', async () => {
     const logged = warnings();
     const item = { id: first?.id ?? '', why: 'Run the purifier tonight.', steps: [] };
 
     const response = await explainWith({ headline: 'Today', summary: 'Stay in.', items: [item] });
 
     expect(response.items).toEqual([]);
-    expect(logged()).toEqual([expect.objectContaining({ kind: 'explain', rejected: 1 })]);
+    expect(logged()).toEqual([]);
   });
 });
 
@@ -135,7 +127,7 @@ describe('createAiService', () => {
     expect(generate).toHaveBeenCalledTimes(1);
   });
 
-  it('keys cached explanations on the whole plan, not only the part the model sees', async () => {
+  it('keys cached explanations on the prompt, as it does chat answers', async () => {
     const { ai, generate } = service({ headline: 'Today', summary: 'Stay in.', items: [] });
     const last = plan.recommendations.length - 1;
     const changedBelowTop = {
@@ -147,6 +139,7 @@ describe('createAiService', () => {
 
     await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'en' }, CALLER);
     await ai.explain({ plan: changedBelowTop, profile: SHARMA_FAMILY, lang: 'en' }, CALLER);
+    await ai.explain({ plan: plan, profile: SHARMA_FAMILY, lang: 'hi' }, CALLER);
 
     expect(generate).toHaveBeenCalledTimes(2);
   });

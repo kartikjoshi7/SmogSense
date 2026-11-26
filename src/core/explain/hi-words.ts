@@ -32,7 +32,7 @@ export const SENSITIVE_ADVICE: Readonly<Record<OutdoorAdvice, string>> = {
 
 const PHRASES: ImpactPhrases = {
   indoorChange: (before, after, percent) =>
-    `दिन भर के औसत में घर के अंदर PM2.5 लगभग ${before} से घटकर ${after} µg/m³ हो जाता है (${percent}% कम)।`,
+    `पिछले 24 घंटों की बाहरी हवा के हिसाब से घर के अंदर PM2.5 लगभग ${before} से घटकर ${after} µg/m³ हो जाता है (${percent}% कम)।`,
   co2Saved: (kg, exposureClause) => `इससे हर हफ़्ते ${kg} kg CO₂ बचता है${exposureClause}।`,
   exposureDown: (percent) => ` और रास्ते में साँस से जाने वाला PM2.5 ${percent}% घटता है`,
   exposureUp: (percent) => `; रास्ते में प्रदूषण ${percent}% बढ़ता है, इसलिए N95 पहनें`,

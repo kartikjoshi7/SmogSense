@@ -11,7 +11,7 @@ export const GURUGRAM = {
   lon: 77.03,
 };
 
-/** An air service stand-in: a Severe-shaped day for any place, and Gurugram for any search. */
+/** An air service stand-in: the fixture Delhi day for any place, and Gurugram for any search. */
 export function fakeAir(overrides: Partial<AirService> = {}): AirService {
   return {
     getAir: () => Promise.resolve(ok(makeAir())),

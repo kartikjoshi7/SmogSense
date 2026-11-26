@@ -7,6 +7,8 @@ import type {
   RecommendationOf,
 } from '../../shared/recommendation.js';
 import { buildPlan } from '../plan.js';
+import { makeAir, SEVERE } from './air.js';
+import { SHARMA_FAMILY } from './profiles.js';
 
 const BASE: Omit<Recommendation, 'id' | 'impact' | 'facts'> = {
   category: 'routine',
@@ -137,6 +139,11 @@ export function planFor(profile: Profile, air: AirData): Plan {
     throw new Error(`expected a plan, got ${result.error}`);
   }
   return planSchema.parse(result.value);
+}
+
+/** The Sharma family's plan on the severe Delhi day, which most engine and AI tests read. */
+export function severePlan(): Plan {
+  return planFor(SHARMA_FAMILY, makeAir({ scale: SEVERE }));
 }
 
 /** The recommendation ids in a plan, in priority order. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeIndex } from './aqi.js';
-import { makeAir } from './fixtures/air.js';
+import { makeAir, SEVERE } from './fixtures/air.js';
 
 /** The headline index for a day of constant concentrations, in India or elsewhere. */
 function steadyDay(pm25: number, options: { readonly pm10?: number; readonly us?: boolean } = {}) {
@@ -120,7 +120,7 @@ describe('computeIndex', () => {
   });
 
   it('rates the same pattern at 2.4× as Severe', () => {
-    const result = computeIndex(makeAir({ scale: 2.4 }));
+    const result = computeIndex(makeAir({ scale: SEVERE }));
 
     expect(result.ok && result.value).toMatchObject({ value: 440, band: 5, category: 'severe' });
   });

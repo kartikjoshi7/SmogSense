@@ -1,9 +1,9 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { makeAir } from '../../../core/fixtures/air.js';
+import { makeAir, MODERATE } from '../../../core/fixtures/air.js';
 import { HOMEBOUND_SENIOR } from '../../../core/fixtures/profiles.js';
-import { buildPlan } from '../../../core/plan.js';
+import { planFor } from '../../../core/fixtures/recommendations.js';
 import { checkA11y } from '../../test/axe.js';
 import { renderInApp } from '../../test/render.js';
 import { explainedItems } from './explained.js';
@@ -12,11 +12,7 @@ import { Timeline } from './timeline.js';
 
 /** A household that neither commutes nor exercises: no routines or alternatives to suggest. */
 function homeboundPlan() {
-  const result = buildPlan(HOMEBOUND_SENIOR, makeAir({ scale: 0.55 }));
-  if (!result.ok) {
-    throw new Error(result.error);
-  }
-  return result.value;
+  return planFor(HOMEBOUND_SENIOR, makeAir({ scale: MODERATE }));
 }
 
 describe('PlanSection', () => {

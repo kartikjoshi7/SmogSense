@@ -1,14 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { Language } from '../../shared/languages.js';
-import { planSchema, type Plan } from '../../shared/plan.js';
+import { planSchema } from '../../shared/plan.js';
 import { recommendationIdSchema } from '../../shared/recommendation.js';
-import { makeAir } from '../fixtures/air.js';
-import { SHARMA_FAMILY } from '../fixtures/profiles.js';
 import {
   findRecommendation,
   SAMPLE_RECOMMENDATIONS as SAMPLE,
+  severePlan,
 } from '../fixtures/recommendations.js';
-import { buildPlan } from '../plan.js';
 import {
   categoryLabel,
   explainRecommendation,
@@ -18,14 +16,6 @@ import {
   planSummary,
   scaleLabel,
 } from './index.js';
-
-function severePlan(): Plan {
-  const result = buildPlan(SHARMA_FAMILY, makeAir({ scale: 2.4 }));
-  if (!result.ok) {
-    throw new Error(result.error);
-  }
-  return result.value;
-}
 
 describe('scale names', () => {
   it('names each index scale in both languages', () => {

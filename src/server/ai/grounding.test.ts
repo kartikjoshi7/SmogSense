@@ -1,16 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { makeAir } from '../../core/fixtures/air.js';
+import { makeAir, SEVERE } from '../../core/fixtures/air.js';
 import { SHARMA_FAMILY } from '../../core/fixtures/profiles.js';
-import { buildPlan } from '../../core/plan.js';
+import { planFor, severePlan } from '../../core/fixtures/recommendations.js';
+import type { Plan } from '../../shared/plan.js';
 import type { Profile } from '../../shared/profile.js';
 import { allowedNumbers, isGrounded } from './grounding.js';
+import { explainPrompt } from './prompts.js';
 
-function severePlan() {
-  const result = buildPlan(SHARMA_FAMILY, makeAir({ scale: 2.4 }));
-  if (!result.ok) {
-    throw new Error(result.error);
-  }
-  return result.value;
+/** The numbers the plan's explain prompt sends the model. */
+function allowedFor(plan: Plan): ReadonlySet<number> {
+  return allowedNumbers(explainPrompt({ plan, profile: SHARMA_FAMILY, lang: 'en' }).facts);
 }
 
 describe('reading numbers', () => {
@@ -75,7 +74,7 @@ describe('reading numbers', () => {
 });
 
 describe('isGrounded', () => {
-  const allowed = allowedNumbers(severePlan());
+  const allowed = allowedFor(severePlan());
 
   it('accepts numbers from the plan, rounded numbers, clock times and common terms', () => {
     expect(isGrounded('A purifier takes the room from 201 to 28 µg/m³ (86% less).', allowed)).toBe(
@@ -114,22 +113,24 @@ describe('isGrounded', () => {
     expect(isGrounded('The index is 999.', allowed)).toBe(false);
   });
 
+  it('rejects a number from the plan that the prompt does not send, such as the forecast', () => {
+    const plan = severePlan();
+    const forecast = plan.forecast.map((point) => ({ ...point, pm25: 777 }));
+
+    expect(isGrounded('PM2.5 reaches 777 tonight.', allowedFor({ ...plan, forecast }))).toBe(false);
+  });
+
   it('accepts the size of a negative fact, as text writes it', () => {
     const walker: Profile = {
       ...SHARMA_FAMILY,
       commute: { ...SHARMA_FAMILY.commute, mode: 'walk', oneWayKm: 2, alternatives: ['metro'] },
     };
-    const result = buildPlan(walker, makeAir({ scale: 2.4 }));
-    if (!result.ok) {
-      throw new Error(result.error);
-    }
-    const metro = result.value.recommendations.find((rec) => rec.id === 'switch_to_metro');
+    const plan = planFor(walker, makeAir({ scale: SEVERE }));
+    const metro = plan.recommendations.find((rec) => rec.id === 'switch_to_metro');
     const co2 = metro && 'co2SavedKgPerWeek' in metro.impact ? metro.impact.co2SavedKgPerWeek : 0;
 
     expect(co2).toBeLessThan(0);
-    expect(
-      isGrounded(`It adds ${String(-co2)} kg of CO₂ a week.`, allowedNumbers(result.value)),
-    ).toBe(true);
+    expect(isGrounded(`It adds ${String(-co2)} kg of CO₂ a week.`, allowedFor(plan))).toBe(true);
   });
 
   it('accepts text with no numbers at all', () => {

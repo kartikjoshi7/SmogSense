@@ -41,7 +41,7 @@ function commuteProtection(ctx: PlanContext): Candidate[] {
 
 /** Air the home for a few minutes at the cleanest daylight hour, then close up again. */
 function ventilateBriefly(ctx: PlanContext): Candidate[] {
-  const cleanest = ctx.ventilation;
+  const cleanest = ctx.cleanestHour;
   if (cleanest === null) {
     return [];
   }
@@ -62,7 +62,7 @@ function ventilateBriefly(ctx: PlanContext): Candidate[] {
 
 /** Low-emission driving habits for households that drive themselves. */
 function drivingHabits(ctx: PlanContext): Candidate[] {
-  if (!COMMUTE_MODES[ctx.profile.commute.mode].isPrivateMotor) {
+  if (COMMUTE_MODES[ctx.profile.commute.mode].ownVehicle === null) {
     return [];
   }
   const habit = (id: 'engine_off_at_signals' | 'combine_errands'): Candidate =>

@@ -60,7 +60,7 @@ constant there; `src/core/constants.test.ts` fails if one is missing or shows an
 | `COMMUTE_MODES › co2KgPerKm` | walk 0, cycle 0, two_wheeler 0.05, auto 0.08, bus 0.03, metro 0.02, car_petrol 0.17, car_diesel 0.16, car_cng 0.13, car_ev 0.08 (kg/km) | Estimate from India GHG Program road-transport factors; per passenger for bus and metro |
 | `COMMUTE_MODES › speedKmh` | walk 5, cycle 12, two_wheeler 25, auto 20, bus 15, metro 30, car_petrol 22, car_diesel 22, car_cng 22, car_ev 22 (km/h) | Estimate: typical urban door-to-door speeds |
 | `COMMUTE_MODES › breathingM3h` | walk 1.6, cycle 2.5, two_wheeler 0.7, auto 0.7, bus 0.7, metro 0.7, car_petrol 0.7, car_diesel 0.7, car_cng 0.7, car_ev 0.7 (m³/h) | US EPA Exposure Factors Handbook (2011) rates: moderate walking, between moderate and high for cycling, light for passengers |
-| `CAR_MODES` | car_petrol, car_diesel, car_cng, car_ev | The modes where carpooling applies |
+| `COMMUTE_MODES › ownVehicle` | two_wheeler two_wheeler, car_petrol car, car_diesel car, car_cng car, car_ev car | The vehicle the traveller drives: engine-off and errand advice apply to both kinds, carpooling only to a car |
 | `TRIPS_PER_COMMUTE_DAY` | 2 trips | There and back on each commuting day |
 | `CARPOOL_OCCUPANTS` | 3 people | Estimate |
 | `MAX_CYCLE_KM, MAX_WALK_KM` | 8 km, 2 km | Estimate: longest one-way trips suggested for cycling and walking |
@@ -99,16 +99,17 @@ POST /api/plan  { profile, location }
 
 POST /api/explain  { profile, location, lang }
   same middleware with the AI rate limit → loadPlan
-  → AiService.explain: cache (SHA-256 of language, the whole plan and the members; 30 min)
+  → AiService.explain: cache (SHA-256 of the exact prompt; 30 min)
   → on a miss, one unit of the caller's daily allowance (none left: standard guidance)
   → GeminiClient.generate: each model in order, skipping cooled-down ones, within the daily budget,
     JSON schema in the request, Zod on the reply (a rejected reply is logged with its reason)
-  → only the grounded parts: the intro and each item with at least one step (drops are counted in the log)
+  → only the grounded parts, checked against the prompt's own facts: the intro and each item
+    with at least one step (grounding drops are counted in the log)
   → 200 { intro | null, items[], planKey }: the UI uses them only if planKey matches its plan
 ```
 
 `/api/chat` and `/api/community` follow the same path as `/api/explain` with their own prompts;
-their caches are keyed on a SHA-256 of the exact prompt and last 10 and 30 minutes. `GET
+their caches are also keyed on the exact prompt and last 10 and 30 minutes. `GET
 /api/geocode` validates the query and the interface language, calls Open-Meteo's geocoding API
 through the same `fetchJson` wrapper (place names come back in that language) and sets a one-day
 CDN cache header. The rate limits and the location rounding are described in

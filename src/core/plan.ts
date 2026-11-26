@@ -17,7 +17,7 @@ import { routineCandidates } from './recommendations/routine.js';
 import { ok, type Result } from './result.js';
 import { sensitiveMemberIds, householdSensitivity, outdoorAdvice } from './risk.js';
 import { severityMode } from './severity.js';
-import { bestActivityWindow, ventilationHour } from './windows.js';
+import { bestActivityWindow, cleanestDaylightHour } from './windows.js';
 
 /** Recommendations that depend only on the air and the place, not on the household, in order. */
 const FOR_EVERYONE: readonly RecommendationId[] = [
@@ -63,7 +63,7 @@ function buildContext(profile: Profile, air: AirData, index: IndexReading): Plan
             durationMin: exercise.durationMin,
             usualHour: exercise.usualHour,
           }),
-    ventilation: ventilationHour(air.hourly, air.nowIndex, air.daylight),
+    cleanestHour: cleanestDaylightHour(air.hourly, air.nowIndex, air.daylight),
   };
 }
 
@@ -112,7 +112,7 @@ export function buildPlan(profile: Profile, air: AirData): Result<Plan, 'insuffi
     householdSensitivity: ctx.sensitivity,
     outdoorAdvice: ctx.advice,
     inversion: analyzeInversion(air.hourly, air.nowIndex),
-    cleanestHour: ctx.ventilation,
+    cleanestHour: ctx.cleanestHour,
     forecast: horizon.map(({ time, hour, pm25 }) => ({ time, hour, pm25 })),
     recommendations: rank(
       candidates.map((c) => c.recommendation),

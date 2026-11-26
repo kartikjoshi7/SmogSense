@@ -18,7 +18,7 @@ met, in the code and in the tests.
 | Sustainable alternatives | Metro, bus, carpool, cycling, walking, working from home, cleaner cooking fuel; the commute swaps with kg CO₂ saved per week; on smoggy days a walker or cyclist is offered the metro or bus as protection, with the CO₂ it adds | `core/emissions.ts`, `recommendations/alternatives.ts` | `emissions.test.ts` |
 | Tailored to location | GPS or city search; NAQI in India, US AQI elsewhere; the NCR-only GRAP check | `core/aqi.ts`, `server/air/geocode.ts` | `aqi.test.ts`, `geocode.test.ts` |
 | Tailored to lifestyle | Commute mode, distance and days, exercise habit, home, cooking fuel, incense, smoking, winter heating, mask | `shared/profile.ts` | `profile.test.ts` |
-| Clearly explaining the impact | Every measurable card shows the engine's numbers and the rest a benefit level; AI text with a number the grounding check cannot match to the plan is replaced by standard guidance, and every text says which it is | `server/ai/grounding.ts`, `core/explain/*` | `grounding.test.ts`, `e2e/flow.spec.ts` |
+| Clearly explaining the impact | Every measurable card shows the engine's numbers and the rest a benefit level; AI text with a number the grounding check cannot match to its prompt's facts is replaced by standard guidance, and every text says which it is | `server/ai/grounding.ts`, `core/explain/*` | `grounding.test.ts`, `e2e/flow.spec.ts` |
 
 ## What the judges look for
 

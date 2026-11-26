@@ -6,7 +6,7 @@ import { FUEL, HEATER, indoor, qualitative } from './hi-words.js';
 export const homeTemplates = {
   run_purifier: (rec) => ({
     title: rec.facts.purifiersOwned > 0 ? 'प्यूरीफ़ायर तेज़ चलाएँ' : 'एयर प्यूरीफ़ायर लगाएँ',
-    why: `आपके ${rec.facts.roomAreaM2} m² के कमरे में प्यूरीफ़ायर से दिन भर का औसत PM2.5 लगभग ${rec.impact.indoorBeforeUgM3} से ${rec.impact.indoorAfterUgM3} µg/m³ हो जाता है (${rec.impact.exposureReductionPct}% कम)।`,
+    why: `पिछले 24 घंटों की बाहरी हवा के हिसाब से, आपके ${rec.facts.roomAreaM2} m² के कमरे में प्यूरीफ़ायर से PM2.5 लगभग ${rec.impact.indoorBeforeUgM3} से ${rec.impact.indoorAfterUgM3} µg/m³ हो जाता है (${rec.impact.exposureReductionPct}% कम)।`,
     steps: [
       'इसे उस कमरे में रखें जहाँ परिवार सोता है, दरवाज़ा बंद रखें।',
       'रात भर और सबसे ज़्यादा धुंध के समय तेज़ चलाएँ।',
@@ -50,7 +50,7 @@ export const homeTemplates = {
   ),
   safer_heating: (rec) => ({
     title: 'बिना धुएँ के कमरा गरम करें',
-    why: `${HEATER[rec.facts.heating]} में ईंधन कमरे के अंदर ही जलता है। इसके बिना घर के अंदर दिन भर का औसत PM2.5 लगभग ${rec.impact.indoorBeforeUgM3} से घटकर ${rec.impact.indoorAfterUgM3} µg/m³ हो जाता है (${rec.impact.exposureReductionPct}% कम)।`,
+    why: `${HEATER[rec.facts.heating]} में ईंधन कमरे के अंदर ही जलता है। इसके बिना, पिछले 24 घंटों की बाहरी हवा के हिसाब से, घर के अंदर PM2.5 लगभग ${rec.impact.indoorBeforeUgM3} से घटकर ${rec.impact.indoorAfterUgM3} µg/m³ हो जाता है (${rec.impact.exposureReductionPct}% कम)।`,
     steps: [
       'इसकी जगह बिजली का हीटर, गरम कपड़े और कंबल इस्तेमाल करें।',
       'बंद कमरे में सोते समय आग या हीटर कभी जलता न छोड़ें: इसकी कार्बन मोनोऑक्साइड जान ले सकती है।',

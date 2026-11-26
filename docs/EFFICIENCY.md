@@ -27,8 +27,8 @@ own functions, with no network call.
 
 - `gemini-3.5-flash-lite` first, then `gemini-3.8-flash` (`GEMINI_MODELS`), with minimal thinking
   and capped output tokens (900 for a plan, 400 for chat and notices).
-- One call explains the whole plan, and the explain and chat prompts carry only its 8
-  highest-priority items. Each reply's JSON Schema is built once and reused for every call.
+- One call explains the plan's 8 highest-priority items (the rest keep standard text), and the
+  chat prompt carries the same 8. Each reply's JSON Schema is built once and reused for every call.
 - AI answers are cached; a response with no AI text is never cached, so the next request can reach
   the model again. An answer from the cache never spends the client's daily AI allowance.
 - A model that answers 429 is skipped for 10 minutes, and a daily budget (`GEMINI_DAILY_BUDGET`,

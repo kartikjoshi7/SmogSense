@@ -16,15 +16,17 @@ export interface PlanContext {
   /** Members in a sensitive group, who get personal alerts. */
   readonly sensitiveIds: readonly string[];
   /**
-   * The 24-hour mean of outdoor PM2.5: the baseline for the home, where the family spends all day.
-   * Activities at a known time use that time's air instead (`commutePm25`, `exerciseWindow`).
+   * The mean outdoor PM2.5 of the past 24 hours (the index's mean): the baseline for the home,
+   * where the family spends all day. Activities at a known time use that time's air instead
+   * (`commutePm25`, `exerciseWindow`).
    */
   readonly ambientPm25: number;
   /** Outdoor PM2.5 at the household's usual commuting hours. */
   readonly commutePm25: number;
   /** Cleanest daylight window for the household's exercise, if any. */
   readonly exerciseWindow: ActivityWindow | null;
-  readonly ventilation: CleanestHour | null;
+  /** The cleanest daylight hour in the next 24 hours: when to air the home (`cleanestHour`). */
+  readonly cleanestHour: CleanestHour | null;
 }
 
 /** Leaves out the priority of each member of a union separately, so every id keeps its facts. */

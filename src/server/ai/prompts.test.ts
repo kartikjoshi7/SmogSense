@@ -1,16 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { makeAir } from '../../core/fixtures/air.js';
 import { SHARMA_FAMILY } from '../../core/fixtures/profiles.js';
-import { buildPlan, communityPlan } from '../../core/plan.js';
+import { severePlan } from '../../core/fixtures/recommendations.js';
+import { communityPlan } from '../../core/plan.js';
 import { SYSTEM_INSTRUCTION, chatPrompt, communityPrompt, explainPrompt } from './prompts.js';
-
-function severePlan() {
-  const result = buildPlan(SHARMA_FAMILY, makeAir({ scale: 2.4 }));
-  if (!result.ok) {
-    throw new Error(result.error);
-  }
-  return result.value;
-}
 
 describe('prompts', () => {
   it('sets non-negotiable rules in the system instruction', () => {
@@ -22,7 +14,7 @@ describe('prompts', () => {
 
   it('sends the household as ids and age groups with the facts, never health conditions', () => {
     const plan = severePlan();
-    const prompt = explainPrompt({ plan, profile: SHARMA_FAMILY, lang: 'hi' });
+    const { text: prompt, facts } = explainPrompt({ plan, profile: SHARMA_FAMILY, lang: 'hi' });
 
     expect(prompt).toContain('LANGUAGE: Hindi');
     expect(prompt).toContain('[{"id":"m1","ageGroup":"adult"},{"id":"m2","ageGroup":"child"}');
@@ -32,10 +24,11 @@ describe('prompts', () => {
     expect(prompt).toContain(`"id":"${plan.recommendations[0]?.id ?? ''}"`);
     expect(plan.recommendations.length).toBeGreaterThan(8);
     expect(prompt).not.toContain(`"id":"${plan.recommendations[8]?.id ?? ''}"`);
+    expect(prompt).toContain(`FACTS: ${JSON.stringify(facts)}`);
   });
 
   it('fences the question and strips anything that could close the fence', () => {
-    const prompt = chatPrompt({
+    const { text: prompt } = chatPrompt({
       plan: severePlan(),
       profile: SHARMA_FAMILY,
       lang: 'en',
@@ -50,7 +43,7 @@ describe('prompts', () => {
   });
 
   it('fences earlier turns as data, so a turn cannot pose as the rules or close the fence', () => {
-    const prompt = chatPrompt({
+    const { text: prompt } = chatPrompt({
       plan: severePlan(),
       profile: SHARMA_FAMILY,
       lang: 'en',
@@ -67,7 +60,7 @@ describe('prompts', () => {
   });
 
   it('writes community notices from shared actions only', () => {
-    const prompt = communityPrompt({
+    const { text: prompt } = communityPrompt({
       plan: communityPlan(severePlan()),
       audience: 'school',
       lang: 'en',

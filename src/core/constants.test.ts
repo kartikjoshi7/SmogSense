@@ -51,7 +51,12 @@ const ASSUMPTIONS: readonly (readonly [string, string])[] = [
   ['COMMUTE_MODES › co2KgPerKm', `${byMode((mode) => mode.co2KgPerKm)} (kg/km)`],
   ['COMMUTE_MODES › speedKmh', `${byMode((mode) => mode.speedKmh)} (km/h)`],
   ['COMMUTE_MODES › breathingM3h', `${byMode((mode) => mode.breathingM3h)} (m³/h)`],
-  ['CAR_MODES', C.CAR_MODES.join(', ')],
+  [
+    'COMMUTE_MODES › ownVehicle',
+    Object.entries(C.COMMUTE_MODES)
+      .flatMap(([mode, { ownVehicle }]) => (ownVehicle === null ? [] : [`${mode} ${ownVehicle}`]))
+      .join(', '),
+  ],
   ['TRIPS_PER_COMMUTE_DAY', `${C.TRIPS_PER_COMMUTE_DAY} trips`],
   ['CARPOOL_OCCUPANTS', `${C.CARPOOL_OCCUPANTS} people`],
   ['MAX_CYCLE_KM, MAX_WALK_KM', `${C.MAX_CYCLE_KM} km, ${C.MAX_WALK_KM} km`],

@@ -43,15 +43,15 @@ answer and notice is labelled standard guidance.
 **Context.** Even when a model is given the facts, it can round them differently, convert units or
 invent a figure, and in Hindi or Tamil it may write digits in that language's script.
 
-**Decision.** A reply is used only if every number in it, in any script, is one of the plan's
-numbers at the precision written. Anything else is replaced by standard guidance, and each text
+**Decision.** A reply is used only if every number in it, in any script, is one of the numbers
+its prompt sent, at the precision written. Anything else is replaced by standard guidance, and each text
 says whether it came from the AI or not. The mechanism and its known gaps are in
 [Security › AI safety](SECURITY.md#ai-safety).
 
 **Turned down.** Trusting the instruction "use only these numbers" alone. Asking the model to
 cite fact ids: more tokens, and the citations themselves would still need checking.
 
-**Cost.** A correct reply that writes a number the plan does not contain (a sum of two figures,
+**Cost.** A correct reply that writes a number the prompt does not contain (a sum of two figures,
 say) is thrown away; the user then sees standard guidance, labelled as such.
 
 **Carried by** `src/server/ai/grounding.ts`, `explanation.ts` and `text-replies.ts`. **Checked by**

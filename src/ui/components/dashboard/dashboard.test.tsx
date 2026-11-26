@@ -1,8 +1,8 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { createRef, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { makeAir } from '../../../core/fixtures/air.js';
-import { buildPlan } from '../../../core/plan.js';
+import { makeAir, SEVERE } from '../../../core/fixtures/air.js';
+import { planFor } from '../../../core/fixtures/recommendations.js';
 import type { AirData } from '../../../shared/air.js';
 import { AppProvider } from '../../state/app-context.js';
 import { checkA11y } from '../../test/axe.js';
@@ -65,11 +65,7 @@ describe('Dashboard errors', () => {
 
 /** The plan the engine builds for the example family from this air data. */
 function planFrom(air: AirData) {
-  const result = buildPlan(DEMO_HOUSEHOLD.profile, air);
-  if (!result.ok) {
-    throw new Error(result.error);
-  }
-  return result.value;
+  return planFor(DEMO_HOUSEHOLD.profile, air);
 }
 
 describe('Dashboard loading', () => {
@@ -89,7 +85,7 @@ describe('Dashboard loading', () => {
 describe('Dashboard requests', () => {
   it('never shows a slow plan for a place the household has already left', async () => {
     const delhi = planFrom(makeAir());
-    const mumbai = planFrom(makeAir({ scale: 2.4 }));
+    const mumbai = planFrom(makeAir({ scale: SEVERE }));
     expect(delhi.index.value).not.toBe(mumbai.index.value);
     const answers: ((body: unknown) => void)[] = [];
     vi.stubGlobal(

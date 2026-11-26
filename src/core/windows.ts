@@ -156,7 +156,7 @@ export function bestActivityWindow(
 /**
  * The daylight hour in the next 24 hours with the lowest PM2.5: the time to air the home briefly.
  */
-export function ventilationHour(
+export function cleanestDaylightHour(
   hourly: readonly HourlyReading[],
   fromIndex: number,
   daylight: readonly Daylight[],

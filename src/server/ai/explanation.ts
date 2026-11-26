@@ -1,11 +1,10 @@
 /** The plan's explanation: only the parts of Gemini's wording that pass the grounding check. */
 import { z } from 'zod';
 import type { AiExplanation } from '../../shared/api.js';
-import type { Plan } from '../../shared/plan.js';
 import { SETTINGS } from '../config.js';
 import type { AiClient } from './gemini-client.js';
 import { allowedNumbers, isGrounded, logUngrounded } from './grounding.js';
-import { SYSTEM_INSTRUCTION, explainPrompt, type ExplainInput } from './prompts.js';
+import { SYSTEM_INSTRUCTION, type Prompt, type PromptFacts } from './prompts.js';
 
 const LIMITS = SETTINGS.aiReplyChars;
 
@@ -23,25 +22,17 @@ const explanationReply = z.object({
 type ExplanationReply = z.infer<typeof explanationReply>;
 
 /**
- * The AI's items that can be shown: one per recommendation in the plan, with at least one step,
- * and with every number in it a fact of the plan.
+ * The reply's item for each recommendation the prompt sent, in the plan's order. An item without
+ * steps counts as not written: standard text stands in, as it does for an item left out.
  */
-function groundedItems(
-  plan: Plan,
-  reply: ExplanationReply,
-  allowed: ReadonlySet<number>,
-): AiExplanation['items'] {
-  return plan.recommendations.flatMap((rec) => {
-    const written = reply.items.find((item) => item.id === rec.id);
-    const usable =
-      written !== undefined &&
-      written.steps.length > 0 &&
-      isGrounded([written.why, ...written.steps].join(' '), allowed);
-    return usable ? [{ id: rec.id, why: written.why, steps: written.steps }] : [];
+function writtenItems(facts: PromptFacts, reply: ExplanationReply): AiExplanation['items'] {
+  return facts.recommendations.flatMap(({ id }) => {
+    const written = reply.items.find((item) => item.id === id && item.steps.length > 0);
+    return written === undefined ? [] : [{ id, why: written.why, steps: written.steps }];
   });
 }
 
-/** The reply's headline and summary when every number in them is a plan fact, else null. */
+/** The reply's headline and summary when every number in them is allowed, else null. */
 function groundedIntro(
   reply: ExplanationReply,
   allowed: ReadonlySet<number>,
@@ -50,32 +41,26 @@ function groundedIntro(
   return isGrounded(`${headline} ${summary}`, allowed) ? { headline, summary } : null;
 }
 
-/** Keep only the grounded parts of a Gemini reply (none without one); log what was dropped. */
-function composeExplanation(plan: Plan, reply: ExplanationReply | null): AiExplanation {
+/** Keep only the grounded parts of a Gemini reply (none without one); log how many were dropped. */
+function composeExplanation(facts: PromptFacts, reply: ExplanationReply | null): AiExplanation {
   if (reply === null) {
     return { intro: null, items: [] };
   }
-  const allowed = allowedNumbers(plan);
-  const items = groundedItems(plan, reply, allowed);
+  const allowed = allowedNumbers(facts);
+  const written = writtenItems(facts, reply);
+  const items = written.filter((item) => isGrounded([item.why, ...item.steps].join(' '), allowed));
   const intro = groundedIntro(reply, allowed);
-  const planIds = new Set<string>(plan.recommendations.map((rec) => rec.id));
-  const droppedItems = reply.items.filter(
-    (written) => planIds.has(written.id) && !items.some((item) => item.id === written.id),
-  ).length;
-  logUngrounded('explain', droppedItems + (intro === null ? 1 : 0));
+  logUngrounded('explain', written.length - items.length + (intro === null ? 1 : 0));
   return { intro, items };
 }
 
-/** Gemini's wording for a plan, keeping only the parts that pass the grounding check. */
-export async function writeExplanation(
-  client: AiClient,
-  input: ExplainInput,
-): Promise<AiExplanation> {
+/** Gemini's wording for an explain prompt, keeping only the parts that pass the grounding check. */
+export async function writeExplanation(client: AiClient, prompt: Prompt): Promise<AiExplanation> {
   const reply = await client.generate({
     system: SYSTEM_INSTRUCTION,
-    prompt: explainPrompt(input),
+    prompt: prompt.text,
     schema: explanationReply,
     maxOutputTokens: SETTINGS.aiMaxOutputTokens.explain,
   });
-  return composeExplanation(input.plan, reply.ok ? reply.value : null);
+  return composeExplanation(prompt.facts, reply.ok ? reply.value : null);
 }

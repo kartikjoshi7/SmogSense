@@ -32,7 +32,7 @@ export const SENSITIVE_ADVICE: Readonly<Record<OutdoorAdvice, string>> = {
 
 const PHRASES: ImpactPhrases = {
   indoorChange: (before, after, percent) =>
-    `Averaged over the day, indoor PM2.5 goes from about ${before} to ${after} µg/m³ (${percent}% less).`,
+    `Going by the past 24 hours' outdoor air, indoor PM2.5 goes from about ${before} to ${after} µg/m³ (${percent}% less).`,
   co2Saved: (kg, exposureClause) => `This saves ${kg} kg of CO₂ a week${exposureClause}.`,
   exposureDown: (percent) => ` and cuts the PM2.5 you breathe on the way by ${percent}%`,
   exposureUp: (percent) => `; in-transit exposure rises by ${percent}%, so wear an N95`,

@@ -17,6 +17,7 @@ import type { AiClient } from './gemini-client.js';
 import {
   chatPrompt,
   communityPrompt,
+  explainPrompt,
   type ChatInput,
   type ExplainInput,
   type NoticeInput,
@@ -81,23 +82,23 @@ export function createAiService(deps: {
   const modelFor = (caller: string) => meteredModel(deps.client, allowance, caller);
 
   return {
+    // Every cache is keyed on the exact prompt: a reply covers only what its prompt sent, and the
+    // route ties an explanation to the caller's own plan by that plan's key.
     explain(input, caller) {
-      // The response carries standard text for every recommendation, so it is keyed on the
-      // whole plan, not only on the part the model sees.
-      const key = digestOf('explain', input.lang, input.plan, input.profile.members);
-      const load = () => writeExplanation(modelFor(caller), input);
-      return explanations.getOrLoad(key, load, explanationHasAiText);
+      const prompt = explainPrompt(input);
+      const load = () => writeExplanation(modelFor(caller), prompt);
+      return explanations.getOrLoad(digestOf('explain', prompt.text), load, explanationHasAiText);
     },
     chat(input, caller) {
       const prompt = chatPrompt(input);
       const load = () => writeAnswer(modelFor(caller), input, prompt);
-      return answers.getOrLoad(digestOf('chat', prompt), load, hasAiText);
+      return answers.getOrLoad(digestOf('chat', prompt.text), load, hasAiText);
     },
     communityNotice(input, caller) {
       const everyone = { ...input, plan: communityPlan(input.plan) };
       const prompt = communityPrompt(everyone);
       const load = () => writeNotice(modelFor(caller), everyone, prompt);
-      return notices.getOrLoad(digestOf('notice', prompt), load, hasAiText);
+      return notices.getOrLoad(digestOf('notice', prompt.text), load, hasAiText);
     },
   };
 }

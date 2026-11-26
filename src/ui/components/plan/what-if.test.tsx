@@ -1,9 +1,8 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { makeAir } from '../../../core/fixtures/air.js';
+import { makeAir, POOR } from '../../../core/fixtures/air.js';
 import { HEALTHY_COUPLE, SHARMA_FAMILY } from '../../../core/fixtures/profiles.js';
-import { findRecommendation } from '../../../core/fixtures/recommendations.js';
-import { buildPlan } from '../../../core/plan.js';
+import { findRecommendation, planFor, severePlan } from '../../../core/fixtures/recommendations.js';
 import type { Plan } from '../../../shared/plan.js';
 import type { Profile } from '../../../shared/profile.js';
 import { checkA11y } from '../../test/axe.js';
@@ -15,14 +14,6 @@ const LONG_RUN: Profile = {
   ...HEALTHY_COUPLE,
   exercise: { ...HEALTHY_COUPLE.exercise, durationMin: 90 },
 };
-
-function planOnPoorDay(): Plan {
-  const result = buildPlan(LONG_RUN, makeAir({ scale: 0.8 }));
-  if (!result.ok) {
-    throw new Error(result.error);
-  }
-  return result.value;
-}
 
 function show(plan: Plan) {
   const view = renderInApp(
@@ -38,18 +29,11 @@ function show(plan: Plan) {
 
 describe('WhatIf', () => {
   it('gives the same usual-time dose as the plan’s advice to exercise indoors', () => {
-    const result = buildPlan(SHARMA_FAMILY, makeAir({ scale: 2.4 }));
-    if (!result.ok) {
-      throw new Error(result.error);
-    }
-    const indoors = findRecommendation(result.value, 'exercise_indoors');
+    const plan = severePlan();
+    const indoors = findRecommendation(plan, 'exercise_indoors');
     expect(indoors).toBeDefined();
     renderInApp(
-      <WhatIf
-        plan={result.value}
-        exercise={SHARMA_FAMILY.exercise}
-        members={SHARMA_FAMILY.members}
-      />,
+      <WhatIf plan={plan} exercise={SHARMA_FAMILY.exercise} members={SHARMA_FAMILY.members} />,
     );
 
     expect(
@@ -60,7 +44,7 @@ describe('WhatIf', () => {
   });
 
   it('gives the same doses as the plan’s own exercise advice, over the whole session', async () => {
-    const plan = planOnPoorDay();
+    const plan = planFor(LONG_RUN, makeAir({ scale: POOR }));
     const advice = findRecommendation(plan, 'exercise_window');
     expect(advice).toBeDefined();
     const { view, moveTo } = show(plan);
@@ -79,7 +63,7 @@ describe('WhatIf', () => {
   });
 
   it('says so when the forecast ends before the session would', () => {
-    const plan = planOnPoorDay();
+    const plan = planFor(LONG_RUN, makeAir({ scale: POOR }));
     const { moveTo } = show(plan);
     moveTo(plan.forecast.at(-1)?.hour ?? 0);
 

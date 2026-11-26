@@ -50,31 +50,57 @@ function household(profile: Profile): string {
   return JSON.stringify(profile.members.map(({ id, ageGroup }) => ({ id, ageGroup })));
 }
 
+/** A recommendation as a prompt sends it: member ids only in the household's own prompts. */
+type PromptRecommendation = Pick<Recommendation, 'id' | 'category' | 'impact' | 'facts'> &
+  Partial<Pick<Recommendation, 'memberIds'>>;
+
+/** The plan facts a prompt sends: the only numbers the model's reply may quote. */
+export interface PromptFacts extends Pick<
+  Plan,
+  | 'index'
+  | 'current'
+  | 'severity'
+  | 'householdSensitivity'
+  | 'outdoorAdvice'
+  | 'inversion'
+  | 'cleanestHour'
+> {
+  readonly recommendations: readonly PromptRecommendation[];
+}
+
+/** A prompt for Gemini and the facts in it, which the reply is checked against. */
+export interface Prompt {
+  readonly text: string;
+  readonly facts: PromptFacts;
+}
+
 /**
  * The plan's facts for a prompt. Member ids are included only for the household's own
  * explanations; anything written for neighbours or a school must not identify family members.
  */
-function facts(
+function promptFacts(
   plan: Plan,
   recommendations: readonly Recommendation[],
   withMembers: boolean,
-): string {
-  return JSON.stringify({
-    index: plan.index,
-    current: plan.current,
-    severity: plan.severity,
-    householdSensitivity: plan.householdSensitivity,
-    outdoorAdvice: plan.outdoorAdvice,
-    inversion: plan.inversion,
-    cleanestHour: plan.cleanestHour,
-    recommendations: recommendations.map(({ id, category, impact, facts: values, memberIds }) => ({
+): PromptFacts {
+  const { index, current, severity, householdSensitivity, outdoorAdvice, inversion, cleanestHour } =
+    plan;
+  return {
+    index,
+    current,
+    severity,
+    householdSensitivity,
+    outdoorAdvice,
+    inversion,
+    cleanestHour,
+    recommendations: recommendations.map(({ id, category, impact, facts, memberIds }) => ({
       id,
       category,
       impact,
-      facts: values,
+      facts,
       ...(withMembers ? { memberIds } : {}),
     })),
-  });
+  };
 }
 
 /** The recommendations a household prompt carries: only the top ones, to save tokens. */
@@ -83,14 +109,16 @@ function topRecommendations(plan: Plan): readonly Recommendation[] {
 }
 
 /** Ask for a headline, summary and one explanation per top recommendation. */
-export function explainPrompt({ plan, profile, lang }: ExplainInput): string {
-  return [
+export function explainPrompt({ plan, profile, lang }: ExplainInput): Prompt {
+  const facts = promptFacts(plan, topRecommendations(plan), true);
+  const text = [
     `LANGUAGE: ${ENGLISH_NAMES[lang]}`,
     `HOUSEHOLD: ${household(profile)}`,
-    `FACTS: ${facts(plan, topRecommendations(plan), true)}`,
+    `FACTS: ${JSON.stringify(facts)}`,
     `TASK: Write a headline of at most ${SETTINGS.aiReplyChars.headline} characters and a two-sentence summary of today for this household.`,
     `Then, for every recommendation id in FACTS, write "why" (at most two sentences that use its impact numbers) and up to ${SETTINGS.aiMaxSteps} short "steps".`,
   ].join('\n');
+  return { text, facts };
 }
 
 /** User text with angle brackets removed, so it can neither open nor close a delimiter tag. */
@@ -99,27 +127,31 @@ function asData(text: string): string {
 }
 
 /** Ask a free-form question about today's plan. */
-export function chatPrompt({ plan, profile, lang, question, history }: ChatInput): string {
+export function chatPrompt({ plan, profile, lang, question, history }: ChatInput): Prompt {
   const turns = history.map((turn) => `${turn.role}: ${asData(turn.text)}`).join('\n');
-  return [
+  const facts = promptFacts(plan, topRecommendations(plan), true);
+  const text = [
     `LANGUAGE: ${ENGLISH_NAMES[lang]}`,
     `HOUSEHOLD: ${household(profile)}`,
-    `FACTS: ${facts(plan, topRecommendations(plan), true)}`,
+    `FACTS: ${JSON.stringify(facts)}`,
     `<conversation>\n${turns === '' ? '(none)' : turns}\n</conversation>`,
     `<user_question>${asData(question)}</user_question>`,
     `TASK: Answer the question in at most ${SETTINGS.aiAnswerSentences} sentences, using the FACTS.`,
   ].join('\n');
+  return { text, facts };
 }
 
 /**
  * Ask for a short notice a housing society, school or office can share, from a plan that is
  * the same for every family nearby (`communityPlan`).
  */
-export function communityPrompt({ plan, audience, lang }: NoticeInput): string {
-  return [
+export function communityPrompt({ plan, audience, lang }: NoticeInput): Prompt {
+  const facts = promptFacts(plan, plan.recommendations, false);
+  const text = [
     `LANGUAGE: ${ENGLISH_NAMES[lang]}`,
     `AUDIENCE: ${AUDIENCE_NAMES[audience]}`,
-    `FACTS: ${facts(plan, plan.recommendations, false)}`,
+    `FACTS: ${JSON.stringify(facts)}`,
     `TASK: Write a notice of at most ${SETTINGS.aiNoticeWords} words for a messaging group: the air today, when it is cleanest, and three things everyone should do. Do not mention any household.`,
   ].join('\n');
+  return { text, facts };
 }

@@ -1,8 +1,8 @@
-/** The grounding check: AI text may only quote numbers that are facts of the plan. */
+/** The grounding check: AI text may only quote numbers its prompt gave the model. */
 import { HOURS_PER_DAY } from '../../shared/limits.js';
-import type { Plan } from '../../shared/plan.js';
 import { SETTINGS } from '../config.js';
 import * as logger from '../logger.js';
+import type { PromptFacts } from './prompts.js';
 
 /** Numbers inside common terms ("PM2.5", "N95"); "PM10" is covered by the small-number rule. */
 const ALWAYS_ALLOWED = new Set([2.5, 95]);
@@ -71,34 +71,25 @@ function extractQuantities(text: string): Quantity[] {
   }));
 }
 
-function addNumbers(target: Set<number>, values: readonly unknown[]): void {
-  for (const value of values) {
-    if (typeof value === 'number') {
-      // Text states sizes ("rises by 30%", "0.4 kg more"), so a negative fact allows its size.
-      target.add(Math.abs(value));
-    }
+/** Add every number in a value to the set, at any depth of its objects and arrays. */
+function addNumbers(target: Set<number>, value: unknown): void {
+  if (typeof value === 'number') {
+    // Text states sizes ("rises by 30%", "0.4 kg more"), so a negative fact allows its size.
+    target.add(Math.abs(value));
+  } else if (typeof value === 'object' && value !== null) {
+    Object.values(value).forEach((item: unknown) => {
+      addNumbers(target, item);
+    });
   }
 }
 
 /**
- * Every number the plan supports: the readings, timing, forecast and each recommendation's facts.
+ * Every number the prompt sent the model: the readings, timing and the facts of the items it
+ * carries. Its reply may quote these and no others, so nothing else in the plan counts.
  */
-export function allowedNumbers(plan: Plan): ReadonlySet<number> {
+export function allowedNumbers(facts: PromptFacts): ReadonlySet<number> {
   const allowed = new Set(ALWAYS_ALLOWED);
-  addNumbers(allowed, [plan.index.value, plan.index.pm25Mean24h]);
-  addNumbers(allowed, Object.values(plan.current));
-  addNumbers(allowed, Object.values(plan.inversion));
-  addNumbers(allowed, [plan.cleanestHour?.hour, plan.cleanestHour?.pm25]);
-  addNumbers(
-    allowed,
-    plan.forecast.map((point) => point.pm25),
-  );
-  for (const rec of plan.recommendations) {
-    addNumbers(allowed, [
-      ...Object.values<unknown>(rec.impact),
-      ...Object.values<unknown>(rec.facts),
-    ]);
-  }
+  addNumbers(allowed, facts);
   return allowed;
 }
 
@@ -111,7 +102,7 @@ function isAllowed({ value, measured, decimals }: Quantity, allowed: ReadonlySet
 }
 
 /**
- * True when every number in the text is a fact of the plan (allowing for rounding). Small whole
+ * True when every number in the text is an allowed fact (allowing for rounding). Small whole
  * numbers pass as clock hours or counts, but never with a percent sign or a unit of mass.
  */
 export function isGrounded(text: string, allowed: ReadonlySet<number>): boolean {
@@ -121,7 +112,7 @@ export function isGrounded(text: string, allowed: ReadonlySet<number>): boolean 
 /** The kinds of text the model writes, each with its own output budget. */
 export type ReplyKind = keyof typeof SETTINGS.aiMaxOutputTokens;
 
-/** Log how many parts of an AI reply were dropped for quoting numbers the plan does not contain. */
+/** Log how many parts of an AI reply were dropped for quoting numbers its prompt did not send. */
 export function logUngrounded(kind: ReplyKind, rejected: number): void {
   if (rejected > 0) {
     logger.warn('AI text failed the grounding check', { kind, rejected });

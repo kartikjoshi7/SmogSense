@@ -17,10 +17,10 @@ which also runs the other gates in [Code quality](CODE_QUALITY.md#gates-that-fai
 | --- | --- | --- | --- |
 | `src/core` (engine) | 15 | 223 | Node |
 | `src/shared` (schemas) | 3 | 16 | Node |
-| `src/server` (API, Open-Meteo, Gemini) | 15 | 122 | Node |
+| `src/server` (API, Open-Meteo, Gemini) | 15 | 123 | Node |
 | `api` (Vercel entry) | 1 | 3 | Node |
 | `src/ui` (React) | 16 | 119 | jsdom + Testing Library + axe-core |
-| **Vitest total** | **50** | **483** |  |
+| **Vitest total** | **50** | **484** |  |
 | `e2e` (Playwright) | 4 | 19 | Chromium, production build |
 
 **Engine.** Every AQI breakpoint edge on both scales (through `computeIndex`, so float error in
@@ -42,8 +42,9 @@ call: a valid reply, the request settings (schema, system rules, thinking level)
 skip after a 429, falling through to the next model, no key, the daily budget, and a log line for
 each rejected reply. The grounding check is tested with invented numbers, rounding, clock times,
 units, the digits of every Indian script the ten languages use, and the word for "percent" in each
-of them; the AI service logs how many parts of a reply it drops (never the text itself). The explanation cache is
-tested to tell plans apart that differ only below the items the model sees.
+of them; the AI service logs how many parts of a reply it drops (never the text itself). The tests also check
+that a reply may quote only the numbers its prompt sent, and that plans differing only below the
+items the model sees share one cached explanation.
 
 **UI.** Tests query by role and label, and the main screens and both dialogs are also checked with
 axe (jsdom cannot measure colour contrast; the end-to-end axe run does). They cover the setup form
@@ -83,10 +84,10 @@ and 90% for the whole project. `npm run coverage`, and with it `npm run check` a
 below them. From the last run:
 
 ```
-Statements   : 99.15% ( 1641/1655 )
-Branches     : 96.54% ( 754/781 )
-Functions    : 98.84% ( 601/608 )
-Lines        : 99.3% ( 1566/1577 )
+Statements   : 99.15% ( 1638/1652 )
+Branches     : 96.54% ( 755/782 )
+Functions    : 98.84% ( 599/606 )
+Lines        : 99.3% ( 1564/1575 )
 ```
 
 `src/core` is at 100% on all four. Test helpers, fixtures and `src/ui/main.tsx` (the file that

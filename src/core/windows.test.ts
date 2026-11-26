@@ -4,7 +4,7 @@ import {
   activityMeanPm25,
   bestActivityWindow,
   roundTripMeanPm25,
-  ventilationHour,
+  cleanestDaylightHour,
 } from './windows.js';
 
 describe('bestActivityWindow', () => {
@@ -75,7 +75,10 @@ describe('bestActivityWindow', () => {
   it('keeps the earliest hour on a tie when there is no usual hour', () => {
     const air = makeAir({ pm25Day: Array<number>(24).fill(80) });
 
-    expect(ventilationHour(air.hourly, air.nowIndex, air.daylight)).toEqual({ hour: 7, pm25: 80 });
+    expect(cleanestDaylightHour(air.hourly, air.nowIndex, air.daylight)).toEqual({
+      hour: 7,
+      pm25: 80,
+    });
   });
 
   it('skips windows with missing hours and reports no comparison when the usual hour is missing', () => {
@@ -119,7 +122,7 @@ describe('bestActivityWindow', () => {
         usualHour: 6,
       }),
     ).toBeNull();
-    expect(ventilationHour(air.hourly, air.nowIndex, [])).toBeNull();
+    expect(cleanestDaylightHour(air.hourly, air.nowIndex, [])).toBeNull();
   });
 });
 

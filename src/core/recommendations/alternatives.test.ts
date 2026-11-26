@@ -1,15 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { Profile } from '../../shared/profile.js';
-import { makeAir } from '../fixtures/air.js';
+import { makeAir, MODERATE, SEVERE } from '../fixtures/air.js';
 import { SHARMA_FAMILY } from '../fixtures/profiles.js';
 import {
   findRecommendation as find,
   idsOf as ids,
   planFor as plan,
 } from '../fixtures/recommendations.js';
-
-const SEVERE = 2.4;
-const MODERATE = 0.55;
 
 /** The Sharma family, but Riya walks 2 km to work and could take the metro instead. */
 const WALKER: Profile = {

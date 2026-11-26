@@ -5,7 +5,8 @@ const CI = process.env.CI !== undefined;
 
 /**
  * End-to-end tests run in Chromium against the production build (`vite build` + `vite preview`,
- * which sends the same security headers as Vercel). Every `/api/*` call is mocked in the page.
+ * which sends the same security headers as Vercel). The page's `/api/*` calls are answered by the
+ * real Hono app with fake air and AI services (`src/ui/test/fake-server.ts`).
  */
 export default defineConfig({
   testDir: 'e2e',
